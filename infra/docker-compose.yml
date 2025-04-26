@@ -1,0 +1,26 @@
+version: "3.8"
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: eventitta-db
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    env_file:
+      - .env
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      TZ: ${TZ}
+    volumes:
+      - ./db/mysql/data:/var/lib/mysql
+      - ./db/mysql/init:/docker-entrypoint-initdb.d
+    networks:
+      - eventitta-network
+
+networks:
+  eventitta-network:
+    driver: bridge

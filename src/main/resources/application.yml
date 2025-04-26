@@ -1,0 +1,16 @@
+spring:
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+    show-sql: false
+    format_sql: true
+
+  sql:
+    init:
+      mode: never
+
+logging:
+  level:
+    root: INFO
+    org.hibernate.SQL: WARN

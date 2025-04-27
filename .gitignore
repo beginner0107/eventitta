@@ -358,3 +358,7 @@ gradle-app.setting
 *.env
 /.idea
 HELP.md
+
+# IntelliJ
+*.iml
+.idea/

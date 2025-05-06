@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.4.5'
     id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.ec4j.editorconfig' version '0.1.0'
 }
 
 group = 'com'
@@ -51,4 +52,13 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+editorconfig {
+    includes = ['src/**', 'build.gradle']
+    excludes = ['**/generated/**', '**/*.bin']
+}
+
+check {
+    dependsOn editorconfigCheck
 }

@@ -1,4 +1,4 @@
-package com.eventitta.config;
+package com.eventitta.common.config;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;

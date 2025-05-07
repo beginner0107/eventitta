@@ -1,6 +1,6 @@
 package com.eventitta.user.domain;
 
-import com.eventitta.config.BaseEntity;
+import com.eventitta.common.config.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -36,10 +36,12 @@ public class User extends BaseEntity {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @NotBlank @Size(min = 8, max = 255)
+    @NotBlank
+    @Size(min = 8, max = 255)
     private String password;
 
-    @NotBlank @Size(max = 100)
+    @NotBlank
+    @Size(max = 100)
     private String nickname;
 
     @Column(name = "profile_picture_url", length = 512)

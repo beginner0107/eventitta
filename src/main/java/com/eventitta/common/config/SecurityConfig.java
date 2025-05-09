@@ -12,6 +12,10 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+
+import java.util.Collections;
 
 @Configuration
 @EnableWebSecurity
@@ -31,6 +35,7 @@ public class SecurityConfig {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth ->
                 auth.requestMatchers(
                         "/api/v1/auth/**",
@@ -42,5 +47,16 @@ public class SecurityConfig {
             )
             .httpBasic(Customizer.withDefaults());
         return http.build();
+    }
+
+    private CorsConfigurationSource corsConfigurationSource() {
+        return request -> {
+            CorsConfiguration configuration = new CorsConfiguration();
+            configuration.setAllowedHeaders(Collections.singletonList("*"));
+            configuration.setAllowedMethods(Collections.singletonList("*"));
+            configuration.setAllowedOriginPatterns(Collections.singletonList("*"));
+            configuration.setAllowCredentials(true);
+            return configuration;
+        };
     }
 }

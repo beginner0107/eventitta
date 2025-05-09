@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,9 +24,9 @@ public class AuthController {
 
     @Operation(summary = "회원가입", description = "회원 정보를 받아 회원가입을 수행합니다.")
     @PostMapping("/signup")
-    public SignUpResponse signUp(@Valid @RequestBody SignUpRequest req) {
+    public ResponseEntity<SignUpResponse> signUp(@Valid @RequestBody SignUpRequest req) {
         var user = authService.signUp(req.toEntity(passwordEncoder));
-        return SignUpResponse.of(user);
+        return ResponseEntity.ok(SignUpResponse.of(user));
     }
 }
 

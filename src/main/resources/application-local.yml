@@ -25,6 +25,11 @@ springdoc:
     tags-sorter: alpha
     operations-sorter: alpha
 
+jwt:
+  secret: ${SECRET_KEY}
+  access-token-validity: 1800  # 초 (30분)
+  refresh-token-validity: 1209600  # 초 (14일)
+
 logging:
   level:
     root: DEBUG

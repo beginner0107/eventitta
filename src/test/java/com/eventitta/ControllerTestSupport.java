@@ -1,7 +1,9 @@
 package com.eventitta;
 
 import com.eventitta.auth.controller.AuthController;
+import com.eventitta.auth.jwt.JwtTokenProvider;
 import com.eventitta.auth.service.AuthService;
+import com.eventitta.auth.service.CustomUserDetailsService;
 import com.eventitta.common.config.SecurityConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,4 +23,8 @@ public abstract class ControllerTestSupport {
     protected ObjectMapper objectMapper;
     @MockitoBean
     protected AuthService authService;
+    @MockitoBean
+    protected JwtTokenProvider jwtTokenProvider;
+    @MockitoBean
+    protected CustomUserDetailsService customUserDetailsService;
 }

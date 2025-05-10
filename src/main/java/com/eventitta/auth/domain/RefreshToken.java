@@ -42,9 +42,8 @@ public class RefreshToken {
         this.expiresAt = LocalDateTime.ofInstant(expiresAt, ZoneId.systemDefault());
     }
 
-    public RefreshToken updateToken(String newHash, Instant newExpiresAt) {
+    public void updateToken(String newHash, Instant newExpiresAt) {
         this.tokenHash = newHash;
         this.expiresAt = LocalDateTime.ofInstant(newExpiresAt, ZoneId.systemDefault());
-        return this;
     }
 }

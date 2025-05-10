@@ -19,7 +19,6 @@ public record SignUpRequest(
     String email,
     @Schema(description = "비밀번호", example = "P@ssw0rd!", pattern = RegexPattern.PASSWORD)
     @NotBlank(message = ValidationMessage.PASSWORD)
-    @Size(min = 8, max = 20, message = "비밀번호는 8자 이상 20자 이하로 입력해주세요.")
     @Pattern(regexp = RegexPattern.PASSWORD, message = ValidationMessage.PASSWORD)
     String password,
     @Schema(description = "닉네임", example = "johndoe", minLength = 2, maxLength = 20, pattern = RegexPattern.NICKNAME)

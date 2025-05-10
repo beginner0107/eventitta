@@ -4,7 +4,7 @@ import com.eventitta.auth.domain.RefreshToken;
 import com.eventitta.auth.domain.UserPrincipal;
 import com.eventitta.auth.dto.request.SignUpRequest;
 import com.eventitta.auth.dto.response.TokenResponse;
-import com.eventitta.auth.exception.SignUpErrorCode;
+import com.eventitta.auth.exception.AuthErrorCode;
 import com.eventitta.auth.jwt.JwtTokenProvider;
 import com.eventitta.auth.repository.RefreshTokenRepository;
 import com.eventitta.user.domain.User;
@@ -33,10 +33,10 @@ public class AuthService {
 
     public User signUp(SignUpRequest request) {
         if (userRepository.existsByEmail(request.email())) {
-            throw SignUpErrorCode.CONFLICTED_EMAIL.defaultException();
+            throw AuthErrorCode.CONFLICTED_EMAIL.defaultException();
         }
         if (userRepository.existsByNickname(request.nickname())) {
-            throw SignUpErrorCode.CONFLICTED_NICKNAME.defaultException();
+            throw AuthErrorCode.CONFLICTED_NICKNAME.defaultException();
         }
         return userRepository.save(request.toEntity(passwordEncoder));
     }

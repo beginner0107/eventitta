@@ -24,6 +24,8 @@ springdoc:
     path: /swagger-ui.html
     tags-sorter: alpha
     operations-sorter: alpha
+    with-credentials: true
+    persist-authorization: true
 
 jwt:
   secret: ${SECRET_KEY}

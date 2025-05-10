@@ -19,6 +19,9 @@ import org.springframework.security.crypto.password.Pbkdf2PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+
+import static com.eventitta.auth.exception.AuthErrorCode.*;
 
 @Service
 @Transactional
@@ -33,10 +36,10 @@ public class AuthService {
 
     public User signUp(SignUpRequest request) {
         if (userRepository.existsByEmail(request.email())) {
-            throw AuthErrorCode.CONFLICTED_EMAIL.defaultException();
+            throw CONFLICTED_EMAIL.defaultException();
         }
         if (userRepository.existsByNickname(request.nickname())) {
-            throw AuthErrorCode.CONFLICTED_NICKNAME.defaultException();
+            throw CONFLICTED_NICKNAME.defaultException();
         }
         return userRepository.save(request.toEntity(passwordEncoder));
     }
@@ -63,5 +66,31 @@ public class AuthService {
             );
 
         return new TokenResponse(at, rt);
+    }
+
+    public TokenResponse refreshTokens(String expiredAt, String rawRt) {
+        if (rawRt == null) throw REFRESH_TOKEN_MISSING.defaultException();
+
+        Long userId = tokenProvider.getUserIdFromExpiredToken(expiredAt);
+
+        RefreshToken entity = rtRepo.findByUserId(userId)
+            .orElseThrow(REFRESH_TOKEN_INVALID::defaultException);
+
+        if (!rtEncoder.matches(rawRt, entity.getTokenHash())) {
+            throw REFRESH_TOKEN_INVALID.defaultException();
+        }
+        if (entity.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw REFRESH_TOKEN_EXPIRED.defaultException();
+        }
+
+        String newAt = tokenProvider.createAccessToken(userId);
+        String newRt = tokenProvider.createRefreshToken();
+        String newRtHash = rtEncoder.encode(newRt);
+        Instant newExpiresAt = tokenProvider.getRefreshTokenExpiry();
+
+        entity.updateToken(newRtHash, newExpiresAt);
+        rtRepo.save(entity);
+
+        return new TokenResponse(newAt, newRt);
     }
 }

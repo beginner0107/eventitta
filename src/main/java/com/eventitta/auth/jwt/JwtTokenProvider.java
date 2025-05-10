@@ -1,9 +1,7 @@
 package com.eventitta.auth.jwt;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import com.eventitta.auth.exception.AuthErrorCode;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.Getter;
 import org.springframework.security.crypto.keygen.KeyGenerators;
@@ -14,6 +12,8 @@ import java.security.Key;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Date;
+
+import static com.eventitta.auth.exception.AuthErrorCode.*;
 
 @Component
 public class JwtTokenProvider {
@@ -69,4 +69,22 @@ public class JwtTokenProvider {
         return Long.parseLong(claims.getSubject());
     }
 
+    public Long getUserIdFromExpiredToken(String token) {
+        try {
+            return getUserId(token);
+        } catch (ExpiredJwtException e) {
+            return Long.parseLong(e.getClaims().getSubject());
+        }
+    }
+
+    public boolean validateAccessToken(String token) {
+        try {
+            Jwts.parserBuilder().setSigningKey(signingKey).build().parseClaimsJws(token);
+            return true;
+        } catch (ExpiredJwtException e) {
+            throw ACCESS_TOKEN_EXPIRED.defaultException(e);
+        } catch (JwtException | IllegalArgumentException e) {
+            throw ACCESS_TOKEN_INVALID.defaultException(e);
+        }
+    }
 }

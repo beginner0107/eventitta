@@ -1,5 +1,6 @@
 package com.eventitta.config;
 
+import com.eventitta.common.config.AuditorAwareImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,7 +32,7 @@ class AuditorAwareImplTest {
     @DisplayName("익명 사용자(anonymousUser)로 인증된 경우 사용자 식별 결과가 없다")
     void anonymousUser_returnsEmpty() {
         SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken("anonymousUser",null)
+            new UsernamePasswordAuthenticationToken("anonymousUser", null)
         );
         assertThat(auditor.getCurrentAuditor()).isEmpty();
     }
@@ -41,7 +42,7 @@ class AuditorAwareImplTest {
     void authenticated_returnsName() {
         List<GrantedAuthority> auths = List.of(new SimpleGrantedAuthority("ROLE_USER"));
         UsernamePasswordAuthenticationToken token =
-                new UsernamePasswordAuthenticationToken("alice", null, auths);
+            new UsernamePasswordAuthenticationToken("alice", null, auths);
 
         SecurityContextHolder.getContext().setAuthentication(token);
 

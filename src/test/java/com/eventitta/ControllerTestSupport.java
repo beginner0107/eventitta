@@ -1,0 +1,24 @@
+package com.eventitta;
+
+import com.eventitta.auth.controller.AuthController;
+import com.eventitta.auth.service.AuthService;
+import com.eventitta.common.config.SecurityConfig;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+
+@WebMvcTest(controllers = {
+    AuthController.class,
+})
+@Import(SecurityConfig.class)
+public abstract class ControllerTestSupport {
+    @Autowired
+    protected MockMvc mockMvc;
+    @Autowired
+    protected ObjectMapper objectMapper;
+    @MockitoBean
+    protected AuthService authService;
+}

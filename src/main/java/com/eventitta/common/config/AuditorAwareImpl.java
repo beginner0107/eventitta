@@ -1,4 +1,4 @@
-package com.eventitta.config;
+package com.eventitta.common.config;
 
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.security.core.Authentication;

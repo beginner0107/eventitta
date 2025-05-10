@@ -35,30 +35,9 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Void> login(@Valid @RequestBody SignInRequest req, HttpServletResponse response) {
+    public ResponseEntity<Void> login(@Valid @RequestBody SignInRequest req, HttpServletResponse resp) {
         TokenResponse tokenResponse = authService.login(req.email(), req.password());
-
-        // 2) 쿠키 세팅
-        Duration atTtl = Duration.ofMillis(jwtTokenProvider.getAccessTokenValidityMs());
-        Duration rtTtl = Duration.ofMillis(jwtTokenProvider.getRefreshTokenValidityMs());
-
-        ResponseCookie atCookie = ResponseCookie.from("access_token", tokenResponse.accessToken())
-            .httpOnly(true)
-            .path("/")
-            .sameSite("Strict")
-            .maxAge(atTtl)
-            .build();
-
-        ResponseCookie rtCookie = ResponseCookie.from("refresh_token", tokenResponse.refreshToken())
-            .httpOnly(true)
-            .path("/")
-            .sameSite("Strict")
-            .maxAge(rtTtl)
-            .build();
-
-        response.addHeader(HttpHeaders.SET_COOKIE, atCookie.toString());
-        response.addHeader(HttpHeaders.SET_COOKIE, rtCookie.toString());
-
+        CookieUtil.addTokenCookies(resp, tokenResponse, jwtTokenProvider);
         return ResponseEntity.ok().build();
     }
 

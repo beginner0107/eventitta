@@ -8,7 +8,6 @@ import com.eventitta.user.domain.User;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Schema(description = "회원가입")
@@ -23,7 +22,6 @@ public record SignUpRequest(
     String password,
     @Schema(description = "닉네임", example = "johndoe", minLength = 2, maxLength = 20, pattern = RegexPattern.NICKNAME)
     @NotBlank(message = ValidationMessage.NICKNAME)
-    @Size(min = 2, max = 20, message = ValidationMessage.NICKNAME)
     @Pattern(regexp = RegexPattern.NICKNAME, message = ValidationMessage.NICKNAME)
     String nickname
 

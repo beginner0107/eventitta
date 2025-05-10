@@ -15,8 +15,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 
-import static com.eventitta.auth.exception.SignUpErrorCode.CONFLICTED_EMAIL;
-import static com.eventitta.auth.exception.SignUpErrorCode.CONFLICTED_NICKNAME;
+import static com.eventitta.auth.exception.AuthErrorCode.CONFLICTED_EMAIL;
+import static com.eventitta.auth.exception.AuthErrorCode.CONFLICTED_NICKNAME;
 import static org.assertj.core.api.Assertions.*;
 
 @DisplayName("회원 인증/인가 비즈니스 로직 테스트")

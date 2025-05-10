@@ -25,8 +25,8 @@ public class JwtTokenProvider {
 
     public JwtTokenProvider(JwtProperties props) {
         this.signingKey = Keys.hmacShaKeyFor(props.getSecret().getBytes(StandardCharsets.UTF_8));
-        this.accessTokenValidityMs = props.getAccessTokenValiditySeconds() * 1_000L;
-        this.refreshTokenValidityMs = props.getRefreshTokenValiditySeconds() * 1_000L;
+        this.accessTokenValidityMs = props.getAccessTokenValidityMs();
+        this.refreshTokenValidityMs = props.getRefreshTokenValidityMs();
     }
 
     public String createAccessToken(Long userId) {

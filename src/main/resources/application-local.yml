@@ -27,8 +27,8 @@ springdoc:
 
 jwt:
   secret: ${SECRET_KEY}
-  access-token-validity: 1800  # 초 (30분)
-  refresh-token-validity: 1209600  # 초 (14일)
+  access-token-validity-ms: 3600000
+  refresh-token-validity-ms: 86400000
 
 logging:
   level:

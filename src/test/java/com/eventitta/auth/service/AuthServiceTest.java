@@ -2,6 +2,7 @@ package com.eventitta.auth.service;
 
 import com.eventitta.IntegrationTestSupport;
 import com.eventitta.auth.dto.request.SignUpRequest;
+import com.eventitta.auth.exception.AuthException;
 import com.eventitta.common.exception.CustomException;
 import com.eventitta.user.domain.Provider;
 import com.eventitta.user.domain.Role;
@@ -65,7 +66,7 @@ class AuthServiceTest extends IntegrationTestSupport {
 
         // when & then
         assertThatThrownBy(() -> authService.signUp(signUpRequest))
-            .isInstanceOf(CustomException.class)
+            .isInstanceOf(AuthException.class)
             .hasMessageContaining(CONFLICTED_EMAIL.defaultMessage());
     }
 
@@ -80,7 +81,7 @@ class AuthServiceTest extends IntegrationTestSupport {
 
         // when & then
         assertThatThrownBy(() -> authService.signUp(signUpRequest))
-            .isInstanceOf(CustomException.class)
+            .isInstanceOf(AuthException.class)
             .hasMessageContaining(CONFLICTED_NICKNAME.defaultMessage());
     }
 

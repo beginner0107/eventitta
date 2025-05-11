@@ -24,6 +24,13 @@ springdoc:
     path: /swagger-ui.html
     tags-sorter: alpha
     operations-sorter: alpha
+    with-credentials: true
+    persist-authorization: true
+
+jwt:
+  secret: ${SECRET_KEY}
+  access-token-validity-ms: 3600000
+  refresh-token-validity-ms: 86400000
 
 logging:
   level:

@@ -1,28 +1,46 @@
 package com.eventitta.auth.service;
 
+import com.eventitta.auth.dto.request.SignInRequest;
 import com.eventitta.auth.dto.request.SignUpRequest;
-import com.eventitta.auth.exception.SignUpErrorCode;
+import com.eventitta.auth.dto.response.TokenResponse;
+import com.eventitta.auth.exception.AuthErrorCode;
+import com.eventitta.auth.jwt.JwtTokenProvider;
+import com.eventitta.common.util.CookieUtil;
 import com.eventitta.user.domain.User;
-import com.eventitta.user.repository.UserRepository;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
+
+import static com.eventitta.auth.exception.AuthErrorCode.*;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class AuthService {
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final LoginService loginService;
+    private final SignUpService signUpService;
+    private final TokenService tokenService;
+    private final RefreshTokenService refreshService;
+    private final JwtTokenProvider jwtTokenProvider;
 
-    public User signUp(SignUpRequest request) {
-        if (userRepository.existsByEmail(request.email())) {
-            throw SignUpErrorCode.CONFLICTED_EMAIL.defaultException();
+    public User signUp(SignUpRequest signUpRequest) {
+        return signUpService.register(signUpRequest);
+    }
+
+    public void login(SignInRequest request, HttpServletResponse response) {
+        try {
+            Long userId = loginService.authenticate(request.email(), request.password());
+            TokenResponse tokens = tokenService.issueTokens(userId);
+            CookieUtil.addTokenCookies(response, tokens, jwtTokenProvider);
+        } catch (AuthenticationException e) {
+            throw INVALID_CREDENTIALS.defaultException(e);
         }
-        if (userRepository.existsByNickname(request.nickname())) {
-            throw SignUpErrorCode.CONFLICTED_NICKNAME.defaultException();
-        }
-        return userRepository.save(request.toEntity(passwordEncoder));
+    }
+
+    public void refresh(String accessToken, String refreshToken, HttpServletResponse resp) {
+        TokenResponse tokens = refreshService.refresh(accessToken, refreshToken);
+        CookieUtil.addTokenCookies(resp, tokens, jwtTokenProvider);
     }
 }

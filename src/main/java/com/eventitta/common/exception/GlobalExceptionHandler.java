@@ -1,11 +1,15 @@
 package com.eventitta.common.exception;
 
+import com.eventitta.auth.exception.AuthErrorCode;
+import com.eventitta.auth.exception.AuthException;
 import com.eventitta.common.response.ApiErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -22,6 +26,19 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<ApiErrorResponse> handleCustom(CustomException ex) {
         return toResponse(ex.getErrorCode());
+    }
+
+    @ExceptionHandler(AuthException.class)
+    public ResponseEntity<ApiErrorResponse> handleAuth(AuthException ex) {
+        return toResponse(ex.getErrorCode());
+    }
+
+    @ExceptionHandler({
+        InternalAuthenticationServiceException.class,
+        BadCredentialsException.class
+    })
+    public ResponseEntity<ApiErrorResponse> handleBadCredentials(Exception ex) {
+        return toResponse(AuthErrorCode.INVALID_CREDENTIALS);
     }
 
     @ExceptionHandler(NoResourceFoundException.class)

@@ -37,4 +37,9 @@ public class RefreshTokenService {
 
         return tokenService.issueTokens(userId);
     }
+
+    public void invalidateByAccessToken(String accessToken) {
+        Long userId = tokenProvider.getUserIdFromExpiredToken(accessToken);
+        rtRepo.deleteByUserId(userId);
+    }
 }

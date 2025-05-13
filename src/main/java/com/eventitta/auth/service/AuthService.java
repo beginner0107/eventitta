@@ -3,18 +3,22 @@ package com.eventitta.auth.service;
 import com.eventitta.auth.dto.request.SignInRequest;
 import com.eventitta.auth.dto.request.SignUpRequest;
 import com.eventitta.auth.dto.response.TokenResponse;
-import com.eventitta.auth.exception.AuthErrorCode;
+import com.eventitta.auth.exception.AuthException;
 import com.eventitta.auth.jwt.JwtTokenProvider;
 import com.eventitta.common.util.CookieUtil;
 import com.eventitta.user.domain.User;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import static com.eventitta.auth.exception.AuthErrorCode.*;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -42,5 +46,17 @@ public class AuthService {
     public void refresh(String accessToken, String refreshToken, HttpServletResponse resp) {
         TokenResponse tokens = refreshService.refresh(accessToken, refreshToken);
         CookieUtil.addTokenCookies(resp, tokens, jwtTokenProvider);
+    }
+
+    public void logout(String accessToken, HttpServletResponse response) {
+        if (StringUtils.hasText(accessToken)) {
+            try {
+                refreshService.invalidateByAccessToken(accessToken);
+            } catch (AuthException e) {
+                log.debug("로그아웃: 토큰 검증 오류 무시", e);
+            }
+        }
+        CookieUtil.deleteCookie(response, "access_token");
+        CookieUtil.deleteCookie(response, "refresh_token");
     }
 }

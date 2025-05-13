@@ -1,5 +1,6 @@
 package com.eventitta.auth.filter;
 
+import com.eventitta.auth.exception.AuthException;
 import com.eventitta.auth.jwt.JwtTokenProvider;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -33,11 +34,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             .map(Cookie::getValue)
             .findFirst().orElse(null);
 
-        if (at != null && tokenProvider.validateToken(at)) {
-            Long userId = tokenProvider.getUserId(at);
-            UsernamePasswordAuthenticationToken auth =
-                new UsernamePasswordAuthenticationToken(userId, null, List.of());
-            SecurityContextHolder.getContext().setAuthentication(auth);
+        if (at != null) {
+            try {
+                tokenProvider.validateAccessToken(at);
+                Long userId = tokenProvider.getUserId(at);
+                UsernamePasswordAuthenticationToken auth =
+                    new UsernamePasswordAuthenticationToken(userId, null, List.of());
+                SecurityContextHolder.getContext().setAuthentication(auth);
+            } catch (AuthException ex) {
+                SecurityContextHolder.clearContext();
+                throw ex;
+            }
         }
         chain.doFilter(req, res);
     }

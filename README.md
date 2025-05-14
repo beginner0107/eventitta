@@ -21,11 +21,154 @@
 ## 4. 도메인 모델
 
 ## 5. 차트 & 다이어그램
+<details>
+  <summary> ERD 보기/숨기기</summary>
+
+```mermaid
+erDiagram
+    USERS {
+        INT        id PK
+        VARCHAR    email
+        VARCHAR    paassword
+        VARCHAR    nickname
+        VARCHAR    profile_picture_url
+        TEXT       self_intro
+        VARCGAR    intersets
+        VARCHAR    address
+        DECIMAL    latitude
+        DECIMAL    longitude
+        ENUM       role
+        VARCHAR    provider
+        VARCHAR    provider_id
+        TIMESTAMP  created_at
+        TIMESTAMP  updated_at
+    }
+
+    POST {
+        INT        id PK
+        INT        user_id FK
+        VARCHAR    title
+        TEXT       content
+        VARCHAR    location_label
+        DECIMAL    latitude
+        DECIMAL    longtitude
+        TIMESTAMP  created_at
+        TIMESTAMP  updated_at
+    }
+
+    COMMENT {
+        INT        id PK
+        INT        post_id FK
+        INT        user_id FK
+        TEXT       comment
+        INT        parent_comment_id FK
+        TIMESTAMP  created_at
+        TIMESTAMP  updated_at
+    }
+
+    BADGE {
+        INT        id PK
+        VARCHAR    badge_name
+        INT        description
+    }
+
+    USER_BADGE {
+        INT        id PK
+        INT        user_id FK
+        INT        badge_id FK
+        DATETIME   awarded_at
+    }
+
+    ACTIVITY_TYPE {
+        INT        id PK
+        VARCHAR    code
+        VARCHAR    name
+    }
+
+    USER_ACTIVITY {
+        INT        id PK
+        INT        activity_type_id FK
+        INT        user_id FK
+        INT        points
+        DATETIME   activity_date
+    }
+
+    MEETING {
+        INT        id PK
+        INT        user_id FK
+        VARCHAR    title
+        TEXT       description
+        DATETIME   start_time
+        DATETIME   end_time
+        INT        max_members
+        ENUM       status
+        VARCHAR    location_address
+        DECIMAL    latitude
+        DECIMAL    longtitude
+        TIMESTAMP  created_at
+        TIMESTAMP  updated_at
+    }
+
+    MEETING_PARTICIPANT {
+        INT        id PK
+        INT        meeting_id FK
+        INT        user_id FK
+        ENUM       join_status
+        TIMESTAMP  created_at
+        TIMESTAMP  updated_at
+    }
+
+    EVENT {
+        INT        id PK
+        VARCHAR    source
+        VARCHAR    title
+        VARCHAR    place
+        VARCHAR    address
+        TEXT       desciption
+        DATETIME   start_time
+        DATETIME   end_time
+        VARCHAR    location_address
+        DECIMAL    latitude
+        DECIMAL    longtitude
+        VARCHAR    category
+        VARCHAR    is_free
+        VARCHAR    use_fee
+        VARCHAR    hompage_url
+        VARCHAR    main_img_url
+        TIMESTAMP  updated_at
+        TIMESTAMP  created_at
+    }
+
+    REFRESH_TOKENS {
+        INT        id PK
+        INT        user_id FK
+        VARCHAR    token_hash
+        DATETIME   createdAt
+        DATETIME   expiresAt
+    }
+
+    %%----------------- Relationships -----------------%%
+    USERS           ||--o{ POST               : writes
+    USERS           ||--o{ COMMENT            : writes
+    USERS           ||--o{ USER_BADGE         : receives
+    USERS           ||--o{ USER_ACTIVITY      : logs
+    USERS           ||--o{ MEETING            : hosts
+    USERS           ||--o{ MEETING_PARTICIPANT: joins
+    USERS           ||--o{ REFRESH_TOKENS     : has
+
+    POST            ||--o{ COMMENT            : contains
+    COMMENT         ||--o{ COMMENT            : replies_to
+    BADGE           ||--o{ USER_BADGE         : grants
+    ACTIVITY_TYPE   ||--o{ USER_ACTIVITY      : categorizes
+    MEETING         ||--o{ MEETING_PARTICIPANT: includes
+```
+</details> 
 
 ## 6. 핵심 기능
 
 ## 7. Technical Issues & 고민 사항
-
+- 인증/인가 구현: 세션, 토큰 방식
+- Geo 검색 (위경도 기반 범위·거리 조회)
 
 ## 8. 트러블 슈팅
 

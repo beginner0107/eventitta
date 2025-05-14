@@ -19,8 +19,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.*;
 import static org.mockito.Mockito.mock;
 
 @ExtendWith(MockitoExtension.class)
@@ -53,9 +52,11 @@ class RefreshTokenServiceUnitTest {
     @Test
     @DisplayName("저장된 토큰이 없으면 인증에 실패한다")
     void noStoredRefreshToken_throwsInvalidException() {
+        // given
         given(tokenProvider.getUserIdFromExpiredToken("expiredAt")).willReturn(10L);
         given(rtRepo.findByUserId(10L)).willReturn(Optional.empty());
 
+        // when & then
         assertThatThrownBy(() -> refreshTokenService.refresh("expiredAt", "rawRt"))
             .isInstanceOf(AuthException.class)
             .extracting(ERROR_CODE_FIELD)
@@ -65,11 +66,13 @@ class RefreshTokenServiceUnitTest {
     @Test
     @DisplayName("토큰의 해시가 일치하지 않으면 인증에 실패한다")
     void mismatchedRefreshToken_throwsInvalidException() {
+        // given
         given(tokenProvider.getUserIdFromExpiredToken("expiredAt")).willReturn(20L);
         RefreshToken entity = mock(RefreshToken.class);
         given(rtRepo.findByUserId(20L)).willReturn(Optional.of(entity));
         given(rtEncoder.matches("rawRt", entity.getTokenHash())).willReturn(false);
 
+        // when & then
         assertThatThrownBy(() -> refreshTokenService.refresh("expiredAt", "rawRt"))
             .isInstanceOf(AuthException.class)
             .extracting(ERROR_CODE_FIELD)
@@ -79,12 +82,14 @@ class RefreshTokenServiceUnitTest {
     @Test
     @DisplayName("만료된 토큰으로 재발급을 시도하면 거부된다")
     void expiredRefreshToken_throwsExpiredException() {
+        // given
         given(tokenProvider.getUserIdFromExpiredToken("expiredAt")).willReturn(30L);
         RefreshToken entity = mock(RefreshToken.class);
         given(rtRepo.findByUserId(30L)).willReturn(Optional.of(entity));
         given(rtEncoder.matches("rawRt", entity.getTokenHash())).willReturn(true);
         given(entity.getExpiresAt()).willReturn(LocalDateTime.now().minusSeconds(1));
 
+        // when & then
         assertThatThrownBy(() -> refreshTokenService.refresh("expiredAt", "rawRt"))
             .isInstanceOf(AuthException.class)
             .extracting(ERROR_CODE_FIELD)
@@ -94,6 +99,7 @@ class RefreshTokenServiceUnitTest {
     @Test
     @DisplayName("유효한 리프레시 토큰이면 새 액세스/리프레시 토큰을 발급한다")
     void validRefreshToken_returnsNewTokenResponse() {
+        // given
         given(tokenProvider.getUserIdFromExpiredToken("expiredAt")).willReturn(40L);
         RefreshToken entity = mock(RefreshToken.class);
         given(rtRepo.findByUserId(40L)).willReturn(Optional.of(entity));
@@ -103,9 +109,26 @@ class RefreshTokenServiceUnitTest {
         TokenResponse expected = new TokenResponse("newAt", "newRt");
         given(tokenService.issueTokens(40L)).willReturn(expected);
 
+        // when
         TokenResponse actual = refreshTokenService.refresh("expiredAt", "rawRt");
 
+        // then
         assertThat(actual).isSameAs(expected);
         then(tokenService).should().issueTokens(40L);
+    }
+
+    @Test
+    @DisplayName("액세스 토큰으로 로그아웃 시 해당 유저의 리프레시 토큰을 삭제한다")
+    void invalidateByAccessToken_deletesRefreshTokenByUserId() {
+        // given
+        String accessToken = "someExpiredJwt";
+        given(tokenProvider.getUserIdFromExpiredToken(accessToken)).willReturn(123L);
+        willDoNothing().given(rtRepo).deleteByUserId(123L);
+
+        // when
+        refreshTokenService.invalidateByAccessToken(accessToken);
+
+        // then
+        then(rtRepo).should().deleteByUserId(123L);
     }
 }

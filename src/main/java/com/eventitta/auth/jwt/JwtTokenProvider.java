@@ -7,13 +7,15 @@ import lombok.Getter;
 import org.springframework.security.crypto.keygen.KeyGenerators;
 import org.springframework.stereotype.Component;
 
-import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.time.Clock;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Date;
 
-import static com.eventitta.auth.exception.AuthErrorCode.*;
+import static com.eventitta.auth.exception.AuthErrorCode.ACCESS_TOKEN_EXPIRED;
+import static com.eventitta.auth.exception.AuthErrorCode.ACCESS_TOKEN_INVALID;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Component
 public class JwtTokenProvider {
@@ -22,19 +24,28 @@ public class JwtTokenProvider {
     private final long accessTokenValidityMs;
     @Getter
     private final long refreshTokenValidityMs;
+    private final Clock clock;
 
-    public JwtTokenProvider(JwtProperties props) {
-        this.signingKey = Keys.hmacShaKeyFor(props.getSecret().getBytes(StandardCharsets.UTF_8));
+    public JwtTokenProvider(JwtProperties props, Clock clock) {
+        this.signingKey = Keys.hmacShaKeyFor(props.getSecret().getBytes(UTF_8));
+        this.clock = clock;
         this.accessTokenValidityMs = props.getAccessTokenValidityMs();
         this.refreshTokenValidityMs = props.getRefreshTokenValidityMs();
     }
 
+    private JwtParser parser() {
+        return Jwts.parserBuilder()
+            .setSigningKey(signingKey)
+            .setClock(() -> Date.from(clock.instant()))
+            .build();
+    }
+
     public String createAccessToken(Long userId) {
-        Date now = new Date();
+        Instant now = clock.instant();
         return Jwts.builder()
             .setSubject(userId.toString())
-            .setIssuedAt(now)
-            .setExpiration(new Date(now.getTime() + accessTokenValidityMs))
+            .setIssuedAt(Date.from(now))
+            .setExpiration(Date.from(now.plusMillis(accessTokenValidityMs)))
             .signWith(signingKey, SignatureAlgorithm.HS256)
             .compact();
     }
@@ -45,15 +56,12 @@ public class JwtTokenProvider {
     }
 
     public Instant getRefreshTokenExpiry() {
-        return Instant.now().plusMillis(refreshTokenValidityMs);
+        return clock.instant().plusMillis(refreshTokenValidityMs);
     }
 
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder()
-                .setSigningKey(signingKey)
-                .build()
-                .parseClaimsJws(token);
+            parser().parseClaimsJws(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
             return false;
@@ -61,12 +69,12 @@ public class JwtTokenProvider {
     }
 
     public Long getUserId(String token) {
-        Claims claims = Jwts.parserBuilder()
-            .setSigningKey(signingKey)
-            .build()
-            .parseClaimsJws(token)
-            .getBody();
-        return Long.parseLong(claims.getSubject());
+        try {
+            Claims claims = parser().parseClaimsJws(token).getBody();
+            return Long.parseLong(claims.getSubject());
+        } catch (MalformedJwtException | UnsupportedJwtException | IllegalArgumentException e) {
+            throw AuthErrorCode.ACCESS_TOKEN_INVALID.defaultException(e);
+        }
     }
 
     public Long getUserIdFromExpiredToken(String token) {
@@ -79,7 +87,7 @@ public class JwtTokenProvider {
 
     public boolean validateAccessToken(String token) {
         try {
-            Jwts.parserBuilder().setSigningKey(signingKey).build().parseClaimsJws(token);
+            parser().parseClaimsJws(token);
             return true;
         } catch (ExpiredJwtException e) {
             throw ACCESS_TOKEN_EXPIRED.defaultException(e);

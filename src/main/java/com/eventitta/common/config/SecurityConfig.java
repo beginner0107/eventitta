@@ -32,6 +32,7 @@ public class SecurityConfig {
 
     private final JwtTokenProvider tokenProvider;
     private final CustomUserDetailsService customUserDetailsService;
+    private final CustomAuthenticationEntryPoint authenticationEntryPoint;
 
     @Bean
     @Primary
@@ -65,6 +66,7 @@ public class SecurityConfig {
                     .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())
+            .exceptionHandling(ex -> ex.authenticationEntryPoint(authenticationEntryPoint))
             .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

@@ -16,15 +16,16 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpHeaders;
+import org.springframework.mock.web.MockHttpServletResponse;
+
+import java.util.List;
 
 import static com.eventitta.auth.exception.AuthErrorCode.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.mockStatic;
+import static org.mockito.BDDMockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("인증 단위 테스트")
@@ -47,7 +48,7 @@ public class AuthServiceUnitTest {
 
     @Test
     @DisplayName("회원가입 요청을 수행한다.")
-    void 회원가입_요청_성공() {
+    void givenValidSignUpRequest_whenSignUp_thenReturnsUser() {
         // given
         SignUpRequest req = new SignUpRequest("a@b.com", "P@ssw0rd!", "nick");
         User user = User.builder()
@@ -68,7 +69,7 @@ public class AuthServiceUnitTest {
 
     @Test
     @DisplayName("중복된 이메일이 입력되었을 경우 에러가 발생한다.")
-    void 중복된_이메일_회원가입_실패() {
+    void givenConflictEmail_whenSignUp_thenThrowsException() {
         // given
         SignUpRequest request = new SignUpRequest("absdd1@dkdk.com", "P@ssw0rd!", "nick12");
 
@@ -82,7 +83,7 @@ public class AuthServiceUnitTest {
 
     @Test
     @DisplayName("중복된 닉네임이 입력되었을 경우 에러가 발생한다.")
-    void 중복된_낙네임_회원가입_실패() {
+    void givenConflictNickname_whenSignUp_thenThrowsException() {
         // given
         SignUpRequest request = new SignUpRequest("absdd1@dkdk.com", "P@ssw0rd!", "nick12");
 
@@ -96,7 +97,7 @@ public class AuthServiceUnitTest {
 
     @Test
     @DisplayName("올바른 자격으로 로그인하면 인증 서비스, 토큰 서비스, 쿠키 유틸이 차례로 호출된다")
-    void 로그인_성공() {
+    void givenValidCredentials_whenLogin_thenAuthenticateAndIssueTokensAndSetCookies() {
         // given
         SignInRequest request = new SignInRequest("abcde@b.com", "correctPw!");
         given(loginService.authenticate("abcde@b.com", "correctPw!")).willReturn(42L);
@@ -118,7 +119,7 @@ public class AuthServiceUnitTest {
 
     @Test
     @DisplayName("인증 자격이 유효하지 않으면 예외 메시지를 반환한다.")
-    void 로그인_인증_실패() {
+    void givenInvalidCredentials_whenLogin_thenThrowsException() {
         // given
         SignInRequest req = new SignInRequest("abcde@b.com", "asdf1234!@");
         given(loginService.authenticate(any(), any()))
@@ -132,7 +133,7 @@ public class AuthServiceUnitTest {
 
     @Test
     @DisplayName("유효한 리프레시 토큰이면 엑세스 토큰과 리프레시 토큰을 재발급한다.")
-    void 엑세스_리프레시_토큰_재발급() {
+    void givenValidRefresh_whenRefresh_thenIssueNewTokensAndSetCookies() {
         // given
         String at = "expiredAt", rt = "rawRefresh";
         TokenResponse newTokens = new TokenResponse("newAt", "newRt");
@@ -151,33 +152,91 @@ public class AuthServiceUnitTest {
 
     @Test
     @DisplayName("리프레시 토큰이 없으면 예외를 반환한다.")
-    void 리프레시_토큰_없을때_에러_메시지() {
+    void givenMissingRefreshToken_whenRefresh_thenThrowsException() {
         // given
         given(refreshService.refresh(any(), any()))
             .willThrow(AuthErrorCode.REFRESH_TOKEN_MISSING.defaultException());
 
-        // when
-        AuthException ex = assertThrows(AuthException.class,
-            () -> authService.refresh("anyAt", null, response)
-        );
-
-        // then
-        assertThat(ex.getErrorCode()).isEqualTo(AuthErrorCode.REFRESH_TOKEN_MISSING);
+        // when & then
+        assertThatThrownBy(() -> authService.refresh("anyAt", null, response))
+            .isInstanceOf(AuthException.class)
+            .hasMessage(REFRESH_TOKEN_MISSING.defaultMessage());
     }
 
     @Test
     @DisplayName("토큰 검증에 실패하면 예외를 반환한다.")
-    void 토큰_검증_실패_예러_메시지() {
+    void givenInvalidRefreshToken_whenRefresh_thenThrowsException() {
         // given
         given(refreshService.refresh(any(), any()))
             .willThrow(AuthErrorCode.REFRESH_TOKEN_INVALID.defaultException());
 
+        // when & then
+        assertThatThrownBy(() -> authService.refresh("anyAt", "badRt", response))
+            .isInstanceOf(AuthException.class)
+            .hasMessage(REFRESH_TOKEN_INVALID.defaultMessage());
+        then(refreshService).should().refresh(any(), any());
+    }
+
+    @Test
+    @DisplayName("엑세스 토큰으로 사용자를 검증하고, 리프레시 토큰과 쿠키를 삭제한다.")
+    void givenValidToken_whenLogout_thenInvalidateAndClearCookies() {
+        // given
+        String token = "validToken";
+        doNothing().when(refreshService).invalidateByAccessToken(token);
+
+        MockHttpServletResponse res = new MockHttpServletResponse();
+
         // when
-        AuthException ex = assertThrows(AuthException.class,
-            () -> authService.refresh("anyAt", "badRt", response)
-        );
+        authService.logout(token, res);
 
         // then
-        assertThat(ex.getErrorCode()).isEqualTo(AuthErrorCode.REFRESH_TOKEN_INVALID);
+        verify(refreshService).invalidateByAccessToken(token);
+
+        // then
+        List<String> setCookie = res.getHeaders(HttpHeaders.SET_COOKIE);
+        assertThat(setCookie).hasSize(2);
+        assertThat(setCookie.get(0)).startsWith("access_token=;");
+        assertThat(setCookie.get(1)).startsWith("refresh_token=;");
+    }
+
+    @Test
+    @DisplayName("잘못된 토큰으로 예외가 발생해도 쿠키는 항상 삭제된다")
+    void givenInvalidToken_whenLogout_thenStillClearCookies() {
+        // given
+        String badToken = "badToken";
+        willThrow(ACCESS_TOKEN_INVALID.defaultException())
+            .given(refreshService).invalidateByAccessToken(badToken);
+
+        MockHttpServletResponse res = new MockHttpServletResponse();
+
+        // when
+        authService.logout(badToken, res);
+
+        // then
+        verify(refreshService).invalidateByAccessToken(badToken);
+
+        // then
+        List<String> setCookie = res.getHeaders(HttpHeaders.SET_COOKIE);
+        assertThat(setCookie).hasSize(2);
+        assertThat(setCookie.get(0)).startsWith("access_token=;");
+        assertThat(setCookie.get(1)).startsWith("refresh_token=;");
+    }
+
+    @Test
+    @DisplayName("토큰이 없으면 검증은 건너뛰고 쿠키만 삭제한다")
+    void givenNoToken_whenLogout_thenOnlyClearCookies() {
+        // given
+        MockHttpServletResponse res = new MockHttpServletResponse();
+
+        // when
+        authService.logout(null, res);
+
+        // then
+        then(refreshService).shouldHaveNoInteractions();
+
+        List<String> setCookies = res.getHeaders(HttpHeaders.SET_COOKIE);
+        assertThat(setCookies).hasSize(2);
+        assertThat(setCookies.get(0)).startsWith("access_token=;");
+        assertThat(setCookies.get(1)).startsWith("refresh_token=;");
     }
 }

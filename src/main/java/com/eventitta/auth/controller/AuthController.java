@@ -6,6 +6,8 @@ import com.eventitta.auth.dto.response.SignUpResponse;
 import com.eventitta.auth.service.AuthService;
 import com.eventitta.auth.service.SignUpService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -51,6 +53,22 @@ public class AuthController {
     ) {
         authService.refresh(accessToken, refreshToken, response);
         return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "로그아웃", description = "현재 로그인 세션을 종료하고 토큰을 무효화합니다.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "204", description = "로그아웃 성공"),
+    })
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(
+        @Parameter(in = ParameterIn.COOKIE, name = "access_token", description = "액세스 토큰")
+        @CookieValue(name = "access_token", required = false) String accessToken,
+        @Parameter(in = ParameterIn.COOKIE, name = "refresh_token", description = "리프레시 토큰")
+        @CookieValue(name = "refresh_token", required = false) String refreshToken,
+        HttpServletResponse response
+    ) {
+        authService.logout(accessToken, response);
+        return ResponseEntity.noContent().build();
     }
 }
 

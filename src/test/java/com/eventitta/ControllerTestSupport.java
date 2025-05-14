@@ -3,6 +3,7 @@ package com.eventitta;
 import com.eventitta.auth.controller.AuthController;
 import com.eventitta.auth.jwt.JwtTokenProvider;
 import com.eventitta.auth.service.*;
+import com.eventitta.common.config.CustomAuthenticationEntryPoint;
 import com.eventitta.common.config.SecurityConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,4 +33,6 @@ public abstract class ControllerTestSupport {
     protected TokenService tokenService;
     @MockitoBean
     protected RefreshTokenService refreshService;
+    @MockitoBean
+    protected CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 }

@@ -3,7 +3,6 @@ package com.eventitta.auth.controller;
 import com.eventitta.IntegrationTestSupport;
 import com.eventitta.auth.dto.request.SignInRequest;
 import com.eventitta.auth.dto.request.SignUpRequest;
-import com.eventitta.auth.exception.AuthErrorCode;
 import com.eventitta.auth.repository.RefreshTokenRepository;
 import com.eventitta.user.domain.Provider;
 import com.eventitta.user.domain.Role;
@@ -16,11 +15,14 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.web.servlet.MvcResult;
 
 import static com.eventitta.auth.exception.AuthErrorCode.*;
 import static com.eventitta.common.constants.ValidationMessage.*;
 import static com.eventitta.common.exception.CommonErrorCode.INVALID_INPUT;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -236,6 +238,62 @@ public class AuthIntegrationTest extends IntegrationTestSupport {
             .andExpect(status().isUnauthorized())
             .andExpect(jsonPath("$.error").value(REFRESH_TOKEN_INVALID.toString()))
             .andExpect(jsonPath("$.message").value(REFRESH_TOKEN_INVALID.defaultMessage()));
+    }
+
+    @Test
+    @DisplayName("로그인 후 로그아웃하면 저장된 리프레시 토큰이 삭제되고 쿠키가 만료된다")
+    void givenLoggedIn_whenLogout_thenDeletesRefreshTokenAndClearsCookies() throws Exception {
+        userRepository.save(User.builder()
+            .email("logout@it.com")
+            .password(passwordEncoder.encode("P@ssw0rd!"))
+            .nickname("logoutUser")
+            .role(Role.USER)
+            .provider(Provider.LOCAL)
+            .build());
+
+        var loginResult = mockMvc.perform(post("/api/v1/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(
+                    new SignInRequest("logout@it.com", "P@ssw0rd!"))))
+            .andExpect(status().isOk())
+            .andExpect(cookie().exists("access_token"))
+            .andExpect(cookie().exists("refresh_token"))
+            .andReturn();
+
+        String at = loginResult.getResponse().getCookie("access_token").getValue();
+
+        assertThat(refreshTokenRepository.findAll()).hasSize(1);
+
+        mockMvc.perform(post("/api/v1/auth/logout")
+                .cookie(new Cookie("access_token", at)))
+            .andExpect(status().isNoContent())
+            .andExpect(cookie().maxAge("access_token", 0))
+            .andExpect(cookie().maxAge("refresh_token", 0));
+
+        assertThat(refreshTokenRepository.findAll()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("로그인하지 않은 상태에서 로그아웃 요청해도 쿠키가 만료된다")
+    void givenNoLogin_whenLogout_thenReturnsNoContentAndClearsCookies() throws Exception {
+        // when
+        MvcResult result = mockMvc.perform(post("/api/v1/auth/logout"))
+            .andExpect(status().isNoContent())
+            .andReturn();
+
+        MockHttpServletResponse resp = result.getResponse();
+
+        Cookie expiredAccess = resp.getCookie("access_token");
+        Cookie expiredRefresh = resp.getCookie("refresh_token");
+
+        // then
+        assertThat(expiredAccess).isNotNull();
+        assertThat(expiredAccess.getMaxAge()).isZero();
+
+        assertThat(expiredRefresh).isNotNull();
+        assertThat(expiredRefresh.getMaxAge()).isZero();
+
+        assertThat(refreshTokenRepository.count()).isZero();
     }
 
     private User createUser() {

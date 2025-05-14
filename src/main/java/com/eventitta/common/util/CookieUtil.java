@@ -48,4 +48,13 @@ public final class CookieUtil {
                 .toString()
         );
     }
+
+    public static void deleteCookie(HttpServletResponse resp, String name) {
+        ResponseCookie c = ResponseCookie.from(name, "")
+            .httpOnly(true)
+            .path("/")
+            .maxAge(0)
+            .build();
+        resp.addHeader(HttpHeaders.SET_COOKIE, c.toString());
+    }
 }

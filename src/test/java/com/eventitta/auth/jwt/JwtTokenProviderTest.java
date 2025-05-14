@@ -7,7 +7,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneOffset;
 
 import static com.eventitta.auth.exception.AuthErrorCode.ACCESS_TOKEN_EXPIRED;
 import static com.eventitta.auth.exception.AuthErrorCode.ACCESS_TOKEN_INVALID;
@@ -19,17 +22,23 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class JwtTokenProviderTest {
 
     private JwtTokenProvider provider;
+    private Clock baseClock;
+    private JwtProperties props;
+
     private final String secret = "0123456789abcdef0123456789abcdef";
-    private final long accessValidity = 500;
-    private final long refreshValidity = 1000;
+    private final long accessValidity = 60_000L;
+    private final long refreshValidity = 1000L;
+
 
     @BeforeEach
     void setUp() {
-        JwtProperties props = new JwtProperties();
+        baseClock = Clock.fixed(Instant.parse("2025-01-01T00:00:00Z"), ZoneOffset.UTC);
+
+        props = new JwtProperties();
         props.setSecret(secret);
         props.setAccessTokenValidityMs(accessValidity);
         props.setRefreshTokenValidityMs(refreshValidity);
-        provider = new JwtTokenProvider(props);
+        provider = new JwtTokenProvider(props, baseClock);
     }
 
     @Test
@@ -48,22 +57,25 @@ class JwtTokenProviderTest {
     void givenExpiredToken_whenValidateToken_thenReturnsFalse() throws InterruptedException {
         // given
         String token = provider.createAccessToken(99L);
-        Thread.sleep(accessValidity + 100);
+
+        Clock laterClock = Clock.offset(baseClock, Duration.ofMillis(accessValidity + 1));
+        JwtTokenProvider expiredProvider = new JwtTokenProvider(props, laterClock);
 
         // when & then
-        assertThat(provider.validateToken(token)).isFalse();
+        assertThat(expiredProvider.validateToken(token)).isFalse();
     }
 
     @Test
     @DisplayName("만료된 토큰에서 사용자 ID를 추출하면 올바른 ID를 반환해야 한다.")
-    void givenExpiredToken_whenGetUserIdFromExpiredToken_thenReturnsId() throws InterruptedException {
+    void givenExpiredTime_whenGetUserIdFromExpiredToken_thenReturnsId() {
         // given
         String token = provider.createAccessToken(77L);
-        Thread.sleep(accessValidity + 100);
+
+        Clock laterClock = Clock.offset(baseClock, Duration.ofMillis(accessValidity + 1));
+        JwtTokenProvider expiredProvider = new JwtTokenProvider(props, laterClock);
 
         // when & then
-        Long userId = provider.getUserIdFromExpiredToken(token);
-        assertThat(userId).isEqualTo(77L);
+        assertThat(expiredProvider.getUserIdFromExpiredToken(token)).isEqualTo(77L);
     }
 
     @Test
@@ -77,14 +89,15 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    @DisplayName("만료된 토큰으로 호출 시 토큰 만료 예외가 발생해야 한다.")
-    void givenExpiredToken_whenValidateAccessToken_thenThrowsExpired() throws InterruptedException {
+    @DisplayName("만료된 토큰으로 호출 시 토큰 만료 예외가 발생해야 한다")
+    void givenExpiredToken_whenValidateAccessToken_thenThrowsExpired() {
         // given
         String token = provider.createAccessToken(55L);
-        Thread.sleep(accessValidity + 100);
+        Clock laterClock = Clock.offset(baseClock, Duration.ofMillis(accessValidity + 1));
+        JwtTokenProvider expiredProvider = new JwtTokenProvider(props, laterClock);
 
         // when & then
-        assertThatThrownBy(() -> provider.validateAccessToken(token))
+        assertThatThrownBy(() -> expiredProvider.validateAccessToken(token))
             .isInstanceOf(AuthException.class)
             .extracting("errorCode")
             .isEqualTo(ACCESS_TOKEN_EXPIRED);
@@ -107,10 +120,12 @@ class JwtTokenProviderTest {
     @DisplayName("리프레시 토큰 만료 시각은 현재 시각 이후여야 한다.")
     void getRefreshTokenExpiry_returnsFutureInstant() {
         // given
-        Instant now = Instant.now();
-        Instant expiry = provider.getRefreshTokenExpiry();
+        Instant expected = baseClock.instant().plusMillis(refreshValidity);
 
-        // when & then
-        assertThat(expiry).isAfterOrEqualTo(now.plusMillis(refreshValidity - 10));
+        // when
+        Instant actual = provider.getRefreshTokenExpiry();
+
+        // then
+        assertThat(actual).isEqualTo(expected);
     }
 }

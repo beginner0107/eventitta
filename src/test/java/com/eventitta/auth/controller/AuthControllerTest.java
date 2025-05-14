@@ -20,8 +20,7 @@ import static com.eventitta.common.exception.CommonErrorCode.INVALID_INPUT;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -274,5 +273,45 @@ class AuthControllerTest extends ControllerTestSupport {
             .andExpect(jsonPath("$.error").value(REFRESH_TOKEN_INVALID.toString()))
             .andExpect(jsonPath("$.message").value(AuthErrorCode.REFRESH_TOKEN_INVALID.defaultMessage()));
         then(authService).should().refresh(any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("유효한 엑세스 토큰 쿠키가 있으면 로그아웃을 성공한다.")
+    void givenAccessTokenCookie_whenLogout_thenReturnsNoContent() throws Exception {
+        // arrange: authService.logout 은 void 이므로 아무 예외 없이 수행되도록 stub
+        doNothing().when(authService).logout(eq("validAccessToken"), any());
+
+        // act & assert
+        mockMvc.perform(post("/api/v1/auth/logout")
+                .cookie(new Cookie("access_token", "validAccessToken")))
+            .andExpect(status().isNoContent());
+
+        // verify: 서비스가 정확히 호출됐는지 확인
+        verify(authService).logout(eq("validAccessToken"), any(HttpServletResponse.class));
+    }
+
+    @Test
+    @DisplayName("엑세스 토큰 쿠키가 없어도 로그아웃에 성공한다.")
+    void givenNoAccessTokenCookie_whenLogout_thenReturnsNoContent() throws Exception {
+        // given
+        doNothing().when(authService).logout(isNull(), any());
+
+        // when & then
+        mockMvc.perform(post("/api/v1/auth/logout"))
+            .andExpect(status().isNoContent());
+
+        verify(authService).logout(isNull(), any(HttpServletResponse.class));
+    }
+
+    @Test
+    @DisplayName("잘못된 엑세스 토큰으로 로그아웃 요청에도 로그아웃은 성공한다.")
+    void givenInvalidToken_whenLogout_thenInvokesLogoutAndReturnsNoContent() throws Exception {
+        doNothing().when(authService).logout(eq("badToken"), any(HttpServletResponse.class));
+
+        mockMvc.perform(post("/api/v1/auth/logout")
+                .cookie(new Cookie("access_token", "badToken")))
+            .andExpect(status().isNoContent());
+
+        verify(authService).logout(eq("badToken"), any(HttpServletResponse.class));
     }
 }

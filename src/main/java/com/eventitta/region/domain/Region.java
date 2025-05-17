@@ -1,4 +1,4 @@
-package com.eventitta.post.domain;
+package com.eventitta.region.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

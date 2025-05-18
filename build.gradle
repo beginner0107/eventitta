@@ -51,6 +51,9 @@ dependencies {
 
     // H2 임베디드 DB (테스트용)
     testImplementation 'com.h2database:h2'
+
+    // Spring Security Test
+    testImplementation 'org.springframework.security:spring-security-test'
 }
 
 tasks.named('test') {

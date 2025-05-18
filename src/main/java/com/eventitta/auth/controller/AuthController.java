@@ -4,7 +4,6 @@ import com.eventitta.auth.dto.request.SignInRequest;
 import com.eventitta.auth.dto.request.SignUpRequest;
 import com.eventitta.auth.dto.response.SignUpResponse;
 import com.eventitta.auth.service.AuthService;
-import com.eventitta.auth.service.SignUpService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;

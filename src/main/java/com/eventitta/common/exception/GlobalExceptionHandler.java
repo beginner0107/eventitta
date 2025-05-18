@@ -3,6 +3,7 @@ package com.eventitta.common.exception;
 import com.eventitta.auth.exception.AuthErrorCode;
 import com.eventitta.auth.exception.AuthException;
 import com.eventitta.common.response.ApiErrorResponse;
+import com.eventitta.user.exception.UserException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
@@ -25,11 +26,6 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<ApiErrorResponse> handleCustom(CustomException ex) {
-        return toResponse(ex.getErrorCode());
-    }
-
-    @ExceptionHandler(AuthException.class)
-    public ResponseEntity<ApiErrorResponse> handleAuth(AuthException ex) {
         return toResponse(ex.getErrorCode());
     }
 

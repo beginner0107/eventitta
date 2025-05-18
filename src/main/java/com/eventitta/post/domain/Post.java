@@ -1,6 +1,7 @@
 package com.eventitta.post.domain;
 
 import com.eventitta.common.config.BaseEntity;
+import com.eventitta.region.domain.Region;
 import com.eventitta.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -34,4 +35,20 @@ public class Post extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "region_code", nullable = false)
     private Region region;
+
+    public Post(User user, String title, String content, Region region) {
+        this.user = user;
+        this.title = title;
+        this.content = content;
+        this.region = region;
+    }
+
+    public static Post create(
+        User user,
+        String title,
+        String content,
+        Region region
+    ) {
+        return new Post(user, title, content, region);
+    }
 }

@@ -51,4 +51,10 @@ public class Post extends BaseEntity {
     ) {
         return new Post(user, title, content, region);
     }
+
+    public void update(String title, String content, Region region) {
+        this.title = title;
+        this.content = content;
+        this.region = region;
+    }
 }

@@ -36,6 +36,9 @@ public class Post extends BaseEntity {
     @JoinColumn(name = "region_code", nullable = false)
     private Region region;
 
+    @Column(nullable = false)
+    private boolean deleted = false;
+
     public Post(User user, String title, String content, Region region) {
         this.user = user;
         this.title = title;
@@ -56,5 +59,9 @@ public class Post extends BaseEntity {
         this.title = title;
         this.content = content;
         this.region = region;
+    }
+
+    public void softDelete() {
+        this.deleted = true;
     }
 }

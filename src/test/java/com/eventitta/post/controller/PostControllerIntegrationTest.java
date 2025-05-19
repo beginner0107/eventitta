@@ -24,8 +24,7 @@ import static com.eventitta.common.constants.ValidationMessage.*;
 import static com.eventitta.common.exception.CommonErrorCode.INVALID_INPUT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -251,5 +250,57 @@ public class PostControllerIntegrationTest extends IntegrationTestSupport {
                 .content(objectMapper.writeValueAsString(req))
             )
             .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockCustomUser(userId = 1L)
+    @DisplayName("작성자는 자신의 게시글을 삭제할 수 있다")
+    void givenExistingPost_whenDeletePost_thenSoftDeletedAndNoContent() throws Exception {
+        // given: initial post
+        Post post = postRepository.save(Post.create(
+            userRepository.findById(testUserId).get(),
+            "to delete", "content",
+            regionRepository.findById("1100110100").get()
+        ));
+        Long postId = post.getId();
+
+        // when & then
+        mockMvc.perform(delete("/api/v1/posts/{postId}", postId)
+                .cookie(buildAccessTokenCookie(testUserId))
+            )
+            .andExpect(status().isNoContent());
+
+        // then
+        Post deleted = postRepository.findById(postId).orElseThrow();
+        assertThat(deleted.isDeleted()).isTrue();
+    }
+
+    @Test
+    @WithMockCustomUser(userId = 1L)
+    @DisplayName("존재하지 않는 게시글은 삭제할 수 없다")
+    void givenNotExistPost_whenDeletePost_thenNotFound() throws Exception {
+        mockMvc.perform(delete("/api/v1/posts/{postId}", 9999L)
+                .cookie(buildAccessTokenCookie(testUserId))
+            )
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockCustomUser(userId = 2L)
+    @DisplayName("작성자만 게시글을 삭제할 수 있다")
+    void givenDifferentUser_whenDeletePost_thenForbidden() throws Exception {
+        // given
+        Post post = postRepository.save(Post.create(
+            userRepository.findById(testUserId).get(),
+            "to delete", "content",
+            regionRepository.findById("1100110100").get()
+        ));
+        Long postId = post.getId();
+
+        // when & then
+        mockMvc.perform(delete("/api/v1/posts/{postId}", postId)
+                .cookie(buildAccessTokenCookie(2L))
+            )
+            .andExpect(status().isForbidden());
     }
 }

@@ -58,4 +58,19 @@ public class PostController {
         postService.update(postId, userId, request);
         return ResponseEntity.noContent().build();
     }
+
+    @Operation(
+        summary = "게시글 삭제"
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "204", description = "게시글 삭제 성공"),
+    })
+    @DeleteMapping("/{postId}")
+    public ResponseEntity<Void> delete(
+        @PathVariable("postId") Long postId,
+        @CurrentUser Long userId
+    ) {
+        postService.delete(postId, userId);
+        return ResponseEntity.noContent().build();
+    }
 }

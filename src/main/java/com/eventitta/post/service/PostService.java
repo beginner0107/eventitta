@@ -42,7 +42,7 @@ public class PostService {
     }
 
     public void update(Long postId, Long userId, UpdatePostRequest request) {
-        Post post = postRepository.findById(postId)
+        Post post = postRepository.findByIdAndDeletedFalse(postId)
             .orElseThrow(NOT_FOUND_POST_ID::defaultException);
 
         if (!post.getUser().getId().equals(userId)) {
@@ -52,5 +52,14 @@ public class PostService {
             .orElseThrow(RegionErrorCode.NOT_FOUND_REGION_CODE::defaultException);
 
         post.update(request.title(), request.content(), region);
+    }
+
+    public void delete(Long postId, Long userId) {
+        Post post = postRepository.findByIdAndDeletedFalse(postId)
+            .orElseThrow(NOT_FOUND_POST_ID::defaultException);
+        if (!post.getUser().getId().equals(userId)) {
+            throw ACCESS_DENIED.defaultException();
+        }
+        post.softDelete();
     }
 }

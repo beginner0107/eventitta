@@ -5,6 +5,8 @@ import com.eventitta.WithMockCustomUser;
 import com.eventitta.common.constants.ValidationMessage;
 import com.eventitta.post.dto.request.CreatePostRequest;
 import com.eventitta.post.dto.request.UpdatePostRequest;
+import com.eventitta.post.exception.PostErrorCode;
+import com.eventitta.post.exception.PostException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -15,9 +17,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @DisplayName("동네 기반 게시글 컨트롤러 슬라이스 테스트")
@@ -165,5 +167,49 @@ class PostControllerTest extends ControllerTestSupport {
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value(INVALID_INPUT.toString()))
             .andExpect(jsonPath("$.message").value("regionCode: " + REGION_CODE));
+    }
+
+
+    @Test
+    @WithMockCustomUser(userId = 42L)
+    @DisplayName("작성자는 자신의 게시글을 삭제할 수 있다")
+    void givenValidRequest_whenDelete_thenNoContent() throws Exception {
+        // given
+        long postId = 100L;
+        doNothing().when(postService).delete(postId, 42L);
+
+        // when & then
+        mockMvc.perform(delete("/api/v1/posts/" + postId))
+            .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @WithMockCustomUser(userId = 42L)
+    @DisplayName("존재하지 않는 게시글은 삭제할 수 없다")
+    void givenNonexistentPost_whenDelete_thenNotFound() throws Exception {
+        // given
+        long postId = 101L;
+        doThrow(new PostException(PostErrorCode.NOT_FOUND_POST_ID))
+            .when(postService).delete(postId, 42L);
+
+        // when & then
+        mockMvc.perform(delete("/api/v1/posts/" + postId))
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.error").value(PostErrorCode.NOT_FOUND_POST_ID.name()));
+    }
+
+    @Test
+    @WithMockCustomUser(userId = 42L)
+    @DisplayName("작성자만 게시글을 삭제할 수 있다")
+    void givenDifferentUser_whenDelete_thenForbidden() throws Exception {
+        // given
+        long postId = 102L;
+        doThrow(new PostException(PostErrorCode.ACCESS_DENIED))
+            .when(postService).delete(postId, 42L);
+
+        // when & then
+        mockMvc.perform(delete("/api/v1/posts/" + postId))
+            .andExpect(status().isForbidden())
+            .andExpect(jsonPath("$.error").value(PostErrorCode.ACCESS_DENIED.name()));
     }
 }

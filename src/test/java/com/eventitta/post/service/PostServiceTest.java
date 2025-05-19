@@ -32,6 +32,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
+@DisplayName("동네 기반 게시글 단위 테스트")
 @ExtendWith(MockitoExtension.class)
 class PostServiceTest {
 
@@ -116,7 +117,7 @@ class PostServiceTest {
             "oldTitle", "oldContent",
             region
         ));
-        given(postRepository.findById(POST_ID))
+        given(postRepository.findByIdAndDeletedFalse(POST_ID))
             .willReturn(Optional.of(post));
         given(regionRepository.findById(VALID_REGION))
             .willReturn(Optional.of(region));
@@ -139,10 +140,10 @@ class PostServiceTest {
         // given
         final long POST_ID = 1L;
         final long USER_ID = 10L;
-        given(postRepository.findById(POST_ID))
+        given(postRepository.findByIdAndDeletedFalse(POST_ID))
             .willReturn(Optional.empty());
 
-        // when / then
+        // when & then
         assertThatThrownBy(() ->
             postService.update(POST_ID, USER_ID, createUpdateDto("t", "c", VALID_REGION))
         )
@@ -161,7 +162,7 @@ class PostServiceTest {
         final long OTHER_USER_ID = 20L;
         User user = createUser(USER_ID, "test@test.com", "pw123123", "유저");
         Post post = createPost(POST_ID, user, "title", createRegion(VALID_REGION));
-        given(postRepository.findById(POST_ID)).willReturn(Optional.of(post));
+        given(postRepository.findByIdAndDeletedFalse(POST_ID)).willReturn(Optional.of(post));
 
         // when & then
         assertThatThrownBy(() ->
@@ -180,17 +181,72 @@ class PostServiceTest {
         final long USER_ID = 10L;
         User user = createUser(USER_ID, "test@test.com", "pw123123", "유저");
         Post post = createPost(POST_ID, user, "title", createRegion(INVALID_REGION));
-        given(postRepository.findById(POST_ID)).willReturn(Optional.of(post));
+        given(postRepository.findByIdAndDeletedFalse(POST_ID)).willReturn(Optional.of(post));
 
         given(regionRepository.findById(INVALID_REGION)).willReturn(Optional.empty());
 
-        // when / then
+        // when & then
         assertThatThrownBy(() ->
             postService.update(POST_ID, USER_ID, createUpdateDto("t", "c", INVALID_REGION))
         )
             .isInstanceOf(RegionException.class)
             .extracting("errorCode")
             .isEqualTo(RegionErrorCode.NOT_FOUND_REGION_CODE);
+    }
+
+    @Test
+    @DisplayName("작성자는 게시글을 삭제할 수 있다")
+    void givenExistingPostAndOwner_whenDelete_thenSoftDeleted() {
+        // given
+        long postId = 1L;
+        long ownerId = 42L;
+        User owner = User.builder().id(ownerId).build();
+        Post post = Post.create(owner, "t", "c", createRegion(VALID_REGION));
+        assertThat(post.isDeleted()).isFalse();
+
+        given(postRepository.findByIdAndDeletedFalse(postId))
+            .willReturn(Optional.of(post));
+
+        // when
+        postService.delete(postId, ownerId);
+
+        // then
+        assertThat(post.isDeleted()).isTrue();
+    }
+
+    @Test
+    @DisplayName("이미 삭제된 게시글은 다시 삭제할 수 없다")
+    void givenDeletedOrNonexistentPost_whenDelete_thenThrowNotFound() {
+        // given
+        long postId = 99L;
+        given(postRepository.findByIdAndDeletedFalse(postId))
+            .willReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> postService.delete(postId, 1L))
+            .isInstanceOf(PostException.class)
+            .extracting("errorCode")
+            .isEqualTo(PostErrorCode.NOT_FOUND_POST_ID);
+    }
+
+    @Test
+    @DisplayName("작성자만 게시글을 삭제할 수 있다")
+    void givenPostOwnedByAnotherUser_whenDelete_thenThrowAccessDenied() {
+        // given
+        long postId = 2L;
+        long ownerId = 42L;
+        long otherId = 100L;
+        User owner = User.builder().id(ownerId).build();
+        Post post = Post.create(owner, "t", "c", createRegion(VALID_REGION));
+
+        given(postRepository.findByIdAndDeletedFalse(postId))
+            .willReturn(Optional.of(post));
+
+        // when & then
+        assertThatThrownBy(() -> postService.delete(postId, otherId))
+            .isInstanceOf(PostException.class)
+            .extracting("errorCode")
+            .isEqualTo(PostErrorCode.ACCESS_DENIED);
     }
 
     private static User createUser(long userId, String email, String password, String nickname) {

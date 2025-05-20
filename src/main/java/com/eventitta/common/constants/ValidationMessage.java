@@ -11,4 +11,9 @@ public final class ValidationMessage {
     public static final String TITLE = "게시글 제목을 입력해주세요.";
     public static final String CONTENT = "게시글 내용을 입력해주세요.";
     public static final String REGION_CODE = "지역을 입력해주세요.";
+    public static final String SEARCH_TYPE = "검색 타입을 지정해주세요.";
+    public static final String KEYWORD = "검색어를 입력해주세요.";
+    public static final String PAGE_MIN = "페이지 번호는 0 이상이어야 합니다.";
+    public static final String SIZE_MIN = "페이지 크기는 최소 1 이상이어야 합니다.";
+    public static final String SIZE_MAX = "페이지 크기는 최대 100 이하여야 합니다.";
 }

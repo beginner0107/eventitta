@@ -4,15 +4,17 @@ spring:
       on-profile: local
 
   datasource:
-    url: jdbc:mysql://localhost:3306/eventitta?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8
+    url: jdbc:p6spy:mysql://localhost:3306/eventitta?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8
     username: eventittaUser
     password: ${MYSQL_PASSWORD}
+    driver-class-name: com.p6spy.engine.spy.P6SpyDriver
 
   jpa:
     hibernate:
       ddl-auto: create
-    show-sql: true
     defer-datasource-initialization: true
+    properties:
+      hibernate.format_sql: true
 
   sql:
     init:
@@ -40,5 +42,6 @@ jwt:
 
 logging:
   level:
-    root: DEBUG
-    org.hibernate.SQL: DEBUG
+    root: INFO
+    org.hibernate.SQL: WARN
+    p6spy: DEBUG

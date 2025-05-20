@@ -1,7 +1,9 @@
 package com.eventitta.post.service;
 
+import com.eventitta.common.response.PageResponse;
 import com.eventitta.post.domain.Post;
 import com.eventitta.post.dto.request.CreatePostRequest;
+import com.eventitta.post.dto.request.PostResponse;
 import com.eventitta.post.dto.request.UpdatePostRequest;
 import com.eventitta.post.repository.PostRepository;
 import com.eventitta.region.domain.Region;
@@ -10,8 +12,14 @@ import com.eventitta.region.repository.RegionRepository;
 import com.eventitta.user.domain.User;
 import com.eventitta.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 import static com.eventitta.post.exception.PostErrorCode.ACCESS_DENIED;
 import static com.eventitta.post.exception.PostErrorCode.NOT_FOUND_POST_ID;
@@ -61,5 +69,22 @@ public class PostService {
             throw ACCESS_DENIED.defaultException();
         }
         post.softDelete();
+    }
+
+    public PageResponse<PostResponse> getPosts(int page, int size) {
+        Pageable pg = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Post> posts = postRepository.findAllByDeletedFalse(pg);
+
+        List<PostResponse> postResponseList = posts.stream()
+            .map(PostResponse::from)
+            .toList();
+
+        return new PageResponse<>(
+            postResponseList,
+            posts.getNumber(),
+            posts.getSize(),
+            posts.getTotalElements(),
+            posts.getTotalPages()
+        );
     }
 }

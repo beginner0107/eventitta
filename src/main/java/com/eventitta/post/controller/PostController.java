@@ -2,6 +2,7 @@ package com.eventitta.post.controller;
 
 import com.eventitta.auth.annotation.CurrentUser;
 import com.eventitta.common.response.PageResponse;
+import com.eventitta.post.dto.PostFilter;
 import com.eventitta.post.dto.request.CreatePostRequest;
 import com.eventitta.post.dto.request.PostResponse;
 import com.eventitta.post.dto.request.UpdatePostRequest;
@@ -18,7 +19,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.List;
 
 @Slf4j
 @RequestMapping("/api/v1/posts")
@@ -52,10 +52,9 @@ public class PostController {
     })
     @GetMapping
     public ResponseEntity<PageResponse<PostResponse>> getPosts(
-        @RequestParam(defaultValue = "0", name = "page") int page,
-        @RequestParam(defaultValue = "10", name = "size") int size
+        PostFilter filter
     ) {
-        PageResponse<PostResponse> result = postService.getPosts(page, size);
+        PageResponse<PostResponse> result = postService.getPosts(filter);
         return ResponseEntity.ok(result);
     }
 

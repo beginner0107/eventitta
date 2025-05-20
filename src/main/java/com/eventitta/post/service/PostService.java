@@ -2,6 +2,7 @@ package com.eventitta.post.service;
 
 import com.eventitta.common.response.PageResponse;
 import com.eventitta.post.domain.Post;
+import com.eventitta.post.dto.PostFilter;
 import com.eventitta.post.dto.request.CreatePostRequest;
 import com.eventitta.post.dto.request.PostResponse;
 import com.eventitta.post.dto.request.UpdatePostRequest;
@@ -71,9 +72,10 @@ public class PostService {
         post.softDelete();
     }
 
-    public PageResponse<PostResponse> getPosts(int page, int size) {
-        Pageable pg = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Post> posts = postRepository.findAllByDeletedFalse(pg);
+    public PageResponse<PostResponse> getPosts(PostFilter filter) {
+        Pageable pg = PageRequest.of(filter.page(), filter.size());
+
+        Page<Post> posts = postRepository.findAllByFilter(filter, pg);
 
         List<PostResponse> postResponseList = posts.stream()
             .map(PostResponse::from)

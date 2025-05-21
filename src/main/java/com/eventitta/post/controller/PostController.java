@@ -52,7 +52,7 @@ public class PostController {
     })
     @GetMapping
     public ResponseEntity<PageResponse<PostResponse>> getPosts(
-        PostFilter filter
+        @Valid PostFilter filter
     ) {
         PageResponse<PostResponse> result = postService.getPosts(filter);
         return ResponseEntity.ok(result);

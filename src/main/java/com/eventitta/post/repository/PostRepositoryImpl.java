@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.support.PageableExecutionUtils;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Objects;
@@ -49,7 +50,9 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
     private BooleanBuilder buildFilter(PostFilter filter) {
         BooleanBuilder b = new BooleanBuilder(post.deleted.isFalse());
 
-        if (filter.keyword() != null) {
+        if (filter.searchType() != null
+            && StringUtils.hasText(filter.keyword())) {
+
             String kw = filter.keyword().toLowerCase();
             BooleanExpression titleCond = post.title.lower().like("%" + kw + "%");
             BooleanExpression contentCond = lowerClobContains(post.content, kw);

@@ -2,8 +2,11 @@ package com.eventitta.post.controller;
 
 import com.eventitta.IntegrationTestSupport;
 import com.eventitta.WithMockCustomUser;
+import com.eventitta.common.response.PageResponse;
 import com.eventitta.post.domain.Post;
+import com.eventitta.post.dto.PostFilter;
 import com.eventitta.post.dto.request.CreatePostRequest;
+import com.eventitta.post.dto.request.PostResponse;
 import com.eventitta.post.dto.request.UpdatePostRequest;
 import com.eventitta.post.repository.PostRepository;
 import com.eventitta.region.domain.Region;
@@ -20,10 +23,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 import static com.eventitta.common.constants.ValidationMessage.*;
 import static com.eventitta.common.exception.CommonErrorCode.INVALID_INPUT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -302,5 +309,58 @@ public class PostControllerIntegrationTest extends IntegrationTestSupport {
                 .cookie(buildAccessTokenCookie(2L))
             )
             .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("모든 사용자는 게시글 목록을 조회할 수 있다.")
+    void givenAnyUser_whenGetPosts_thenOk() throws Exception {
+        // given
+
+        // when & then
+        mockMvc.perform(get("/api/v1/posts")
+                .param("page", "0")
+                .param("size", "10")
+            )
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("페이지 번호가 음수이면 요청이 거부된다")
+    void givenNegativePageNumber_whenRequestingPosts_thenBadRequest() throws Exception {
+        // given
+        int negativePage = -1;
+
+        // when & then
+        mockMvc.perform(get("/api/v1/posts")
+                .param("page", String.valueOf(negativePage))
+                .param("size", "10")
+                .param("searchType", "TITLE")
+                .param("keyword", "foo")
+                .param("regionCode", "1100110100")
+            )
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value(INVALID_INPUT.toString()))
+            .andExpect(jsonPath("$.message").value("page: " + PAGE_MIN));
+    }
+
+    @Test
+    @DisplayName("페이지 크기가 허용된 범위를 벗어나면 요청이 거부된다")
+    void givenOutOfRangePageSize_whenRequestingPosts_thenBadRequest() throws Exception {
+        // given
+        String zeroSize = "0";
+        String badMaxSize = "101";
+
+        // when & then
+        for (String badSize : List.of(zeroSize, badMaxSize)) {
+            mockMvc.perform(get("/api/v1/posts")
+                    .param("page", "0")
+                    .param("size", badSize)
+                    .param("searchType", "TITLE")
+                    .param("keyword", "foo")
+                    .param("regionCode", "1100110100")
+                )
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").exists());
+        }
     }
 }

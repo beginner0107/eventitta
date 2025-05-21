@@ -1,7 +1,10 @@
 package com.eventitta.post.service;
 
+import com.eventitta.common.response.PageResponse;
 import com.eventitta.post.domain.Post;
+import com.eventitta.post.dto.PostFilter;
 import com.eventitta.post.dto.request.CreatePostRequest;
+import com.eventitta.post.dto.request.PostResponse;
 import com.eventitta.post.dto.request.UpdatePostRequest;
 import com.eventitta.post.exception.PostErrorCode;
 import com.eventitta.post.exception.PostException;
@@ -22,12 +25,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.*;
 
+import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -62,7 +67,7 @@ class PostServiceTest {
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
         given(regionRepository.findById(regionCode)).willReturn(Optional.of(region));
 
-        Post savedPost = createPost(123L, user, createPostRequest.title(), region);
+        Post savedPost = createPost(123L, user, createPostRequest.title(), createPostRequest.content(), region);
         given(postRepository.save(any(Post.class))).willReturn(savedPost);
 
         // when
@@ -161,7 +166,7 @@ class PostServiceTest {
         final long USER_ID = 10L;
         final long OTHER_USER_ID = 20L;
         User user = createUser(USER_ID, "test@test.com", "pw123123", "유저");
-        Post post = createPost(POST_ID, user, "title", createRegion(VALID_REGION));
+        Post post = createPost(POST_ID, user, "title", "content", createRegion(VALID_REGION));
         given(postRepository.findByIdAndDeletedFalse(POST_ID)).willReturn(Optional.of(post));
 
         // when & then
@@ -180,7 +185,7 @@ class PostServiceTest {
         final long POST_ID = 1L;
         final long USER_ID = 10L;
         User user = createUser(USER_ID, "test@test.com", "pw123123", "유저");
-        Post post = createPost(POST_ID, user, "title", createRegion(INVALID_REGION));
+        Post post = createPost(POST_ID, user, "title", "content", createRegion(INVALID_REGION));
         given(postRepository.findByIdAndDeletedFalse(POST_ID)).willReturn(Optional.of(post));
 
         given(regionRepository.findById(INVALID_REGION)).willReturn(Optional.empty());
@@ -249,6 +254,60 @@ class PostServiceTest {
             .isEqualTo(PostErrorCode.ACCESS_DENIED);
     }
 
+    @Test
+    @DisplayName("결과가 없는 경우 빈 리스트와 함께 페이지 정보가 제공된다")
+    void givenEmptyPage_whenGetPosts_thenReturnEmptyPageResponse() {
+        // given
+        PostFilter filter = new PostFilter(0, 5, null, null, null);
+        Pageable pageable = PageRequest.of(0, 5, Sort.by("createdAt").descending());
+        Page<Post> emptyPage = new PageImpl<>(List.of(), pageable, 0);
+        given(postRepository.findAllByFilter(eq(filter), any(Pageable.class))).willReturn(emptyPage);
+
+        // when
+        PageResponse<PostResponse> response = postService.getPosts(filter);
+
+        // then
+        assertThat(response.content()).isEmpty();
+        assertThat(response.page()).isEqualTo(0);
+        assertThat(response.size()).isEqualTo(5);
+        assertThat(response.totalElements()).isZero();
+        assertThat(response.totalPages()).isZero();
+    }
+
+    @Test
+    @DisplayName("여러 게시글을 조회하면 응답에 올바른 페이징 정보가 포함된다")
+    void givenNonEmptyPage_whenGetPosts_thenMapToPageResponse() {
+        // given
+        PostFilter filter = new PostFilter(1, 2, null, null, null);
+        Pageable pageable = PageRequest.of(1, 2, Sort.by("createdAt").descending());
+
+        User user1 = User.builder().id(10L).build();
+        User user2 = User.builder().id(11L).build();
+        Post p1 = createPost(10L, user1, "t1", "c1", createRegion(VALID_REGION));
+        Post p2 = createPost(11L, user2, "t2", "c2", createRegion(VALID_REGION));
+        List<Post> content = List.of(p1, p2);
+        long total = 7;
+        Page<Post> page = new PageImpl<>(content, pageable, total);
+
+        given(postRepository.findAllByFilter(eq(filter), any(Pageable.class)))
+            .willReturn(page);
+        // when
+        PageResponse<PostResponse> response = postService.getPosts(filter);
+
+        // then
+        assertThat(response.content())
+            .extracting(PostResponse::id, PostResponse::title, PostResponse::content)
+            .containsExactly(
+                tuple(10L, "t1", "c1"),
+                tuple(11L, "t2", "c2")
+            );
+
+        assertThat(response.page()).isEqualTo(1);
+        assertThat(response.size()).isEqualTo(2);
+        assertThat(response.totalElements()).isEqualTo(7);
+        assertThat(response.totalPages()).isEqualTo(4);
+    }
+
     private static User createUser(long userId, String email, String password, String nickname) {
         return User.builder()
             .id(userId)
@@ -269,11 +328,12 @@ class PostServiceTest {
             .build();
     }
 
-    private static Post createPost(Long postId, User user, String title, Region region) {
+    private static Post createPost(Long postId, User user, String title, String content, Region region) {
         return Post.builder()
             .id(postId)
             .user(user)
             .title(title)
+            .content(content)
             .region(region)
             .build();
     }

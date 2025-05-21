@@ -3,13 +3,21 @@ package com.eventitta.post.controller;
 import com.eventitta.ControllerTestSupport;
 import com.eventitta.WithMockCustomUser;
 import com.eventitta.common.constants.ValidationMessage;
+import com.eventitta.common.response.PageResponse;
+import com.eventitta.post.domain.Post;
+import com.eventitta.post.dto.PostFilter;
 import com.eventitta.post.dto.request.CreatePostRequest;
+import com.eventitta.post.dto.request.PostResponse;
 import com.eventitta.post.dto.request.UpdatePostRequest;
 import com.eventitta.post.exception.PostErrorCode;
 import com.eventitta.post.exception.PostException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.eventitta.common.constants.ValidationMessage.*;
 import static com.eventitta.common.exception.CommonErrorCode.INVALID_INPUT;
@@ -211,5 +219,68 @@ class PostControllerTest extends ControllerTestSupport {
         mockMvc.perform(delete("/api/v1/posts/" + postId))
             .andExpect(status().isForbidden())
             .andExpect(jsonPath("$.error").value(PostErrorCode.ACCESS_DENIED.name()));
+    }
+
+    @Test
+    @DisplayName("모든 사용자는 게시글 목록을 조회할 수 있다.")
+    void givenAnyUser_whenGetPosts_thenOk() throws Exception {
+        // given
+        PageResponse<PostResponse> dummy = new PageResponse<>(
+            List.of(),
+            0,
+            10,
+            0,
+            0
+        );
+
+        given(postService.getPosts(any(PostFilter.class)))
+            .willReturn(dummy);
+
+        // when & then
+        mockMvc.perform(get("/api/v1/posts")
+                .param("page", "0")
+                .param("size", "10")
+            )
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("페이지 번호가 음수이면 요청이 거부된다")
+    void givenNegativePageNumber_whenRequestingPosts_thenBadRequest() throws Exception {
+        // given
+        int negativePage = -1;
+
+        // when & then
+        mockMvc.perform(get("/api/v1/posts")
+                .param("page", String.valueOf(negativePage))
+                .param("size", "10")
+                .param("searchType", "TITLE")
+                .param("keyword", "foo")
+                .param("regionCode", "1100110100")
+            )
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value(INVALID_INPUT.toString()))
+            .andExpect(jsonPath("$.message").value("page: " + PAGE_MIN));
+    }
+
+    @Test
+    @DisplayName("페이지 크기가 허용된 범위를 벗어나면 요청이 거부된다")
+    void givenOutOfRangePageSize_whenRequestingPosts_thenBadRequest() throws Exception {
+        // given
+        String zeroSize = "0";
+        String badMaxSize = "101";
+
+        // when & then
+        for (String badSize : List.of(zeroSize, badMaxSize)) {
+            mockMvc.perform(get("/api/v1/posts")
+                    .param("page", "0")
+                    .param("size", badSize)
+                    .param("searchType", "TITLE")
+                    .param("keyword", "foo")
+                    .param("regionCode", "1100110100")
+                )
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").exists());
+        }
     }
 }

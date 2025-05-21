@@ -1,7 +1,10 @@
 package com.eventitta.post.controller;
 
 import com.eventitta.auth.annotation.CurrentUser;
+import com.eventitta.common.response.PageResponse;
+import com.eventitta.post.dto.PostFilter;
 import com.eventitta.post.dto.request.CreatePostRequest;
+import com.eventitta.post.dto.request.PostResponse;
 import com.eventitta.post.dto.request.UpdatePostRequest;
 import com.eventitta.post.dto.response.CreatePostResponse;
 import com.eventitta.post.service.PostService;
@@ -41,6 +44,18 @@ public class PostController {
         return ResponseEntity
             .created(URI.create("/api/v1/posts/" + postId))
             .body(new CreatePostResponse(postId));
+    }
+
+    @Operation(summary = "게시글 목록 조회")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "게시글 목록 조회 성공"),
+    })
+    @GetMapping
+    public ResponseEntity<PageResponse<PostResponse>> getPosts(
+        @Valid PostFilter filter
+    ) {
+        PageResponse<PostResponse> result = postService.getPosts(filter);
+        return ResponseEntity.ok(result);
     }
 
     @Operation(

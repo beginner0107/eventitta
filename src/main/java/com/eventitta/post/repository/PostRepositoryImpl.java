@@ -3,6 +3,8 @@ package com.eventitta.post.repository;
 import com.eventitta.post.domain.Post;
 import com.eventitta.post.domain.QPost;
 import com.eventitta.post.dto.PostFilter;
+import com.eventitta.region.domain.QRegion;
+import com.eventitta.user.domain.QUser;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Path;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -22,6 +24,8 @@ import static com.querydsl.core.types.dsl.Expressions.stringTemplate;
 public class PostRepositoryImpl implements PostRepositoryCustom {
     private final JPAQueryFactory queryFactory;
     private final QPost post = QPost.post;
+    private final QUser user = QUser.user;
+    private final QRegion region = QRegion.region;
 
     @Override
     public Page<Post> findAllByFilter(PostFilter filter, Pageable pageable) {
@@ -29,6 +33,8 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
 
         List<Post> content = queryFactory
             .selectFrom(post)
+            .join(post.user, user).fetchJoin()
+            .join(post.region, region).fetchJoin()
             .where(predicate)
             .offset(pageable.getOffset())
             .limit(pageable.getPageSize())

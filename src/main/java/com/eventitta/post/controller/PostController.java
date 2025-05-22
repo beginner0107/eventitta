@@ -4,7 +4,7 @@ import com.eventitta.auth.annotation.CurrentUser;
 import com.eventitta.common.response.PageResponse;
 import com.eventitta.post.dto.PostFilter;
 import com.eventitta.post.dto.request.CreatePostRequest;
-import com.eventitta.post.dto.request.PostResponse;
+import com.eventitta.post.dto.response.PostResponse;
 import com.eventitta.post.dto.request.UpdatePostRequest;
 import com.eventitta.post.dto.response.CreatePostResponse;
 import com.eventitta.post.service.PostService;

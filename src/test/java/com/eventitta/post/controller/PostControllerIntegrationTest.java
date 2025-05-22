@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static com.eventitta.common.constants.ValidationMessage.*;
@@ -263,7 +264,7 @@ public class PostControllerIntegrationTest extends IntegrationTestSupport {
     @WithMockCustomUser(userId = 1L)
     @DisplayName("작성자는 자신의 게시글을 삭제할 수 있다")
     void givenExistingPost_whenDeletePost_thenSoftDeletedAndNoContent() throws Exception {
-        // given: initial post
+        // given
         Post post = postRepository.save(Post.create(
             userRepository.findById(testUserId).get(),
             "to delete", "content",
@@ -362,5 +363,28 @@ public class PostControllerIntegrationTest extends IntegrationTestSupport {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").exists());
         }
+    }
+
+    @Test
+    @DisplayName("모든 사용자는 게시글을 조회할 수 있다.")
+    void givenAnyUser_whenGetPost_thenOk() throws Exception {
+        // given
+        String title = "title1234";
+        String content = "content! content! content!";
+        String regionCode = "1100110100";
+        Post post = postRepository.save(Post.create(
+            userRepository.findById(testUserId).get(),
+            title, content,
+            regionRepository.findById(regionCode).get()
+        ));
+        Long postId = post.getId();
+
+        // when & then
+        mockMvc.perform(get("/api/v1/posts/{postId}", postId))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value(postId))
+            .andExpect(jsonPath("$.title").value(title))
+            .andExpect(jsonPath("$.content").value(content))
+            .andExpect(jsonPath("$.regionCode").value(regionCode));
     }
 }

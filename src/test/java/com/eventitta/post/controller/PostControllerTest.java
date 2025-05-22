@@ -283,4 +283,30 @@ class PostControllerTest extends ControllerTestSupport {
                 .andExpect(jsonPath("$.error").exists());
         }
     }
+
+    @Test
+    @DisplayName("모든 사용자는 게시글을 조회할 수 있다.")
+    void givenAnyUser_whenGetPost_thenOk() throws Exception {
+        // given
+        long postId = 1L;
+        PostResponse dummy = new PostResponse(
+            postId,
+            "title",
+            "content",
+            "1100110101",
+            LocalDateTime.now(),
+            LocalDateTime.now()
+        );
+
+        given(postService.getPost(any(Long.class)))
+            .willReturn(dummy);
+
+        // when & then
+        mockMvc.perform(get("/api/v1/posts/{postId}", postId))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value(postId))
+            .andExpect(jsonPath("$.title").value(dummy.title()))
+            .andExpect(jsonPath("$.content").value(dummy.content()))
+            .andExpect(jsonPath("$.regionCode").value(dummy.regionCode()));
+    }
 }

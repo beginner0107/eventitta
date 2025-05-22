@@ -16,7 +16,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -88,5 +87,11 @@ public class PostService {
             posts.getTotalElements(),
             posts.getTotalPages()
         );
+    }
+
+    public PostResponse getPost(Long postId) {
+        Post post = postRepository.findByIdAndDeletedFalse(postId)
+            .orElseThrow(NOT_FOUND_POST_ID::defaultException);
+        return PostResponse.from(post);
     }
 }

@@ -308,6 +308,43 @@ class PostServiceTest {
         assertThat(response.totalPages()).isEqualTo(4);
     }
 
+    @Test
+    @DisplayName("존재하는 게시글을 조회하면 게시글이 조회된다")
+    void givenPostId_whenValidPostId_thenReturnPostResponse() {
+        // given
+        Long postId = 123L;
+        User author = createUser(10L, "a@b.com", "pw12345678", "nick");
+        Region region = createRegion("1100110100");
+        Post post = Post.create(author, "제목", "내용", region);
+
+        given(postRepository.findByIdAndDeletedFalse(postId))
+            .willReturn(Optional.of(post));
+
+        // when
+        PostResponse response = postService.getPost(postId);
+
+        // then
+        assertThat(response.id()).isEqualTo(post.getId());
+        assertThat(response.title()).isEqualTo("제목");
+        assertThat(response.content()).isEqualTo("내용");
+        assertThat(response.regionCode()).isEqualTo("1100110100");
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 게시글을 조회하면 게시글을 조회할 수 없다.")
+    void whenPostNotFound_thenThrowPostException() {
+        // given
+        Long postId = 999L;
+        given(postRepository.findByIdAndDeletedFalse(postId))
+            .willReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> postService.getPost(postId))
+            .isInstanceOf(PostException.class)
+            .extracting("errorCode")
+            .isEqualTo(PostErrorCode.NOT_FOUND_POST_ID);
+    }
+
     private static User createUser(long userId, String email, String password, String nickname) {
         return User.builder()
             .id(userId)

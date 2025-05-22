@@ -4,7 +4,7 @@ import com.eventitta.common.response.PageResponse;
 import com.eventitta.post.domain.Post;
 import com.eventitta.post.dto.PostFilter;
 import com.eventitta.post.dto.request.CreatePostRequest;
-import com.eventitta.post.dto.request.PostResponse;
+import com.eventitta.post.dto.response.PostResponse;
 import com.eventitta.post.dto.request.UpdatePostRequest;
 import com.eventitta.post.repository.PostRepository;
 import com.eventitta.region.domain.Region;

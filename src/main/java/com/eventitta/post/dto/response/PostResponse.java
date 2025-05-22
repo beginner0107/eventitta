@@ -1,4 +1,4 @@
-package com.eventitta.post.dto.request;
+package com.eventitta.post.dto.response;
 
 import com.eventitta.post.domain.Post;
 
@@ -9,6 +9,8 @@ public record PostResponse(
     String title,
     String content,
     String regionCode,
+    String authorNickname,
+    String authorProfileUrl,
     LocalDateTime createdAt,
     LocalDateTime updatedAt
 ) {
@@ -18,6 +20,8 @@ public record PostResponse(
             p.getTitle(),
             p.getContent(),
             p.getRegion().getCode(),
+            p.getUser().getNickname(),
+            p.getUser().getProfilePictureUrl(),
             p.getCreatedAt(),
             p.getUpdatedAt()
         );

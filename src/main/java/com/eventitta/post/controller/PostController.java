@@ -58,6 +58,18 @@ public class PostController {
         return ResponseEntity.ok(result);
     }
 
+    @Operation(summary = "게시글 상세 조회")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "게시글 상세보기 조회 성공"),
+    })
+    @GetMapping("/{postId}")
+    public ResponseEntity<PostResponse> getPost(
+        @PathVariable("postId") Long postId
+    ) {
+        PostResponse result = postService.getPost(postId);
+        return ResponseEntity.ok(result);
+    }
+
     @Operation(
         summary = "게시글 수정"
     )

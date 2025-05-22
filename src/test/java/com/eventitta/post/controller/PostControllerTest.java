@@ -4,10 +4,9 @@ import com.eventitta.ControllerTestSupport;
 import com.eventitta.WithMockCustomUser;
 import com.eventitta.common.constants.ValidationMessage;
 import com.eventitta.common.response.PageResponse;
-import com.eventitta.post.domain.Post;
 import com.eventitta.post.dto.PostFilter;
 import com.eventitta.post.dto.request.CreatePostRequest;
-import com.eventitta.post.dto.request.PostResponse;
+import com.eventitta.post.dto.response.PostResponse;
 import com.eventitta.post.dto.request.UpdatePostRequest;
 import com.eventitta.post.exception.PostErrorCode;
 import com.eventitta.post.exception.PostException;
@@ -16,7 +15,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 import static com.eventitta.common.constants.ValidationMessage.*;
@@ -294,6 +292,8 @@ class PostControllerTest extends ControllerTestSupport {
             "title",
             "content",
             "1100110101",
+            "nickname",
+            "profileUrl",
             LocalDateTime.now(),
             LocalDateTime.now()
         );
@@ -307,6 +307,8 @@ class PostControllerTest extends ControllerTestSupport {
             .andExpect(jsonPath("$.id").value(postId))
             .andExpect(jsonPath("$.title").value(dummy.title()))
             .andExpect(jsonPath("$.content").value(dummy.content()))
+            .andExpect(jsonPath("$.authorNickname").value(dummy.authorNickname()))
+            .andExpect(jsonPath("$.authorProfileUrl").value(dummy.authorProfileUrl()))
             .andExpect(jsonPath("$.regionCode").value(dummy.regionCode()));
     }
 }

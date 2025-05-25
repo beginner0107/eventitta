@@ -3,6 +3,9 @@ package com.eventitta.post.dto.request;
 import com.eventitta.common.constants.ValidationMessage;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @Schema(description = "게시글 수정 요청")
 public record UpdatePostRequest(
@@ -14,6 +17,7 @@ public record UpdatePostRequest(
     String content,
     @Schema(description = "지역 코드", example = "1100110100")
     @NotBlank(message = ValidationMessage.REGION_CODE)
-    String regionCode
+    String regionCode,
+    List<@NotBlank String> imageUrls
 ) {
 }

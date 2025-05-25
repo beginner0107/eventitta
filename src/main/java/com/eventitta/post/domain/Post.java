@@ -9,6 +9,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "posts")
 @Getter
@@ -35,6 +38,9 @@ public class Post extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "region_code", nullable = false)
     private Region region;
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    private final List<PostImage> images = new ArrayList<>();
 
     @Column(nullable = false)
     private boolean deleted = false;
@@ -63,5 +69,21 @@ public class Post extends BaseEntity {
 
     public void softDelete() {
         this.deleted = true;
+    }
+
+    public void addImage(PostImage img) {
+        images.add(img);
+        img.setPost(this);
+    }
+
+    public void removeImage(PostImage img) {
+        images.remove(img);
+        img.setPost(null);
+    }
+
+    public void clearImages() {
+        for (PostImage img : new ArrayList<>(images)) {
+            removeImage(img);
+        }
     }
 }

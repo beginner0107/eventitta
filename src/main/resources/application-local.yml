@@ -40,6 +40,10 @@ jwt:
   access-token-validity-ms: 3600000
   refresh-token-validity-ms: 86400000
 
+file:
+  storage:
+    location: ./uploads
+
 logging:
   level:
     root: INFO

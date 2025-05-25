@@ -5,6 +5,8 @@ import com.eventitta.auth.jwt.JwtTokenProvider;
 import com.eventitta.auth.service.*;
 import com.eventitta.common.config.CustomAuthenticationEntryPoint;
 import com.eventitta.common.config.SecurityConfig;
+import com.eventitta.common.storage.FileStorageService;
+import com.eventitta.file.controller.FileUploadController;
 import com.eventitta.post.controller.PostController;
 import com.eventitta.post.service.PostService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,7 +19,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(controllers = {
     AuthController.class,
-    PostController.class
+    PostController.class,
+    FileUploadController.class
 })
 @AutoConfigureMockMvc(addFilters = false)
 @Import({SecurityConfig.class})
@@ -42,4 +45,6 @@ public abstract class ControllerTestSupport {
     protected CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
     @MockitoBean
     protected PostService postService;
+    @MockitoBean
+    protected FileStorageService storageService;
 }

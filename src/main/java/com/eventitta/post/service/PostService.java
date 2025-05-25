@@ -2,10 +2,12 @@ package com.eventitta.post.service;
 
 import com.eventitta.common.response.PageResponse;
 import com.eventitta.post.domain.Post;
+import com.eventitta.post.domain.PostImage;
 import com.eventitta.post.dto.PostFilter;
 import com.eventitta.post.dto.request.CreatePostRequest;
-import com.eventitta.post.dto.response.PostResponse;
 import com.eventitta.post.dto.request.UpdatePostRequest;
+import com.eventitta.post.dto.response.PostDetailDto;
+import com.eventitta.post.dto.response.PostSummaryDto;
 import com.eventitta.post.repository.PostRepository;
 import com.eventitta.region.domain.Region;
 import com.eventitta.region.exception.RegionErrorCode;
@@ -18,8 +20,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 import static com.eventitta.post.exception.PostErrorCode.ACCESS_DENIED;
 import static com.eventitta.post.exception.PostErrorCode.NOT_FOUND_POST_ID;
@@ -40,58 +40,62 @@ public class PostService {
         Region region = regionRepository.findById(dto.regionCode())
             .orElseThrow(NOT_FOUND_REGION_CODE::defaultException);
 
-        Post post = Post.create(
-            user,
-            dto.title(),
-            dto.content(),
-            region
-        );
+        Post post = Post.create(user, dto.title(), dto.content(), region);
+        if (dto.imageUrls() != null) {
+            for (int i = 0; i < dto.imageUrls().size(); i++) {
+                post.addImage(new PostImage(dto.imageUrls().get(i), i));
+            }
+        }
         return postRepository.save(post).getId();
     }
 
-    public void update(Long postId, Long userId, UpdatePostRequest request) {
-        Post post = postRepository.findByIdAndDeletedFalse(postId)
+    public void update(Long postId, Long userId, UpdatePostRequest dto) {
+        Post post = postRepository.findWithUserByIdAndDeletedFalse(postId)
             .orElseThrow(NOT_FOUND_POST_ID::defaultException);
-
         if (!post.getUser().getId().equals(userId)) {
             throw ACCESS_DENIED.defaultException();
         }
-        Region region = regionRepository.findById(request.regionCode())
-            .orElseThrow(RegionErrorCode.NOT_FOUND_REGION_CODE::defaultException);
 
-        post.update(request.title(), request.content(), region);
+        Region region = regionRepository.findById(dto.regionCode())
+            .orElseThrow(RegionErrorCode.NOT_FOUND_REGION_CODE::defaultException);
+        post.update(dto.title(), dto.content(), region);
+
+        post.clearImages();
+        if (dto.imageUrls() != null) {
+            for (int i = 0; i < dto.imageUrls().size(); i++) {
+                String url = dto.imageUrls().get(i);
+                PostImage img = new PostImage(url, i);
+                post.addImage(img);
+            }
+        }
     }
 
     public void delete(Long postId, Long userId) {
-        Post post = postRepository.findByIdAndDeletedFalse(postId)
+        Post post = postRepository.findWithUserByIdAndDeletedFalse(postId)
             .orElseThrow(NOT_FOUND_POST_ID::defaultException);
         if (!post.getUser().getId().equals(userId)) {
             throw ACCESS_DENIED.defaultException();
         }
+        post.clearImages();
         post.softDelete();
     }
 
-    public PageResponse<PostResponse> getPosts(PostFilter filter) {
+    public PageResponse<PostSummaryDto> getPosts(PostFilter filter) {
         Pageable pg = PageRequest.of(filter.page(), filter.size());
-
-        Page<Post> posts = postRepository.findAllByFilter(filter, pg);
-
-        List<PostResponse> postResponseList = posts.stream()
-            .map(PostResponse::from)
-            .toList();
+        Page<PostSummaryDto> page = postRepository.findSummaries(filter, pg);
 
         return new PageResponse<>(
-            postResponseList,
-            posts.getNumber(),
-            posts.getSize(),
-            posts.getTotalElements(),
-            posts.getTotalPages()
+            page.getContent(),
+            page.getNumber(),
+            page.getSize(),
+            page.getTotalElements(),
+            page.getTotalPages()
         );
     }
 
-    public PostResponse getPost(Long postId) {
-        Post post = postRepository.findByIdAndDeletedFalse(postId)
+    public PostDetailDto getPost(Long postId) {
+        Post post = postRepository.findDetailByIdAndDeletedFalse(postId)
             .orElseThrow(NOT_FOUND_POST_ID::defaultException);
-        return PostResponse.from(post);
+        return PostDetailDto.from(post);
     }
 }

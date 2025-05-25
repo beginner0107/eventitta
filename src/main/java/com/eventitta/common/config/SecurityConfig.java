@@ -62,12 +62,14 @@ public class SecurityConfig {
                         "/api/v1/auth/**",
                         "/v3/api-docs/**",
                         "/swagger-ui/**",
-                        "/swagger-ui.html"
+                        "/swagger-ui.html",
+                        "/api/v1/uploads/**"
                     )
                     .permitAll()
                     .requestMatchers(HttpMethod.GET
                         , "/api/v1/posts"
-                        , "/api/v1/posts/**").permitAll()
+                        , "/api/v1/posts/**"
+                        , "/api/v1/regions").permitAll()
                     .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())

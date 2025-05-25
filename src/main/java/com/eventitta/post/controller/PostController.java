@@ -4,9 +4,10 @@ import com.eventitta.auth.annotation.CurrentUser;
 import com.eventitta.common.response.PageResponse;
 import com.eventitta.post.dto.PostFilter;
 import com.eventitta.post.dto.request.CreatePostRequest;
-import com.eventitta.post.dto.response.PostResponse;
 import com.eventitta.post.dto.request.UpdatePostRequest;
 import com.eventitta.post.dto.response.CreatePostResponse;
+import com.eventitta.post.dto.response.PostDetailDto;
+import com.eventitta.post.dto.response.PostSummaryDto;
 import com.eventitta.post.service.PostService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -38,12 +39,12 @@ public class PostController {
     @PostMapping
     public ResponseEntity<CreatePostResponse> create(
         @CurrentUser Long userId,
-        @RequestBody @Valid CreatePostRequest request
+        @Valid @RequestBody CreatePostRequest request
     ) {
-        Long postId = postService.create(userId, request);
+        Long id = postService.create(userId, request);
         return ResponseEntity
-            .created(URI.create("/api/v1/posts/" + postId))
-            .body(new CreatePostResponse(postId));
+            .created(URI.create("/api/v1/posts/" + id))
+            .body(new CreatePostResponse(id));
     }
 
     @Operation(summary = "게시글 목록 조회")
@@ -51,10 +52,10 @@ public class PostController {
         @ApiResponse(responseCode = "200", description = "게시글 목록 조회 성공"),
     })
     @GetMapping
-    public ResponseEntity<PageResponse<PostResponse>> getPosts(
+    public ResponseEntity<PageResponse<PostSummaryDto>> getPosts(
         @Valid PostFilter filter
     ) {
-        PageResponse<PostResponse> result = postService.getPosts(filter);
+        PageResponse<PostSummaryDto> result = postService.getPosts(filter);
         return ResponseEntity.ok(result);
     }
 
@@ -63,10 +64,10 @@ public class PostController {
         @ApiResponse(responseCode = "200", description = "게시글 상세보기 조회 성공"),
     })
     @GetMapping("/{postId}")
-    public ResponseEntity<PostResponse> getPost(
+    public ResponseEntity<PostDetailDto> getPost(
         @PathVariable("postId") Long postId
     ) {
-        PostResponse result = postService.getPost(postId);
+        PostDetailDto result = postService.getPost(postId);
         return ResponseEntity.ok(result);
     }
 
@@ -76,7 +77,7 @@ public class PostController {
     @ApiResponses({
         @ApiResponse(responseCode = "204", description = "게시글 수정 성공"),
     })
-    @PutMapping("/{postId}")
+    @PutMapping(value = "/{postId}")
     public ResponseEntity<Void> update(
         @PathVariable("postId") Long postId,
         @CurrentUser Long userId,

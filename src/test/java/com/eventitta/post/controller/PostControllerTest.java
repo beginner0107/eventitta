@@ -6,8 +6,9 @@ import com.eventitta.common.constants.ValidationMessage;
 import com.eventitta.common.response.PageResponse;
 import com.eventitta.post.dto.PostFilter;
 import com.eventitta.post.dto.request.CreatePostRequest;
-import com.eventitta.post.dto.response.PostResponse;
+import com.eventitta.post.dto.response.PostDetailDto;
 import com.eventitta.post.dto.request.UpdatePostRequest;
+import com.eventitta.post.dto.response.PostSummaryDto;
 import com.eventitta.post.exception.PostErrorCode;
 import com.eventitta.post.exception.PostException;
 import org.junit.jupiter.api.DisplayName;
@@ -34,9 +35,10 @@ class PostControllerTest extends ControllerTestSupport {
     @Test
     @WithMockCustomUser(userId = 42L)
     @DisplayName("게시글을 생성하면 새 게시글의 식별자를 반환한다")
-    void givenValidCreatePostRequest_whenCreatePost_thenReturnsNewPostId() throws Exception {        // given
+    void givenValidCreatePostRequest_whenCreatePost_thenReturnsNewPostId() throws Exception {
+        // given
         long fakePostId = 100L;
-        CreatePostRequest req = new CreatePostRequest("제목", "내용", "1100110100");
+        CreatePostRequest req = new CreatePostRequest("제목", "내용", "1100110100", List.of());
 
         given(postService.create(eq(42L), any(CreatePostRequest.class)))
             .willReturn(fakePostId);
@@ -59,7 +61,8 @@ class PostControllerTest extends ControllerTestSupport {
         CreatePostRequest bad = new CreatePostRequest(
             "",
             "C",
-            "1100110100"
+            "1100110100",
+            List.of()
         );
 
         // when & then
@@ -80,7 +83,8 @@ class PostControllerTest extends ControllerTestSupport {
         CreatePostRequest bad = new CreatePostRequest(
             "test title!",
             "",
-            "1100110100"
+            "1100110100",
+            List.of()
         );
 
         // when & then
@@ -101,7 +105,8 @@ class PostControllerTest extends ControllerTestSupport {
         CreatePostRequest bad = new CreatePostRequest(
             "test title!",
             "test content!",
-            ""
+            "",
+            List.of()
         );
 
         // when & then
@@ -119,7 +124,7 @@ class PostControllerTest extends ControllerTestSupport {
     @DisplayName("올바른 데이터로 게시글 수정 시 성공적으로 수정된다.")
     void givenValidUpdateRequest_whenUpdate_thenNoContent() throws Exception {
         // given
-        UpdatePostRequest req = new UpdatePostRequest("새 제목", "새 내용", "1100110100");
+        UpdatePostRequest req = new UpdatePostRequest("새 제목", "새 내용", "1100110100", List.of());
         doNothing().when(postService).update(eq(100L), eq(42L), any(UpdatePostRequest.class));
 
         // when & then
@@ -134,7 +139,7 @@ class PostControllerTest extends ControllerTestSupport {
     @WithMockCustomUser(userId = 42L)
     @DisplayName("제목 없이 수정 시 게시글 수정에 실패한다.")
     void givenEmptyTitle_whenUpdate_thenBadRequest() throws Exception {
-        UpdatePostRequest req = new UpdatePostRequest("", "내용", "1100110100");
+        UpdatePostRequest req = new UpdatePostRequest("", "내용", "1100110100", List.of());
 
         mockMvc.perform(put("/api/v1/posts/" + 100L)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -149,7 +154,7 @@ class PostControllerTest extends ControllerTestSupport {
     @WithMockCustomUser(userId = 42L)
     @DisplayName("제목 없이 수정 시 게시글 수정에 실패한다.")
     void givenEmptyContent_whenUpdate_thenBadRequest() throws Exception {
-        UpdatePostRequest req = new UpdatePostRequest("testTitle", "", "1100110100");
+        UpdatePostRequest req = new UpdatePostRequest("testTitle", "", "1100110100", List.of());
 
         mockMvc.perform(put("/api/v1/posts/" + 100L)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -164,7 +169,7 @@ class PostControllerTest extends ControllerTestSupport {
     @WithMockCustomUser(userId = 42L)
     @DisplayName("제목 없이 수정 시 게시글 수정에 실패한다.")
     void givenEmptyRegion_whenUpdate_thenBadRequest() throws Exception {
-        UpdatePostRequest req = new UpdatePostRequest("testTitle", "testContent", "");
+        UpdatePostRequest req = new UpdatePostRequest("testTitle", "testContent", "", List.of());
 
         mockMvc.perform(put("/api/v1/posts/" + 100L)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -223,7 +228,7 @@ class PostControllerTest extends ControllerTestSupport {
     @DisplayName("모든 사용자는 게시글 목록을 조회할 수 있다.")
     void givenAnyUser_whenGetPosts_thenOk() throws Exception {
         // given
-        PageResponse<PostResponse> dummy = new PageResponse<>(
+        PageResponse<PostSummaryDto> dummy = new PageResponse<>(
             List.of(),
             0,
             10,
@@ -287,13 +292,14 @@ class PostControllerTest extends ControllerTestSupport {
     void givenAnyUser_whenGetPost_thenOk() throws Exception {
         // given
         long postId = 1L;
-        PostResponse dummy = new PostResponse(
+        PostDetailDto dummy = new PostDetailDto(
             postId,
             "title",
             "content",
             "1100110101",
             "nickname",
             "profileUrl",
+            List.of(),
             LocalDateTime.now(),
             LocalDateTime.now()
         );

@@ -5,6 +5,7 @@ import com.eventitta.common.config.QuerydslConfig;
 import com.eventitta.post.domain.Post;
 import com.eventitta.post.dto.PostFilter;
 import com.eventitta.post.dto.SearchType;
+import com.eventitta.post.dto.response.PostSummaryDto;
 import com.eventitta.region.domain.Region;
 import com.eventitta.region.repository.RegionRepository;
 import com.eventitta.user.domain.Provider;
@@ -88,10 +89,9 @@ class PostRepositoryIntegrationTest {
     @DisplayName("제목+내용으로 검색하면 둘 중 하나라도 키워드가 포함된 게시글이 조회된다")
     void filterByTitleOrContent_combined() {
         PostFilter f = new PostFilter(0, 10, SearchType.TITLE_CONTENT, "테스트", null);
-        List<Post> results = repository.findAllByFilter(f, Pageable.ofSize(10)).getContent();
+        List<PostSummaryDto> results = repository.findSummaries(f, Pageable.ofSize(10)).getContent();
         assertThat(results).allMatch(p ->
-            p.getTitle().contains("테스트") ||
-                p.getContent().contains("테스트")
+            p.title().contains("테스트")
         );
     }
 

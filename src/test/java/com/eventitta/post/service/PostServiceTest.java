@@ -1,11 +1,15 @@
 package com.eventitta.post.service;
 
+import org.springframework.test.util.ReflectionTestUtils;
+
 import com.eventitta.common.response.PageResponse;
 import com.eventitta.post.domain.Post;
+import com.eventitta.post.domain.PostImage;
 import com.eventitta.post.dto.PostFilter;
 import com.eventitta.post.dto.request.CreatePostRequest;
-import com.eventitta.post.dto.response.PostResponse;
+import com.eventitta.post.dto.response.PostDetailDto;
 import com.eventitta.post.dto.request.UpdatePostRequest;
+import com.eventitta.post.dto.response.PostSummaryDto;
 import com.eventitta.post.exception.PostErrorCode;
 import com.eventitta.post.exception.PostException;
 import com.eventitta.post.repository.PostRepository;
@@ -60,7 +64,7 @@ class PostServiceTest {
         // given
         long userId = 1L;
         String regionCode = "1100110100";
-        CreatePostRequest createPostRequest = new CreatePostRequest("제목", "내용", regionCode);
+        CreatePostRequest createPostRequest = new CreatePostRequest("제목", "내용", regionCode, List.of("url1", "url2"));
 
         User user = createUser(userId, "test@test.com", "pw123123", "유저");
         Region region = createRegion(regionCode);
@@ -68,6 +72,8 @@ class PostServiceTest {
         given(regionRepository.findById(regionCode)).willReturn(Optional.of(region));
 
         Post savedPost = createPost(123L, user, createPostRequest.title(), createPostRequest.content(), region);
+        savedPost.addImage(new PostImage("url1", 0));
+        savedPost.addImage(new PostImage("url2", 1));
         given(postRepository.save(any(Post.class))).willReturn(savedPost);
 
         // when
@@ -75,6 +81,8 @@ class PostServiceTest {
 
         // then
         assertThat(resultId).isEqualTo(123L);
+        // Verify that two images are added to the returned Post
+        assertThat(savedPost.getImages()).hasSize(2);
     }
 
 
@@ -83,7 +91,7 @@ class PostServiceTest {
     void whenUserNotFound_thenThrowUserNotFound() {
         // given
         long fakeUserId = 99L;
-        CreatePostRequest dto = new CreatePostRequest("제목", "내용", "1100110100");
+        CreatePostRequest dto = new CreatePostRequest("제목", "내용", "1100110100", List.of());
         given(userRepository.findById(fakeUserId)).willReturn(Optional.empty());
 
         // when & then
@@ -98,7 +106,7 @@ class PostServiceTest {
     void whenRegionNotFound_thenThrowRegionNotFound() {
         // given
         long fakeUserId = 1L;
-        CreatePostRequest dto = new CreatePostRequest("제목", "내용", "0000000000");
+        CreatePostRequest dto = new CreatePostRequest("제목", "내용", "0000000000", List.of());
         given(userRepository.findById(fakeUserId))
             .willReturn(Optional.of(User.builder().id(fakeUserId).build()));
         given(regionRepository.findById(dto.regionCode())).willReturn(Optional.empty());
@@ -122,7 +130,7 @@ class PostServiceTest {
             "oldTitle", "oldContent",
             region
         ));
-        given(postRepository.findByIdAndDeletedFalse(POST_ID))
+        given(postRepository.findWithUserByIdAndDeletedFalse(POST_ID))
             .willReturn(Optional.of(post));
         given(regionRepository.findById(VALID_REGION))
             .willReturn(Optional.of(region));
@@ -145,7 +153,7 @@ class PostServiceTest {
         // given
         final long POST_ID = 1L;
         final long USER_ID = 10L;
-        given(postRepository.findByIdAndDeletedFalse(POST_ID))
+        given(postRepository.findWithUserByIdAndDeletedFalse(POST_ID))
             .willReturn(Optional.empty());
 
         // when & then
@@ -167,7 +175,7 @@ class PostServiceTest {
         final long OTHER_USER_ID = 20L;
         User user = createUser(USER_ID, "test@test.com", "pw123123", "유저");
         Post post = createPost(POST_ID, user, "title", "content", createRegion(VALID_REGION));
-        given(postRepository.findByIdAndDeletedFalse(POST_ID)).willReturn(Optional.of(post));
+        given(postRepository.findWithUserByIdAndDeletedFalse(POST_ID)).willReturn(Optional.of(post));
 
         // when & then
         assertThatThrownBy(() ->
@@ -186,7 +194,7 @@ class PostServiceTest {
         final long USER_ID = 10L;
         User user = createUser(USER_ID, "test@test.com", "pw123123", "유저");
         Post post = createPost(POST_ID, user, "title", "content", createRegion(INVALID_REGION));
-        given(postRepository.findByIdAndDeletedFalse(POST_ID)).willReturn(Optional.of(post));
+        given(postRepository.findWithUserByIdAndDeletedFalse(POST_ID)).willReturn(Optional.of(post));
 
         given(regionRepository.findById(INVALID_REGION)).willReturn(Optional.empty());
 
@@ -200,6 +208,31 @@ class PostServiceTest {
     }
 
     @Test
+    @DisplayName("업데이트 시 기존 이미지가 제거되고 새로운 이미지로 대체된다")
+    void givenImages_whenUpdate_thenImagesReplaced() {
+        // given
+        final long POST_ID = 1L;
+        final long USER_ID = 10L;
+        Region region = createRegion(VALID_REGION);
+        Post post = spy(Post.create(createUser(USER_ID, "a@b.com", "pw", "nick"), "title", "content", region));
+        given(postRepository.findWithUserByIdAndDeletedFalse(POST_ID)).willReturn(Optional.of(post));
+        given(regionRepository.findById(VALID_REGION)).willReturn(Optional.of(region));
+
+        List<String> imageUrls = List.of("img1.jpg", "img2.jpg", "img3.jpg");
+        UpdatePostRequest dto = new UpdatePostRequest("updated", "updated content", VALID_REGION, imageUrls);
+
+        // when
+        postService.update(POST_ID, USER_ID, dto);
+
+        // then
+        verify(post).clearImages();
+        assertThat(post.getImages()).hasSize(3);
+        assertThat(post.getImages())
+            .extracting(PostImage::getImageUrl)
+            .containsExactly("img1.jpg", "img2.jpg", "img3.jpg");
+    }
+
+    @Test
     @DisplayName("작성자는 게시글을 삭제할 수 있다")
     void givenExistingPostAndOwner_whenDelete_thenSoftDeleted() {
         // given
@@ -209,7 +242,7 @@ class PostServiceTest {
         Post post = Post.create(owner, "t", "c", createRegion(VALID_REGION));
         assertThat(post.isDeleted()).isFalse();
 
-        given(postRepository.findByIdAndDeletedFalse(postId))
+        given(postRepository.findWithUserByIdAndDeletedFalse(postId))
             .willReturn(Optional.of(post));
 
         // when
@@ -224,7 +257,7 @@ class PostServiceTest {
     void givenDeletedOrNonexistentPost_whenDelete_thenThrowNotFound() {
         // given
         long postId = 99L;
-        given(postRepository.findByIdAndDeletedFalse(postId))
+        given(postRepository.findWithUserByIdAndDeletedFalse(postId))
             .willReturn(Optional.empty());
 
         // when & then
@@ -244,7 +277,7 @@ class PostServiceTest {
         User owner = User.builder().id(ownerId).build();
         Post post = Post.create(owner, "t", "c", createRegion(VALID_REGION));
 
-        given(postRepository.findByIdAndDeletedFalse(postId))
+        given(postRepository.findWithUserByIdAndDeletedFalse(postId))
             .willReturn(Optional.of(post));
 
         // when & then
@@ -260,11 +293,11 @@ class PostServiceTest {
         // given
         PostFilter filter = new PostFilter(0, 5, null, null, null);
         Pageable pageable = PageRequest.of(0, 5, Sort.by("createdAt").descending());
-        Page<Post> emptyPage = new PageImpl<>(List.of(), pageable, 0);
-        given(postRepository.findAllByFilter(eq(filter), any(Pageable.class))).willReturn(emptyPage);
+        Page<PostSummaryDto> emptyPage = new PageImpl<>(List.of(), pageable, 0);
+        given(postRepository.findSummaries(eq(filter), any(Pageable.class))).willReturn(emptyPage);
 
         // when
-        PageResponse<PostResponse> response = postService.getPosts(filter);
+        PageResponse<PostSummaryDto> response = postService.getPosts(filter);
 
         // then
         assertThat(response.content()).isEmpty();
@@ -285,21 +318,23 @@ class PostServiceTest {
         User user2 = User.builder().id(11L).build();
         Post p1 = createPost(10L, user1, "t1", "c1", createRegion(VALID_REGION));
         Post p2 = createPost(11L, user2, "t2", "c2", createRegion(VALID_REGION));
-        List<Post> content = List.of(p1, p2);
+        PostSummaryDto p1Dto = PostSummaryDto.from(p1);
+        PostSummaryDto p2Dto = PostSummaryDto.from(p2);
+        List<PostSummaryDto> content = List.of(p1Dto, p2Dto);
         long total = 7;
-        Page<Post> page = new PageImpl<>(content, pageable, total);
+        Page<PostSummaryDto> page = new PageImpl<>(content, pageable, total);
 
-        given(postRepository.findAllByFilter(eq(filter), any(Pageable.class)))
+        given(postRepository.findSummaries(eq(filter), any(Pageable.class)))
             .willReturn(page);
         // when
-        PageResponse<PostResponse> response = postService.getPosts(filter);
+        PageResponse<PostSummaryDto> response = postService.getPosts(filter);
 
         // then
         assertThat(response.content())
-            .extracting(PostResponse::id, PostResponse::title, PostResponse::content)
+            .extracting(PostSummaryDto::id, PostSummaryDto::title)
             .containsExactly(
-                tuple(10L, "t1", "c1"),
-                tuple(11L, "t2", "c2")
+                tuple(10L, "t1"),
+                tuple(11L, "t2")
             );
 
         assertThat(response.page()).isEqualTo(1);
@@ -317,11 +352,11 @@ class PostServiceTest {
         Region region = createRegion("1100110100");
         Post post = Post.create(author, "제목", "내용", region);
 
-        given(postRepository.findByIdAndDeletedFalse(postId))
+        given(postRepository.findDetailByIdAndDeletedFalse(postId))
             .willReturn(Optional.of(post));
 
         // when
-        PostResponse response = postService.getPost(postId);
+        PostDetailDto response = postService.getPost(postId);
 
         // then
         assertThat(response.id()).isEqualTo(post.getId());
@@ -335,7 +370,7 @@ class PostServiceTest {
     void whenPostNotFound_thenThrowPostException() {
         // given
         Long postId = 999L;
-        given(postRepository.findByIdAndDeletedFalse(postId))
+        given(postRepository.findDetailByIdAndDeletedFalse(postId))
             .willReturn(Optional.empty());
 
         // when & then
@@ -343,6 +378,77 @@ class PostServiceTest {
             .isInstanceOf(PostException.class)
             .extracting("errorCode")
             .isEqualTo(PostErrorCode.NOT_FOUND_POST_ID);
+    }
+
+    @Test
+    @DisplayName("게시글 생성 시 이미지의 sortOrder가 입력 순서대로 설정된다")
+    void givenImageUrls_whenCreate_thenSortOrderPreserved() {
+        // given
+        long userId = 1L;
+        String regionCode = VALID_REGION;
+        CreatePostRequest dto = new CreatePostRequest("제목", "내용", regionCode, List.of("img1", "img2", "img3"));
+        User user = createUser(userId, "test@user.com", "pw", "nick");
+        Region region = createRegion(regionCode);
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(regionRepository.findById(regionCode)).willReturn(Optional.of(region));
+        final Post[] createdPostHolder = new Post[1];
+        given(postRepository.save(any())).willAnswer(invocation -> {
+            Post post = invocation.getArgument(0);
+            createdPostHolder[0] = post;
+            return post;
+        });
+
+        // when
+        Long id = postService.create(userId, dto);
+
+        // then
+        Post createdPost = createdPostHolder[0];
+        assertThat(createdPost.getImages())
+            .extracting(PostImage::getSortOrder)
+            .containsExactly(0, 1, 2);
+    }
+
+    @Test
+    @DisplayName("게시글 삭제 시 이미지도 함께 제거된다")
+    void givenPostWithImages_whenDelete_thenImagesAreCleared() {
+        // given
+        long postId = 1L;
+        long userId = 42L;
+        User user = createUser(userId, "u@e.com", "pw", "nick");
+        Post post = Post.create(user, "제목", "내용", createRegion(VALID_REGION));
+        post.addImage(new PostImage("img1", 0));
+        post.addImage(new PostImage("img2", 1));
+        given(postRepository.findWithUserByIdAndDeletedFalse(postId)).willReturn(Optional.of(post));
+
+        // when
+        postService.delete(postId, userId);
+
+        // then
+        assertThat(post.getImages()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("imageUrls가 null인 경우에도 게시글 생성이 정상 동작한다")
+    void givenNullImageUrls_whenCreate_thenNoExceptionThrown() {
+        // given
+        long userId = 1L;
+        String regionCode = VALID_REGION;
+        CreatePostRequest dto = new CreatePostRequest("제목", "내용", regionCode, null);
+        User user = createUser(userId, "test@user.com", "pw", "nick");
+        Region region = createRegion(regionCode);
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(regionRepository.findById(regionCode)).willReturn(Optional.of(region));
+        given(postRepository.save(any())).willAnswer(invocation -> {
+            Post post = invocation.getArgument(0);
+            ReflectionTestUtils.setField(post, "id", 123L);
+            return post;
+        });
+
+        // when
+        Long postId = postService.create(userId, dto);
+
+        // then
+        assertThat(postId).isNotNull();
     }
 
     private static User createUser(long userId, String email, String password, String nickname) {
@@ -376,6 +482,7 @@ class PostServiceTest {
     }
 
     private UpdatePostRequest createUpdateDto(String title, String content, String regionCode) {
-        return new UpdatePostRequest(title, content, regionCode);
+        return new UpdatePostRequest(title, content, regionCode, List.of());
     }
 }
+

@@ -91,6 +91,7 @@ public class PostService {
         post.softDelete();
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<PostSummaryDto> getPosts(PostFilter filter) {
         Pageable pg = PageRequest.of(filter.page(), filter.size());
         Page<PostSummaryDto> page = postRepository.findSummaries(filter, pg);
@@ -104,6 +105,7 @@ public class PostService {
         );
     }
 
+    @Transactional(readOnly = true)
     public PostDetailDto getPost(Long postId) {
         Post post = postRepository.findDetailByIdAndDeletedFalse(postId)
             .orElseThrow(NOT_FOUND_POST_ID::defaultException);

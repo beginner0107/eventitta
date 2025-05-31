@@ -296,9 +296,10 @@ class PostControllerTest extends ControllerTestSupport {
             postId,
             "title",
             "content",
-            "1100110101",
             "nickname",
-            "profileUrl",
+            "authProfileUrl",
+            "1100110101",
+            1,
             List.of(),
             LocalDateTime.now(),
             LocalDateTime.now()
@@ -315,6 +316,7 @@ class PostControllerTest extends ControllerTestSupport {
             .andExpect(jsonPath("$.content").value(dummy.content()))
             .andExpect(jsonPath("$.authorNickname").value(dummy.authorNickname()))
             .andExpect(jsonPath("$.authorProfileUrl").value(dummy.authorProfileUrl()))
+            .andExpect(jsonPath("$.likeCount").value(dummy.likeCount()))
             .andExpect(jsonPath("$.regionCode").value(dummy.regionCode()));
     }
 }

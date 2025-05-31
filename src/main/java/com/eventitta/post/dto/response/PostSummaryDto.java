@@ -15,6 +15,8 @@ public record PostSummaryDto(
     String authorNickname,
     @Schema(description = "지역 코드", example = "1100110100")
     String regionCode,
+    @Schema(description = "추천 수", example = "10")
+    int likeCount,
     @Schema(description = "생성일시", example = "2025-05-24T14:20:52")
     LocalDateTime createdAt
 ) {
@@ -24,6 +26,7 @@ public record PostSummaryDto(
             p.getTitle(),
             p.getUser().getNickname(),
             p.getRegion().getCode(),
+            p.getLikeCount(),
             p.getCreatedAt()
         );
     }

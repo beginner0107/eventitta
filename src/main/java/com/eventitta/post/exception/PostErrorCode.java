@@ -7,8 +7,7 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum PostErrorCode implements ErrorCode {
     NOT_FOUND_POST_ID("해당 게시글이 존재하지 않습니다.", HttpStatus.NOT_FOUND),
-    ACCESS_DENIED("해당 게시글을 수정할 권한이 없습니다.", HttpStatus.FORBIDDEN),
-    ;
+    ACCESS_DENIED("해당 게시글을 수정할 권한이 없습니다.", HttpStatus.FORBIDDEN);
     private final String message;
     private final HttpStatus status;
 

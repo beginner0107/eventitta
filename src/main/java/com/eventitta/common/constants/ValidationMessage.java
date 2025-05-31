@@ -16,4 +16,5 @@ public final class ValidationMessage {
     public static final String PAGE_MIN = "페이지 번호는 0 이상이어야 합니다.";
     public static final String SIZE_MIN = "페이지 크기는 최소 1 이상이어야 합니다.";
     public static final String SIZE_MAX = "페이지 크기는 최대 100 이하여야 합니다.";
+    public static final String COMMENT_CONTENT = "댓글 내용을 입력해주세요.";
 }

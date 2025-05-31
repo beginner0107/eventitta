@@ -4,6 +4,7 @@ import com.eventitta.ControllerTestSupport;
 import com.eventitta.WithMockCustomUser;
 import com.eventitta.common.constants.ValidationMessage;
 import com.eventitta.common.response.PageResponse;
+import com.eventitta.post.domain.Post;
 import com.eventitta.post.dto.PostFilter;
 import com.eventitta.post.dto.request.CreatePostRequest;
 import com.eventitta.post.dto.response.PostDetailDto;
@@ -11,9 +12,12 @@ import com.eventitta.post.dto.request.UpdatePostRequest;
 import com.eventitta.post.dto.response.PostSummaryDto;
 import com.eventitta.post.exception.PostErrorCode;
 import com.eventitta.post.exception.PostException;
+import com.eventitta.region.domain.Region;
+import com.eventitta.user.domain.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.ResultActions;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -23,8 +27,7 @@ import static com.eventitta.common.exception.CommonErrorCode.INVALID_INPUT;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -318,5 +321,38 @@ class PostControllerTest extends ControllerTestSupport {
             .andExpect(jsonPath("$.authorProfileUrl").value(dummy.authorProfileUrl()))
             .andExpect(jsonPath("$.likeCount").value(dummy.likeCount()))
             .andExpect(jsonPath("$.regionCode").value(dummy.regionCode()));
+    }
+
+    @Test
+    @WithMockCustomUser(userId = 42L)
+    @DisplayName("유저는 존재하는 게시글에 대해 추천을 할 수 잇다.")
+    void likePost_shouldReturnNoContent() throws Exception {
+        // given
+        Long postId = 100L;
+
+        // when & then
+        mockMvc.perform(
+                post("/api/v1/posts/{postId}/like", postId))
+            .andExpect(status().isNoContent());
+
+        verify(postService).toggleLike(postId, 42L);
+    }
+
+    @Test
+    @WithMockCustomUser(userId = 42L)
+    @DisplayName("본인이 추천한 게시글 목록 조회를 할 수 있다.")
+    void getLikedPosts_shouldReturnList() throws Exception {
+        // given
+        List<Post> likedPosts = List.of(
+            Post.builder().id(1L).title("첫 글").content("내용").user(mock(User.class)).region(mock(Region.class)).build(),
+            Post.builder().id(2L).title("두 번째 글").content("내용2").user(mock(User.class)).region(mock(Region.class)).build()
+        );
+        given(postService.getLikedPosts(42L)).willReturn(likedPosts);
+
+        // when
+        mockMvc.perform(
+                get("/api/v1/posts/liked"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(2));
     }
 }

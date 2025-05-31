@@ -1,5 +1,8 @@
 package com.eventitta.post.service;
 
+import com.eventitta.auth.exception.AuthException;
+import com.eventitta.post.domain.PostLike;
+import com.eventitta.post.repository.PostLikeRepository;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.eventitta.common.response.PageResponse;
@@ -35,11 +38,11 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @DisplayName("동네 기반 게시글 단위 테스트")
 @ExtendWith(MockitoExtension.class)
@@ -51,6 +54,8 @@ class PostServiceTest {
     UserRepository userRepository;
     @Mock
     RegionRepository regionRepository;
+    @Mock
+    PostLikeRepository postLikeRepository;
 
     @InjectMocks
     PostService postService;
@@ -428,7 +433,7 @@ class PostServiceTest {
     }
 
     @Test
-    @DisplayName("imageUrls가 null인 경우에도 게시글 생성이 정상 동작한다")
+    @DisplayName("이미지가 없는 경우에도 게시글 생성이 정상 동작한다")
     void givenNullImageUrls_whenCreate_thenNoExceptionThrown() {
         // given
         long userId = 1L;
@@ -450,6 +455,76 @@ class PostServiceTest {
         // then
         assertThat(postId).isNotNull();
     }
+
+    @Test
+    @DisplayName("게시글을 추천하면 추천 개수가 증가한다.")
+    void toggleLike_firstTime_addLike() {
+        // given
+        Long postId = 1L;
+        Long userId = 10L;
+
+        Post post = mock(Post.class);
+        User user = mock(User.class);
+
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(postRepository.findById(postId)).willReturn(Optional.of(post));
+        given(postLikeRepository.findByPostIdAndUserId(postId, userId)).willReturn(Optional.empty());
+
+        // when
+        postService.toggleLike(postId, userId);
+
+        // then
+        verify(postLikeRepository).save(any(PostLike.class));
+        verify(post).incrementLikeCount();
+    }
+
+    @Test
+    @DisplayName("게시글을 이미 추천한 경우 추천을 취소한다.")
+    void toggleLike_alreadyLiked_removeLike() {
+        // given
+        Long postId = 1L;
+        Long userId = 10L;
+
+        Post post = mock(Post.class);
+        User user = mock(User.class);
+        PostLike like = mock(PostLike.class);
+
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(postRepository.findById(postId)).willReturn(Optional.of(post));
+        given(postLikeRepository.findByPostIdAndUserId(postId, userId)).willReturn(Optional.of(like));
+
+        // when
+        postService.toggleLike(postId, userId);
+
+        // then
+        verify(postLikeRepository).delete(like);
+        verify(post).decrementLikeCount();
+    }
+
+    @Test
+    @DisplayName("유저가 존재하지 않으면 예외가 발생한다")
+    void toggleLike_userNotFound() {
+        Long postId = 1L;
+        Long userId = 10L;
+
+        given(userRepository.findById(userId)).willReturn(Optional.empty());
+
+        assertThrows(AuthException.class, () -> postService.toggleLike(postId, userId));
+    }
+
+    @Test
+    @DisplayName("게시글이 존재하지 않으면 예외가 발생한다")
+    void toggleLike_postNotFound() {
+        Long postId = 1L;
+        Long userId = 10L;
+        User user = mock(User.class);
+
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(postRepository.findById(postId)).willReturn(Optional.empty());
+
+        assertThrows(PostException.class, () -> postService.toggleLike(postId, userId));
+    }
+
 
     private static User createUser(long userId, String email, String password, String nickname) {
         return User.builder()

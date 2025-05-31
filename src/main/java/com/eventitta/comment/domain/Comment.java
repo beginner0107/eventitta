@@ -38,4 +38,19 @@ public class Comment extends BaseEntity {
 
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> children = new ArrayList<>();
+
+    @Column(nullable = false)
+    private boolean deleted = false;
+
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void softDelete() {
+        this.deleted = true;
+    }
+
+    public void updateContent(String content) {
+        this.content = content;
+    }
 }

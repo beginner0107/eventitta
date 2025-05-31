@@ -67,6 +67,7 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
                 post.title,
                 post.user.nickname,
                 post.region.code,
+                post.likeCount,
                 post.createdAt
             ))
             .from(post)

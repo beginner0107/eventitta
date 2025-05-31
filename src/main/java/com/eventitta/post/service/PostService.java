@@ -1,13 +1,18 @@
 package com.eventitta.post.service;
 
+import com.eventitta.auth.exception.AuthErrorCode;
+import com.eventitta.auth.exception.AuthException;
 import com.eventitta.common.response.PageResponse;
 import com.eventitta.post.domain.Post;
 import com.eventitta.post.domain.PostImage;
+import com.eventitta.post.domain.PostLike;
 import com.eventitta.post.dto.PostFilter;
 import com.eventitta.post.dto.request.CreatePostRequest;
 import com.eventitta.post.dto.request.UpdatePostRequest;
 import com.eventitta.post.dto.response.PostDetailDto;
 import com.eventitta.post.dto.response.PostSummaryDto;
+import com.eventitta.post.exception.PostException;
+import com.eventitta.post.repository.PostLikeRepository;
 import com.eventitta.post.repository.PostRepository;
 import com.eventitta.region.domain.Region;
 import com.eventitta.region.exception.RegionErrorCode;
@@ -21,6 +26,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 import static com.eventitta.post.exception.PostErrorCode.ACCESS_DENIED;
 import static com.eventitta.post.exception.PostErrorCode.NOT_FOUND_POST_ID;
 import static com.eventitta.region.exception.RegionErrorCode.NOT_FOUND_REGION_CODE;
@@ -33,6 +42,8 @@ public class PostService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final RegionRepository regionRepository;
+    private final PostLikeRepository postLikeRepository;
+
 
     public Long create(Long userId, CreatePostRequest dto) {
         User user = userRepository.findById(userId)
@@ -80,6 +91,7 @@ public class PostService {
         post.softDelete();
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<PostSummaryDto> getPosts(PostFilter filter) {
         Pageable pg = PageRequest.of(filter.page(), filter.size());
         Page<PostSummaryDto> page = postRepository.findSummaries(filter, pg);
@@ -93,9 +105,36 @@ public class PostService {
         );
     }
 
+    @Transactional(readOnly = true)
     public PostDetailDto getPost(Long postId) {
         Post post = postRepository.findDetailByIdAndDeletedFalse(postId)
             .orElseThrow(NOT_FOUND_POST_ID::defaultException);
         return PostDetailDto.from(post);
+    }
+
+    @Transactional
+    public void toggleLike(Long postId, Long userId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new AuthException(AuthErrorCode.NOT_FOUND_USER_ID));
+        Post post = postRepository.findById(postId)
+            .orElseThrow(() -> new PostException(NOT_FOUND_POST_ID));
+
+        Optional<PostLike> existing = postLikeRepository.findByPostIdAndUserId(postId, userId);
+        if (existing.isPresent()) {
+            postLikeRepository.delete(existing.get());
+            post.decrementLikeCount();
+        } else {
+            PostLike like = new PostLike(post, user);
+            postLikeRepository.save(like);
+            post.incrementLikeCount();
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public List<Post> getLikedPosts(Long userId) {
+        return postLikeRepository.findAllByUserId(userId)
+            .stream()
+            .map(PostLike::getPost)
+            .collect(Collectors.toList());
     }
 }

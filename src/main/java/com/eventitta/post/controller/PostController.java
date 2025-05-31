@@ -2,6 +2,7 @@ package com.eventitta.post.controller;
 
 import com.eventitta.auth.annotation.CurrentUser;
 import com.eventitta.common.response.PageResponse;
+import com.eventitta.post.domain.Post;
 import com.eventitta.post.dto.PostFilter;
 import com.eventitta.post.dto.request.CreatePostRequest;
 import com.eventitta.post.dto.request.UpdatePostRequest;
@@ -20,6 +21,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RequestMapping("/api/v1/posts")
@@ -30,9 +33,7 @@ public class PostController {
 
     private final PostService postService;
 
-    @Operation(
-        summary = "게시글 생성"
-    )
+    @Operation(summary = "게시글 생성")
     @ApiResponses({
         @ApiResponse(responseCode = "201", description = "게시글 등록 성공"),
     })
@@ -71,9 +72,7 @@ public class PostController {
         return ResponseEntity.ok(result);
     }
 
-    @Operation(
-        summary = "게시글 수정"
-    )
+    @Operation(summary = "게시글 수정")
     @ApiResponses({
         @ApiResponse(responseCode = "204", description = "게시글 수정 성공"),
     })
@@ -87,9 +86,7 @@ public class PostController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(
-        summary = "게시글 삭제"
-    )
+    @Operation(summary = "게시글 삭제")
     @ApiResponses({
         @ApiResponse(responseCode = "204", description = "게시글 삭제 성공"),
     })
@@ -100,5 +97,29 @@ public class PostController {
     ) {
         postService.delete(postId, userId);
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "게시글 추천")
+    @ApiResponses({
+        @ApiResponse(responseCode = "204", description = "게시글 추천 성공"),
+    })
+    @PostMapping("/{postId}/like")
+    public ResponseEntity<Void> like(@PathVariable("postId") Long postId,
+                                     @CurrentUser Long userId) {
+        postService.toggleLike(postId, userId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "본인이 추천한 게시글 목록 조회")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "본인이 추천한 게시글 목록 조회 성공"),
+    })
+    @GetMapping("/liked")
+    public ResponseEntity<List<PostSummaryDto>> likedPosts(@CurrentUser Long userId) {
+        List<Post> posts = postService.getLikedPosts(userId);
+        List<PostSummaryDto> dto = posts.stream()
+            .map(PostSummaryDto::from)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(dto);
     }
 }

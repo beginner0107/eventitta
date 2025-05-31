@@ -12,28 +12,22 @@ import java.util.List;
 public record PostDetailDto(
     @Schema(description = "게시글 ID", example = "1")
     Long id,
-
     @Schema(description = "게시글 제목", example = "맛집 게시글 0")
     String title,
-
     @Schema(description = "게시글 내용", example = "이곳은 테스트 본문입니다.")
     String content,
-
     @Schema(description = "작성자 닉네임", example = "foo")
     String authorNickname,
-
     @Schema(description = "작성자 프로필 이미지 URL", example = "https://cdn.example.com/profile.jpg")
     String authorProfileUrl,
-
     @Schema(description = "지역 코드", example = "1100110100")
     String regionCode,
-
+    @Schema(description = "추천 수", example = "10")
+    int likeCount,
     @Schema(description = "게시글에 포함된 이미지 리스트 (정렬 순서 오름차순)")
     List<PostImageDto> images,
-
     @Schema(description = "생성일시", example = "2025-05-24T14:20:52")
     LocalDateTime createdAt,
-
     @Schema(description = "수정일시", example = "2025-05-24T15:00:00")
     LocalDateTime updatedAt
 ) {
@@ -50,6 +44,7 @@ public record PostDetailDto(
             p.getUser().getNickname(),
             p.getUser().getProfilePictureUrl(),
             p.getRegion().getCode(),
+            p.getLikeCount(),
             images,
             p.getCreatedAt(),
             p.getUpdatedAt()

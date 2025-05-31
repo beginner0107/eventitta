@@ -10,7 +10,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "posts")
@@ -44,6 +46,12 @@ public class Post extends BaseEntity {
 
     @Column(nullable = false)
     private boolean deleted = false;
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<PostLike> likes = new HashSet<>();
+
+    @Column(name = "like_count", nullable = false)
+    private int likeCount = 0;
 
     public Post(User user, String title, String content, Region region) {
         this.user = user;
@@ -85,5 +93,13 @@ public class Post extends BaseEntity {
         for (PostImage img : new ArrayList<>(images)) {
             removeImage(img);
         }
+    }
+
+    public void incrementLikeCount() {
+        this.likeCount++;
+    }
+
+    public void decrementLikeCount() {
+        if (this.likeCount > 0) this.likeCount--;
     }
 }

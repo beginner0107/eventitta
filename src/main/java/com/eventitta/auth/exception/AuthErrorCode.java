@@ -17,8 +17,7 @@ public enum AuthErrorCode implements ErrorCode {
     REFRESH_TOKEN_INVALID("잘못된 리프레시 토큰입니다.", HttpStatus.UNAUTHORIZED),
     REFRESH_TOKEN_EXPIRED("리프레시 토큰이 만료되었습니다. 다시 로그인하세요.", HttpStatus.UNAUTHORIZED),
 
-    INVALID_CREDENTIALS("이메일 또는 비밀번호가 올바르지 않습니다.", HttpStatus.UNAUTHORIZED),
-
+    INVALID_CREDENTIALS("이메일 또는 비밀번호가 올바르지 않습니다.", HttpStatus.UNAUTHORIZED), NOT_FOUND_USER_ID("사용자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
     DEFAULT("예상치 못한 서버 오류가 발생했습니다", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final String message;

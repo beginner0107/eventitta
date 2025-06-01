@@ -24,6 +24,8 @@ public record PostDetailDto(
     String regionCode,
     @Schema(description = "추천 수", example = "10")
     int likeCount,
+    @Schema(description = "댓글 수", example = "6")
+    int commentCount,
     @Schema(description = "게시글에 포함된 이미지 리스트 (정렬 순서 오름차순)")
     List<PostImageDto> images,
     @Schema(description = "생성일시", example = "2025-05-24T14:20:52")
@@ -31,7 +33,7 @@ public record PostDetailDto(
     @Schema(description = "수정일시", example = "2025-05-24T15:00:00")
     LocalDateTime updatedAt
 ) {
-    public static PostDetailDto from(Post p) {
+    public static PostDetailDto from(Post p, int commentCount) {
         List<PostImageDto> images = p.getImages().stream()
             .sorted(Comparator.comparingInt(PostImage::getSortOrder))
             .map(PostImageDto::from)
@@ -45,6 +47,7 @@ public record PostDetailDto(
             p.getUser().getProfilePictureUrl(),
             p.getRegion().getCode(),
             p.getLikeCount(),
+            commentCount,
             images,
             p.getCreatedAt(),
             p.getUpdatedAt()

@@ -2,6 +2,7 @@ package com.eventitta.post.service;
 
 import com.eventitta.auth.exception.AuthErrorCode;
 import com.eventitta.auth.exception.AuthException;
+import com.eventitta.comment.repository.CommentRepository;
 import com.eventitta.common.response.PageResponse;
 import com.eventitta.post.domain.Post;
 import com.eventitta.post.domain.PostImage;
@@ -43,6 +44,7 @@ public class PostService {
     private final UserRepository userRepository;
     private final RegionRepository regionRepository;
     private final PostLikeRepository postLikeRepository;
+    private final CommentRepository commentRepository;
 
 
     public Long create(Long userId, CreatePostRequest dto) {
@@ -109,7 +111,10 @@ public class PostService {
     public PostDetailDto getPost(Long postId) {
         Post post = postRepository.findDetailByIdAndDeletedFalse(postId)
             .orElseThrow(NOT_FOUND_POST_ID::defaultException);
-        return PostDetailDto.from(post);
+
+        int commentCount = commentRepository.countByPostIdAndDeletedFalse(postId);
+
+        return PostDetailDto.from(post, commentCount);
     }
 
     @Transactional

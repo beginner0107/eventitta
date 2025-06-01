@@ -3,7 +3,7 @@ package com.eventitta.comment.controller;
 import com.eventitta.auth.annotation.CurrentUser;
 import com.eventitta.comment.dto.request.CommentRequestDto;
 import com.eventitta.comment.dto.request.CommentUpdateRequestDto;
-import com.eventitta.comment.dto.response.CommentResponseDto;
+import com.eventitta.comment.dto.response.CommentWithChildrenDto;
 import com.eventitta.comment.service.CommentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -36,10 +36,10 @@ public class CommentController {
 
     @Operation(summary = "댓글 목록 조회")
     @GetMapping
-    public ResponseEntity<List<CommentResponseDto>> getComments(
+    public ResponseEntity<List<CommentWithChildrenDto>> getComments(
         @PathVariable("postId") Long postId
     ) {
-        List<CommentResponseDto> comments = commentService.getCommentsByPost(postId);
+        List<CommentWithChildrenDto> comments = commentService.getCommentsByPost(postId);
         return ResponseEntity.ok(comments);
     }
 
@@ -51,7 +51,7 @@ public class CommentController {
         @CurrentUser Long userId,
         @RequestBody @Valid CommentUpdateRequestDto request
     ) {
-        commentService.updateComment(postId, commentId, userId, request.content());
+        commentService.updateComment(commentId, userId, request.content());
         return ResponseEntity.noContent().build();
     }
 

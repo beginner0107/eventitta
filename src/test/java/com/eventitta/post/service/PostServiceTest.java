@@ -1,6 +1,7 @@
 package com.eventitta.post.service;
 
 import com.eventitta.auth.exception.AuthException;
+import com.eventitta.comment.repository.CommentRepository;
 import com.eventitta.post.domain.PostLike;
 import com.eventitta.post.repository.PostLikeRepository;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -56,6 +57,8 @@ class PostServiceTest {
     RegionRepository regionRepository;
     @Mock
     PostLikeRepository postLikeRepository;
+    @Mock
+    CommentRepository commentRepository;
 
     @InjectMocks
     PostService postService;
@@ -359,6 +362,8 @@ class PostServiceTest {
 
         given(postRepository.findDetailByIdAndDeletedFalse(postId))
             .willReturn(Optional.of(post));
+        given(commentRepository.countByPostIdAndDeletedFalse(postId))
+            .willReturn(1);
 
         // when
         PostDetailDto response = postService.getPost(postId);
@@ -368,6 +373,7 @@ class PostServiceTest {
         assertThat(response.title()).isEqualTo("제목");
         assertThat(response.content()).isEqualTo("내용");
         assertThat(response.regionCode()).isEqualTo("1100110100");
+        assertThat(response.commentCount()).isEqualTo(1);
     }
 
     @Test

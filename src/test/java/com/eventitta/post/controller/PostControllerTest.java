@@ -303,6 +303,7 @@ class PostControllerTest extends ControllerTestSupport {
             "authProfileUrl",
             "1100110101",
             1,
+            10,
             List.of(),
             LocalDateTime.now(),
             LocalDateTime.now()

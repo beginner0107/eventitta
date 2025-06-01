@@ -3,6 +3,8 @@ package com.eventitta;
 import com.eventitta.auth.controller.AuthController;
 import com.eventitta.auth.jwt.JwtTokenProvider;
 import com.eventitta.auth.service.*;
+import com.eventitta.comment.controller.CommentController;
+import com.eventitta.comment.service.CommentService;
 import com.eventitta.common.config.CustomAuthenticationEntryPoint;
 import com.eventitta.common.config.SecurityConfig;
 import com.eventitta.common.storage.FileStorageService;
@@ -20,7 +22,8 @@ import org.springframework.test.web.servlet.MockMvc;
 @WebMvcTest(controllers = {
     AuthController.class,
     PostController.class,
-    FileUploadController.class
+    FileUploadController.class,
+    CommentController.class
 })
 @AutoConfigureMockMvc(addFilters = false)
 @Import({SecurityConfig.class})
@@ -47,4 +50,6 @@ public abstract class ControllerTestSupport {
     protected PostService postService;
     @MockitoBean
     protected FileStorageService storageService;
+    @MockitoBean
+    protected CommentService commentService;
 }

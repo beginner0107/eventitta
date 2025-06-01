@@ -2,7 +2,8 @@ package com.eventitta.comment.service;
 
 import com.eventitta.auth.exception.AuthException;
 import com.eventitta.comment.domain.Comment;
-import com.eventitta.comment.dto.response.CommentResponseDto;
+import com.eventitta.comment.dto.query.CommentFlatDto;
+import com.eventitta.comment.dto.response.CommentWithChildrenDto;
 import com.eventitta.comment.exception.CommentException;
 import com.eventitta.comment.repository.CommentRepository;
 import com.eventitta.post.domain.Post;
@@ -15,6 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.eventitta.auth.exception.AuthErrorCode.NOT_FOUND_USER_ID;
 import static com.eventitta.comment.exception.CommentErrorCode.NOT_FOUND_COMMENT_ID;
@@ -53,13 +56,20 @@ public class CommentService {
     }
 
     @Transactional(readOnly = true)
-    public List<CommentResponseDto> getCommentsByPost(Long postId) {
-        return commentRepository.findAllByPostIdAndParentIsNullOrderByCreatedAtAsc(postId).stream()
-            .map(CommentResponseDto::from)
+    public List<CommentWithChildrenDto> getCommentsByPost(Long postId) {
+        List<CommentFlatDto> flats = commentRepository.findFlatByPost(postId);
+
+        Map<Long, List<CommentFlatDto>> parentToChildren = flats.stream()
+            .filter(dto -> dto.parentId() != null)
+            .collect(Collectors.groupingBy(CommentFlatDto::parentId));
+
+        return flats.stream()
+            .filter(dto -> dto.parentId() == null)
+            .map(parent -> CommentWithChildrenDto.from(parent, parentToChildren.get(parent.id())))
             .toList();
     }
 
-    public void updateComment(Long postId, Long commentId, Long userId, String content) {
+    public void updateComment(Long commentId, Long userId, String content) {
         Comment comment = commentRepository.findById(commentId)
             .orElseThrow(() -> new CommentException(NOT_FOUND_COMMENT_ID));
 

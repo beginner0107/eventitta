@@ -11,7 +11,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     defer-datasource-initialization: true
     properties:
       hibernate.format_sql: true
@@ -24,6 +24,11 @@ spring:
   devtools:
     restart:
       enabled: true
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
 
 springdoc:
   api-docs:
@@ -49,3 +54,11 @@ logging:
     root: INFO
     org.hibernate.SQL: WARN
     p6spy: DEBUG
+
+festival:
+  api:
+    base-url: "http://api.data.go.kr/openapi/tn_pubr_public_cltur_fstvl_api"
+    service-key: ${FESTIVAL_API_SERVICE_KEY}
+  import:
+    page-size: 100
+    source: "NATIONAL"

@@ -18,7 +18,7 @@ spring:
 
   sql:
     init:
-      mode: always
+      mode: never
       data-locations: classpath:data.sql
 
   devtools:
@@ -56,9 +56,20 @@ logging:
     p6spy: DEBUG
 
 festival:
-  api:
+  # 기존 전국 축제 API 설정
+  national:
     base-url: "http://api.data.go.kr/openapi/tn_pubr_public_cltur_fstvl_api"
-    service-key: ${FESTIVAL_API_SERVICE_KEY}
-  import:
-    page-size: 100
-    source: "NATIONAL"
+    service-key: "${FESTIVAL_API_SERVICE_KEY}"
+    import:
+      page-size: 100
+      source: "NATIONAL"
+
+  # 서울시 문화행사 API 설정
+  seoul:
+    base-url: "http://openapi.seoul.go.kr:8088"
+    service-key: "${SEOUL_API_SERVICE_KEY}"
+    file-type: "json"
+    service-name: "culturalEventInfo"
+    import:
+      page-size: 50
+      source: "SEOUL"

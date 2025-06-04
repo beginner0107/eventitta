@@ -1,7 +1,7 @@
 package com.eventitta.event.domain;
 
 import jakarta.persistence.*;
-import lombok.Getter;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -9,16 +9,16 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "events")
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
 public class Event {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /**
-     * 데이터 출처 예: "SEOUL", "NATIONAL" 등
-     */
-    @Column(length = 50, nullable = false)
+    @Column(nullable = false, length = 50)
     private String source;
 
     @Column(length = 255, nullable = false)
@@ -33,13 +33,13 @@ public class Event {
     @Column(length = 255)
     private String address;
 
-    @Column(length = 50)
+    @Column(length = 100)
     private String category;
 
     @Column(name = "is_free", nullable = false)
-    private boolean isFree = false;
+    private Boolean isFree;
 
-    @Column(length = 100)
+    @Column(length = 255)
     private String useFee;
 
     @Column(name = "homepage_url", length = 512)
@@ -56,161 +56,66 @@ public class Event {
 
     @Column(name = "start_time")
     private LocalDateTime startTime;
-
+    
     @Column(name = "end_time")
     private LocalDateTime endTime;
 
-    @Column(name = "created_at", nullable = false,
-        columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false,
-        columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
+    @Column(nullable = false)
     private LocalDateTime updatedAt;
-
-    protected Event() {
-    }
-
-    private Event(String source,
-                  String title,
-                  String description,
-                  String place,
-                  String address,
-                  String category,
-                  boolean isFree,
-                  String useFee,
-                  String homepageUrl,
-                  String mainImgUrl,
-                  BigDecimal latitude,
-                  BigDecimal longitude,
-                  LocalDateTime startTime,
-                  LocalDateTime endTime) {
-        this.source = source;
-        this.title = title;
-        this.description = description;
-        this.place = place;
-        this.address = address;
-        this.category = category;
-        this.isFree = isFree;
-        this.useFee = useFee;
-        this.homepageUrl = homepageUrl;
-        this.mainImgUrl = mainImgUrl;
-        this.latitude = latitude;
-        this.longitude = longitude;
-        this.startTime = startTime;
-        this.endTime = endTime;
-    }
 
     @PrePersist
     protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = this.createdAt;
+        createdAt = LocalDateTime.now();
+        updatedAt = createdAt;
     }
 
     @PreUpdate
     protected void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
     }
 
-    public static EventBuilder builder() {
-        return new EventBuilder();
-    }
-
-    public static class EventBuilder {
-        private String source;
-        private String title;
-        private String description;
-        private String place;
-        private String address;
-        private String category;
-        private boolean isFree;
-        private String useFee;
-        private String homepageUrl;
-        private String mainImgUrl;
-        private BigDecimal latitude;
-        private BigDecimal longitude;
-        private LocalDateTime startTime;
-        private LocalDateTime endTime;
-
-        EventBuilder() {
+    /**
+     * null이 아닌 필드만 업데이트.
+     */
+    public void updateFrom(Event other) {
+        if (other.getDescription() != null && !other.getDescription().equals(this.description)) {
+            this.description = other.getDescription();
         }
-
-        public EventBuilder source(String source) {
-            this.source = source;
-            return this;
+        if (other.getPlace() != null && !other.getPlace().equals(this.place)) {
+            this.place = other.getPlace();
         }
-
-        public EventBuilder title(String title) {
-            this.title = title;
-            return this;
+        if (other.getAddress() != null && !other.getAddress().equals(this.address)) {
+            this.address = other.getAddress();
         }
-
-        public EventBuilder description(String description) {
-            this.description = description;
-            return this;
+        if (other.getCategory() != null && !other.getCategory().equals(this.category)) {
+            this.category = other.getCategory();
         }
-
-        public EventBuilder place(String place) {
-            this.place = place;
-            return this;
+        if (other.getIsFree() != null && !other.getIsFree().equals(this.isFree)) {
+            this.isFree = other.getIsFree();
         }
-
-        public EventBuilder address(String address) {
-            this.address = address;
-            return this;
+        if (other.getUseFee() != null && !other.getUseFee().equals(this.useFee)) {
+            this.useFee = other.getUseFee();
         }
-
-        public EventBuilder category(String category) {
-            this.category = category;
-            return this;
+        if (other.getHomepageUrl() != null && !other.getHomepageUrl().equals(this.homepageUrl)) {
+            this.homepageUrl = other.getHomepageUrl();
         }
-
-        public EventBuilder isFree(boolean isFree) {
-            this.isFree = isFree;
-            return this;
+        if (other.getMainImgUrl() != null && !other.getMainImgUrl().equals(this.mainImgUrl)) {
+            this.mainImgUrl = other.getMainImgUrl();
         }
-
-        public EventBuilder useFee(String useFee) {
-            this.useFee = useFee;
-            return this;
+        if (other.getLatitude() != null && !other.getLatitude().equals(this.latitude)) {
+            this.latitude = other.getLatitude();
         }
-
-        public EventBuilder homepageUrl(String homepageUrl) {
-            this.homepageUrl = homepageUrl;
-            return this;
+        if (other.getLongitude() != null && !other.getLongitude().equals(this.longitude)) {
+            this.longitude = other.getLongitude();
         }
-
-        public EventBuilder mainImgUrl(String mainImgUrl) {
-            this.mainImgUrl = mainImgUrl;
-            return this;
+        if (other.getStartTime() != null && !other.getStartTime().equals(this.startTime)) {
+            this.startTime = other.getStartTime();
         }
-
-        public EventBuilder latitude(BigDecimal latitude) {
-            this.latitude = latitude;
-            return this;
-        }
-
-        public EventBuilder longitude(BigDecimal longitude) {
-            this.longitude = longitude;
-            return this;
-        }
-
-        public EventBuilder startTime(LocalDateTime startTime) {
-            this.startTime = startTime;
-            return this;
-        }
-
-        public EventBuilder endTime(LocalDateTime endTime) {
-            this.endTime = endTime;
-            return this;
-        }
-
-        public Event build() {
-            return new Event(
-                source, title, description, place, address, category,
-                isFree, useFee, homepageUrl, mainImgUrl,
-                latitude, longitude, startTime, endTime
-            );
+        if (other.getEndTime() != null && !other.getEndTime().equals(this.endTime)) {
+            this.endTime = other.getEndTime();
         }
     }
 }

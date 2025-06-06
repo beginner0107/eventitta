@@ -23,6 +23,5 @@ public class NationalFestivalImportService extends PageBasedFestivalImportServic
 
     public void importAll() {
         importAll(null);
-        super.importAll(null);
     }
 }

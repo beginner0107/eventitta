@@ -2,6 +2,7 @@ package com.eventitta.event.client;
 
 import com.eventitta.common.config.RestClientConfig.NationalFestivalApi;
 import com.eventitta.event.dto.NationalFestivalResponse;
+import com.eventitta.event.service.PageResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -9,7 +10,8 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-public class NationalFestivalClient {
+public class NationalFestivalClient implements FestivalApiClient<NationalFestivalResponse.FestivalItem> {
+
 
     private final NationalFestivalApi nationalFestivalApi;
 
@@ -20,12 +22,8 @@ public class NationalFestivalClient {
         this.nationalFestivalApi = nationalFestivalApi;
     }
 
-    /**
-     * @param pageNo   1-based 페이지 번호
-     * @param pageSize 한 페이지당 아이템 개수
-     * @return Body (items + totalCount)
-     */
-    public NationalFestivalResponse.Body fetchPage(int pageNo, int pageSize) {
+    @Override
+    public PageResult<NationalFestivalResponse.FestivalItem> fetchPage(int pageNo, int pageSize, String dateParam) {
         log.debug("NationalFestivalClient: serviceKey=[{}], pageNo=[{}], pageSize=[{}]",
             serviceKey, pageNo, pageSize);
 
@@ -40,6 +38,7 @@ public class NationalFestivalClient {
             throw new RuntimeException("NationalFestivalClient: API 호출 결과가 null");
         }
 
-        return response.getResponse().getBody();
+        var body = response.getResponse().getBody();
+        return new PageResult<>(body.getItems(), body.getTotalCount());
     }
 }

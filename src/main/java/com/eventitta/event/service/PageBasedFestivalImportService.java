@@ -1,5 +1,6 @@
 package com.eventitta.event.service;
 
+import com.eventitta.event.client.FestivalApiClient;
 import com.eventitta.event.mapper.FestivalToEventMapper;
 import com.eventitta.event.repository.FestivalRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -7,19 +8,22 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 
 @Slf4j
-public abstract class PageBasedFestivalImportService<D> {
+public class PageBasedFestivalImportService<D> {
 
+    protected final FestivalApiClient<D> apiClient;
     protected final FestivalToEventMapper<D> mapper;
     protected final FestivalRepository repository;
     protected final FestivalUpsertWorker upsertWorker;
     protected final String source;
     protected final int pageSize;
 
-    protected PageBasedFestivalImportService(FestivalToEventMapper<D> mapper,
+    protected PageBasedFestivalImportService(FestivalApiClient<D> apiClient,
+                                             FestivalToEventMapper<D> mapper,
                                              FestivalRepository repository,
                                              FestivalUpsertWorker upsertWorker,
                                              String source,
                                              int pageSize) {
+        this.apiClient = apiClient;
         this.mapper = mapper;
         this.repository = repository;
         this.upsertWorker = upsertWorker;
@@ -34,7 +38,9 @@ public abstract class PageBasedFestivalImportService<D> {
      * @param dateParam API 별 날짜/기간 파라미터 (e.g. "2025", "2025-06", "20230101" 등)
      * @return 해당 페이지 아이템 목록 + 전체 총 개수
      */
-    protected abstract PageResult<D> fetchPageAndCount(int pageNo, String dateParam);
+    protected PageResult<D> fetchPageAndCount(int pageNo, String dateParam) {
+        return apiClient.fetchPage(pageNo, pageSize, dateParam);
+    }
 
     /**
      * 전체 데이터를 API에서 페이징 형태로 조회하여 Upsert를 수행

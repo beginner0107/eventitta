@@ -1,5 +1,6 @@
 package com.eventitta.event.domain;
 
+import com.eventitta.common.config.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,8 +23,8 @@ import java.util.Objects;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class Event {
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = true)
+public class Event extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -71,25 +72,6 @@ public class Event {
 
     @Column(name = "end_time")
     private LocalDateTime endTime;
-
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
-
-
-    @PrePersist
-    protected void onCreate() {
-        // UTC 타임스탬프를 LocalDateTime 형태로 저장
-        createdAt = LocalDateTime.now(ZoneOffset.UTC);
-        updatedAt = createdAt;
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now(ZoneOffset.UTC);
-    }
 
     public void updateFrom(Event other) {
         if (other.getDescription() != null &&

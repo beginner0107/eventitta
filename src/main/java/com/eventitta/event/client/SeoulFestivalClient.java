@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import static com.eventitta.event.exception.EventErrorCode.API_CALL_FAILED;
+
 @Slf4j
 @Component
 public class SeoulFestivalClient implements FestivalApiClient<SeoulFestivalResponse.SeoulEventItem> {
@@ -31,8 +33,7 @@ public class SeoulFestivalClient implements FestivalApiClient<SeoulFestivalRespo
         int startIndex = (pageNo - 1) * pageSize + 1;
         int endIndex = pageNo * pageSize;
 
-        log.debug(
-            "SeoulFestivalClient: serviceKey={}, fileType={}, serviceName={}, start={}, end={}, date={}"
+        log.debug("[FestivalImport][SeoulFestivalClient] serviceKey={}, fileType={}, serviceName={}, start={}, end={}, date={}"
             , serviceKey, fileType, serviceName, startIndex, endIndex, dateParam);
 
         SeoulFestivalResponse response = seoulFestivalApi.getSeoulEvents(
@@ -41,7 +42,7 @@ public class SeoulFestivalClient implements FestivalApiClient<SeoulFestivalRespo
         );
 
         if (response == null || response.getResponseWrapper() == null) {
-            throw new RuntimeException("SeoulFestivalClient: API 호출 결과가 null");
+            throw API_CALL_FAILED.defaultException();
         }
 
         var wrapper = response.getResponseWrapper();

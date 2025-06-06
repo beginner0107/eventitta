@@ -2,11 +2,15 @@ package com.eventitta.event.client;
 
 import com.eventitta.common.config.RestClientConfig.NationalFestivalApi;
 import com.eventitta.event.dto.NationalFestivalResponse;
+import com.eventitta.event.exception.EventErrorCode;
 import com.eventitta.event.service.PageResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import static com.eventitta.event.exception.EventErrorCode.*;
+import static com.eventitta.event.exception.EventErrorCode.SERVICE_KEY_MISSING;
 
 @Slf4j
 @Component
@@ -24,18 +28,17 @@ public class NationalFestivalClient implements FestivalApiClient<NationalFestiva
 
     @Override
     public PageResult<NationalFestivalResponse.FestivalItem> fetchPage(int pageNo, int pageSize, String dateParam) {
-        log.debug("NationalFestivalClient: serviceKey=[{}], pageNo=[{}], pageSize=[{}]",
+        log.debug("[FestivalImport][NationalFestivalClient] serviceKey={}, pageNo={}, pageSize={}",
             serviceKey, pageNo, pageSize);
-
         if (serviceKey == null || serviceKey.isBlank()) {
-            throw new IllegalStateException("NationalFestivalClient: serviceKey가 비어있음");
+            throw SERVICE_KEY_MISSING.defaultException();
         }
 
         NationalFestivalResponse response =
             nationalFestivalApi.getFestivals(serviceKey, pageNo, pageSize, "json");
 
         if (response == null || response.getResponse() == null || response.getResponse().getBody() == null) {
-            throw new RuntimeException("NationalFestivalClient: API 호출 결과가 null");
+            throw API_CALL_FAILED.defaultException();
         }
 
         var body = response.getResponse().getBody();

@@ -7,16 +7,15 @@ import com.eventitta.auth.exception.AuthException;
 import com.eventitta.auth.jwt.JwtTokenProvider;
 import com.eventitta.common.util.CookieUtil;
 import com.eventitta.user.domain.User;
-import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import static com.eventitta.auth.exception.AuthErrorCode.*;
+import static com.eventitta.auth.exception.AuthErrorCode.INVALID_CREDENTIALS;
 
 @Slf4j
 @Service

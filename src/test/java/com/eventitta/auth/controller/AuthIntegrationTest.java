@@ -9,7 +9,6 @@ import com.eventitta.user.domain.Role;
 import com.eventitta.user.domain.User;
 import com.eventitta.user.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
-import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
@@ -19,6 +18,7 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.transaction.annotation.Transactional;
 
 import static com.eventitta.auth.exception.AuthErrorCode.*;
 import static com.eventitta.common.constants.ValidationMessage.*;

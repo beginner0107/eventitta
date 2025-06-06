@@ -5,23 +5,35 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.Objects;
 
 @Entity
-@Table(name = "events")
+@Table(
+    name = "events",
+    uniqueConstraints = {
+        @UniqueConstraint(
+            name = "uk_events_source_title_start_time",
+            columnNames = {"source", "title", "start_time"}
+        )
+    }
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Event {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Long id;
 
     @Column(nullable = false, length = 50)
     private String source;
 
-    @Column(length = 255, nullable = false)
+    @Column(nullable = false, length = 255)
     private String title;
 
     @Column(columnDefinition = "TEXT")
@@ -36,7 +48,7 @@ public class Event {
     @Column(length = 100)
     private String category;
 
-    @Column(name = "is_free", nullable = false)
+    @Column(name = "is_free", nullable = true)
     private Boolean isFree;
 
     @Column(length = 255)
@@ -56,65 +68,87 @@ public class Event {
 
     @Column(name = "start_time")
     private LocalDateTime startTime;
-    
+
     @Column(name = "end_time")
     private LocalDateTime endTime;
 
-    @Column(nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(nullable = false)
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+        // UTC 타임스탬프를 LocalDateTime 형태로 저장
+        createdAt = LocalDateTime.now(ZoneOffset.UTC);
         updatedAt = createdAt;
     }
 
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now(ZoneOffset.UTC);
     }
 
-    /**
-     * null이 아닌 필드만 업데이트.
-     */
     public void updateFrom(Event other) {
-        if (other.getDescription() != null && !other.getDescription().equals(this.description)) {
+        if (other.getDescription() != null &&
+            !Objects.equals(other.getDescription(), this.description)) {
             this.description = other.getDescription();
         }
-        if (other.getPlace() != null && !other.getPlace().equals(this.place)) {
+
+        if (other.getPlace() != null &&
+            !Objects.equals(other.getPlace(), this.place)) {
             this.place = other.getPlace();
         }
-        if (other.getAddress() != null && !other.getAddress().equals(this.address)) {
+
+        if (other.getAddress() != null &&
+            !Objects.equals(other.getAddress(), this.address)) {
             this.address = other.getAddress();
         }
-        if (other.getCategory() != null && !other.getCategory().equals(this.category)) {
+
+        if (other.getCategory() != null &&
+            !Objects.equals(other.getCategory(), this.category)) {
             this.category = other.getCategory();
         }
-        if (other.getIsFree() != null && !other.getIsFree().equals(this.isFree)) {
+
+        if (other.getIsFree() != null &&
+            !Objects.equals(other.getIsFree(), this.isFree)) {
             this.isFree = other.getIsFree();
         }
-        if (other.getUseFee() != null && !other.getUseFee().equals(this.useFee)) {
+
+        if (other.getUseFee() != null &&
+            !Objects.equals(other.getUseFee(), this.useFee)) {
             this.useFee = other.getUseFee();
         }
-        if (other.getHomepageUrl() != null && !other.getHomepageUrl().equals(this.homepageUrl)) {
+
+        if (other.getHomepageUrl() != null &&
+            !Objects.equals(other.getHomepageUrl(), this.homepageUrl)) {
             this.homepageUrl = other.getHomepageUrl();
         }
-        if (other.getMainImgUrl() != null && !other.getMainImgUrl().equals(this.mainImgUrl)) {
+
+        if (other.getMainImgUrl() != null &&
+            !Objects.equals(other.getMainImgUrl(), this.mainImgUrl)) {
             this.mainImgUrl = other.getMainImgUrl();
         }
-        if (other.getLatitude() != null && !other.getLatitude().equals(this.latitude)) {
+
+        if (other.getLatitude() != null &&
+            !Objects.equals(other.getLatitude(), this.latitude)) {
             this.latitude = other.getLatitude();
         }
-        if (other.getLongitude() != null && !other.getLongitude().equals(this.longitude)) {
+
+        if (other.getLongitude() != null &&
+            !Objects.equals(other.getLongitude(), this.longitude)) {
             this.longitude = other.getLongitude();
         }
-        if (other.getStartTime() != null && !other.getStartTime().equals(this.startTime)) {
+
+        if (other.getStartTime() != null &&
+            !Objects.equals(other.getStartTime(), this.startTime)) {
             this.startTime = other.getStartTime();
         }
-        if (other.getEndTime() != null && !other.getEndTime().equals(this.endTime)) {
+
+        if (other.getEndTime() != null &&
+            !Objects.equals(other.getEndTime(), this.endTime)) {
             this.endTime = other.getEndTime();
         }
     }

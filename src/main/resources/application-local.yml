@@ -11,10 +11,16 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
     defer-datasource-initialization: true
+
     properties:
-      hibernate.format_sql: true
+      hibernate:
+        format_sql: true
+        jdbc:
+          batch_size: 100
+        order_inserts: true
+        order_updates: true
 
   sql:
     init:
@@ -56,20 +62,23 @@ logging:
     p6spy: DEBUG
 
 festival:
-  # 기존 전국 축제 API 설정
+  schedule:
+    enabled: true
+
   national:
-    base-url: "http://api.data.go.kr/openapi/tn_pubr_public_cltur_fstvl_api"
-    service-key: "${FESTIVAL_API_SERVICE_KEY}"
+    base-url: http://api.data.go.kr/openapi/tn_pubr_public_cltur_fstvl_api
+    service-key: ${FESTIVAL_API_SERVICE_KEY}
+    schedule-cron: 0 0 0 1 1,4,7,10 *
     import:
       page-size: 100
-      source: "NATIONAL"
+      source: NATIONAL
 
-  # 서울시 문화행사 API 설정
   seoul:
-    base-url: "http://openapi.seoul.go.kr:8088"
-    service-key: "${SEOUL_API_SERVICE_KEY}"
-    file-type: "json"
-    service-name: "culturalEventInfo"
+    base-url: http://openapi.seoul.go.kr:8088
+    service-key: ${SEOUL_API_SERVICE_KEY}
+    file-type: json
+    service-name: culturalEventInfo
+    schedule-cron: 0 0 11 * * *
     import:
       page-size: 50
-      source: "SEOUL"
+      source: SEOUL

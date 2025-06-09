@@ -10,11 +10,11 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
 
-import static com.eventitta.event.dto.SeoulApiResponse.SeoulEventItem;
+import static com.eventitta.event.dto.SeoulFestivalResponse.SeoulEventItem;
 
 @Slf4j
 @Component
-public class SeoulMapper implements EventMapper<SeoulEventItem> {
+public class SeoulFestivalMapper implements FestivalToEventMapper<SeoulEventItem> {
 
     private static final DateTimeFormatter DATE_TIME_FMT = new DateTimeFormatterBuilder()
         .appendPattern("yyyy-MM-dd HH:mm:ss")
@@ -25,24 +25,24 @@ public class SeoulMapper implements EventMapper<SeoulEventItem> {
 
     @Override
     public Event toEntity(SeoulEventItem dto, String source) {
-        LocalDateTime start = null;
+        // (1) 시작/종료일 파싱
+        LocalDateTime start = null, end = null;
         if (dto.getStartDate() != null && !dto.getStartDate().isBlank()) {
             try {
                 start = LocalDateTime.parse(dto.getStartDate(), DATE_TIME_FMT);
             } catch (DateTimeParseException e) {
-                log.warn("[SeoulMapper] startDate 파싱 실패: {}", dto.getStartDate());
+                log.warn("SeoulMapper: startDate 파싱 실패 → {}", dto.getStartDate());
             }
         }
-
-        LocalDateTime end = null;
         if (dto.getEndDate() != null && !dto.getEndDate().isBlank()) {
             try {
                 end = LocalDateTime.parse(dto.getEndDate(), DATE_TIME_FMT);
             } catch (DateTimeParseException e) {
-                log.warn("[SeoulMapper] endDate 파싱 실패: {}", dto.getEndDate());
+                log.warn("SeoulMapper: endDate 파싱 실패 → {}", dto.getEndDate());
             }
         }
 
+        // (2) 위도/경도 파싱
         BigDecimal latitude = null, longitude = null;
         try {
             if (dto.getLot() != null && !dto.getLot().isBlank()) {
@@ -52,9 +52,10 @@ public class SeoulMapper implements EventMapper<SeoulEventItem> {
                 longitude = new BigDecimal(dto.getLat());
             }
         } catch (NumberFormatException e) {
-            log.error("[SeoulMapper] 위도/경도 파싱 오류: {}", e.getMessage());
+            log.error("SeoulMapper: 위도/경도 파싱 실패 → {}", e.getMessage());
         }
 
+        // (3) isFree (“무료”/“유료”) → Boolean
         Boolean isFree = null;
         if ("무료".equals(dto.getIsFree())) {
             isFree = true;

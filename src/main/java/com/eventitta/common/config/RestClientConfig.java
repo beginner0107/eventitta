@@ -1,7 +1,7 @@
 package com.eventitta.common.config;
 
-import com.eventitta.event.dto.FestivalApiResponse;
-import com.eventitta.event.dto.SeoulApiResponse;
+import com.eventitta.event.dto.NationalFestivalResponse;
+import com.eventitta.event.dto.SeoulFestivalResponse;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -24,16 +24,16 @@ public class RestClientConfig {
     }
 
     @Bean
-    public RestClientConfig.FestivalApi nationalFestivalApi(
+    public NationalFestivalApi nationalFestivalApi(
         @Qualifier("nationalRestClient") RestClient restClient) {
         RestClientAdapter adapter = RestClientAdapter.create(restClient);
         HttpServiceProxyFactory factory = HttpServiceProxyFactory.builderFor(adapter).build();
-        return factory.createClient(FestivalApi.class);
+        return factory.createClient(NationalFestivalApi.class);
     }
 
-    public interface FestivalApi {
+    public interface NationalFestivalApi {
         @GetExchange
-        FestivalApiResponse getFestivals(
+        NationalFestivalResponse getFestivals(
             @RequestParam("serviceKey") String serviceKey,
             @RequestParam("pageNo") int pageNo,
             @RequestParam("numOfRows") int numOfRows,
@@ -50,19 +50,19 @@ public class RestClientConfig {
     }
 
     @Bean
-    public RestClientConfig.SeoulApi seoulFestivalApi(
+    public SeoulFestivalApi seoulFestivalApi(
         @Qualifier("seoulRestClient") RestClient restClient) {
         RestClientAdapter adapter = RestClientAdapter.create(restClient);
         HttpServiceProxyFactory factory = HttpServiceProxyFactory.builderFor(adapter).build();
-        return factory.createClient(SeoulApi.class);
+        return factory.createClient(SeoulFestivalApi.class);
     }
 
-    public interface SeoulApi {
+    public interface SeoulFestivalApi {
 
         @GetExchange(
             url = "/{serviceKey}/{fileType}/{serviceName}/{startIndex}/{endIndex}/{unused1}/{unused2}/{dateParam}"
         )
-        SeoulApiResponse getSeoulEvents(
+        SeoulFestivalResponse getSeoulEvents(
             @PathVariable("serviceKey") String serviceKey,
             @PathVariable("fileType") String fileType,
             @PathVariable("serviceName") String serviceName,

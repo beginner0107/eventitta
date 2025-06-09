@@ -1,7 +1,6 @@
 package com.eventitta.comment.exception;
 
 import com.eventitta.common.exception.ErrorCode;
-import com.eventitta.post.exception.PostException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 
@@ -24,12 +23,12 @@ public enum CommentErrorCode implements ErrorCode {
     }
 
     @Override
-    public PostException defaultException() {
-        return new PostException(this);
+    public CommentException defaultException() {
+        return new CommentException(this);
     }
 
     @Override
-    public PostException defaultException(Throwable cause) {
-        return new PostException(this, cause);
+    public CommentException defaultException(Throwable cause) {
+        return new CommentException(this, cause);
     }
 }

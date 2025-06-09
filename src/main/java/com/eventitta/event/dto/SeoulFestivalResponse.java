@@ -11,7 +11,7 @@ import java.util.List;
 @Setter
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class SeoulApiResponse {
+public class SeoulFestivalResponse {
     @JsonProperty("culturalEventInfo")
     private SeoulResponseWrapper responseWrapper;
 

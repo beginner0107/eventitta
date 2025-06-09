@@ -10,7 +10,7 @@ import java.util.List;
 @Setter
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class FestivalApiResponse {
+public class NationalFestivalResponse {
 
     @JsonProperty("response")
     private ResponseWrapper response;

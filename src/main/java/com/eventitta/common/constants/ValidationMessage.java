@@ -17,4 +17,8 @@ public final class ValidationMessage {
     public static final String SIZE_MIN = "페이지 크기는 최소 1 이상이어야 합니다.";
     public static final String SIZE_MAX = "페이지 크기는 최대 100 이하여야 합니다.";
     public static final String COMMENT_CONTENT = "댓글 내용을 입력해주세요.";
+    public static final String LAT = "검색 기준 위도를 입력해주세요.";
+    public static final String LNG = "검색 기준 경도를 입력해주세요.";
+    public static final String DISTANCE = "반경 거리를 입력해주세요.";
+    public static final String DISTANCE_MIN = "반경는 최소 0.1km 이상이어야 합니다.";
 }

@@ -1,4 +1,4 @@
-package com.eventitta.event.dto;
+package com.eventitta.event.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;

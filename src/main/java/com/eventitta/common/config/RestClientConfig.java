@@ -1,7 +1,7 @@
 package com.eventitta.common.config;
 
-import com.eventitta.event.dto.NationalFestivalResponse;
-import com.eventitta.event.dto.SeoulFestivalResponse;
+import com.eventitta.event.dto.response.NationalFestivalResponse;
+import com.eventitta.event.dto.response.SeoulFestivalResponse;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

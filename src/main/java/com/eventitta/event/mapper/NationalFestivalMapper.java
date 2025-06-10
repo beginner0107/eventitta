@@ -2,7 +2,7 @@ package com.eventitta.event.mapper;
 
 import com.eventitta.event.domain.Event;
 
-import static com.eventitta.event.dto.NationalFestivalResponse.FestivalItem;
+import static com.eventitta.event.dto.response.NationalFestivalResponse.FestivalItem;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

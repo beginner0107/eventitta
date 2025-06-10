@@ -1,7 +1,7 @@
 package com.eventitta.event.service;
 
 import com.eventitta.event.client.NationalFestivalClient;
-import com.eventitta.event.dto.NationalFestivalResponse;
+import com.eventitta.event.dto.response.NationalFestivalResponse;
 import com.eventitta.event.mapper.FestivalToEventMapper;
 import com.eventitta.event.repository.FestivalRepository;
 import lombok.extern.slf4j.Slf4j;

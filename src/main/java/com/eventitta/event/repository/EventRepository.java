@@ -1,7 +1,7 @@
 package com.eventitta.event.repository;
 
 import com.eventitta.event.domain.Event;
-import com.eventitta.event.dto.EventDistanceDto;
+import com.eventitta.event.dto.response.EventDistanceDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

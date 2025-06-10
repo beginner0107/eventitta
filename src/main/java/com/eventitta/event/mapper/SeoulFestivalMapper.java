@@ -10,7 +10,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
 
-import static com.eventitta.event.dto.SeoulFestivalResponse.SeoulEventItem;
+import static com.eventitta.event.dto.response.SeoulFestivalResponse.SeoulEventItem;
 
 @Slf4j
 @Component

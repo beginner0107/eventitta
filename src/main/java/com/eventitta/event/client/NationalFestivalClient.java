@@ -1,8 +1,7 @@
 package com.eventitta.event.client;
 
 import com.eventitta.common.config.RestClientConfig.NationalFestivalApi;
-import com.eventitta.event.dto.NationalFestivalResponse;
-import com.eventitta.event.exception.EventErrorCode;
+import com.eventitta.event.dto.response.NationalFestivalResponse;
 import com.eventitta.event.service.PageResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;

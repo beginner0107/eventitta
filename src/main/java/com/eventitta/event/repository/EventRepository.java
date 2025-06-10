@@ -8,19 +8,21 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
+
 public interface EventRepository extends JpaRepository<Event, Long> {
 
     @Query(
         value = """
                 SELECT
-                    e.id              AS id,
-                    e.title           AS title,
-                    e.place           AS place,
-                    e.start_time      AS startTime,
-                    e.end_time        AS endTime,
-                    e.category        AS category,
-                    e.is_free         AS isFree,
-                    e.homepage_url    AS homepageUrl,
+                    e.id            AS id,
+                    e.title         AS title,
+                    e.place         AS place,
+                    e.start_time    AS startTime,
+                    e.end_time      AS endTime,
+                    e.category      AS category,
+                    e.is_free       AS isFree,
+                    e.homepage_url  AS homepageUrl,
                     (
                       6371 * acos(
                         cos(radians(:lat)) * cos(radians(e.latitude)) *
@@ -29,26 +31,34 @@ public interface EventRepository extends JpaRepository<Event, Long> {
                       )
                     ) AS distance
                 FROM events e
+                WHERE
+                  e.start_time >= :startDateTime
+                  AND (:endDateTime IS NULL OR e.start_time <= :endDateTime)
                 HAVING distance <= :distanceKm
                 ORDER BY distance ASC
             """,
         countQuery = """
                 SELECT COUNT(*)
                 FROM events e
-                WHERE (
-                  6371 * acos(
-                    cos(radians(:lat)) * cos(radians(e.latitude)) *
-                    cos(radians(e.longitude) - radians(:lng)) +
-                    sin(radians(:lat)) * sin(radians(e.latitude))
-                  )
-                ) <= :distanceKm
+                WHERE
+                  e.start_time >= :startDateTime
+                  AND (:endDateTime IS NULL OR e.start_time <= :endDateTime)
+                  AND (
+                    6371 * acos(
+                      cos(radians(:lat)) * cos(radians(e.latitude)) *
+                      cos(radians(e.longitude) - radians(:lng)) +
+                      sin(radians(:lat)) * sin(radians(e.latitude))
+                    )
+                  ) <= :distanceKm
             """,
         nativeQuery = true
     )
-    Page<EventDistanceDto> findEventsWithinDistance(
+    Page<EventDistanceDto> findEventsWithinDistanceAndDateBetween(
         @Param("lat") double lat,
         @Param("lng") double lng,
         @Param("distanceKm") double distanceKm,
+        @Param("startDateTime") LocalDateTime startDateTime,
+        @Param("endDateTime") LocalDateTime endDateTime,
         Pageable pageable
     );
 }

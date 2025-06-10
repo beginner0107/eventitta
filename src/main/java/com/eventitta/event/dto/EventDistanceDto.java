@@ -1,5 +1,7 @@
 package com.eventitta.event.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import java.time.LocalDateTime;
 
 public interface EventDistanceDto {
@@ -9,8 +11,18 @@ public interface EventDistanceDto {
 
     String getPlace();
 
+    @JsonFormat(
+        shape = JsonFormat.Shape.STRING,
+        pattern = "yyyy-MM-dd HH:mm",
+        timezone = "Asia/Seoul"
+    )
     LocalDateTime getStartTime();
 
+    @JsonFormat(
+        shape = JsonFormat.Shape.STRING,
+        pattern = "yyyy-MM-dd HH:mm",
+        timezone = "Asia/Seoul"
+    )
     LocalDateTime getEndTime();
 
     String getCategory();

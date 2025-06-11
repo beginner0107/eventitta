@@ -1,8 +1,10 @@
 package com.eventitta.common.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
+import java.util.function.Function;
 
 @Schema(description = "페이지네이션된 응답 모델")
 public record PageResponse<T>(
@@ -23,4 +25,13 @@ public record PageResponse<T>(
     int totalPages
 
 ) {
+    public static <U> PageResponse<U> of(Page<U> p) {
+        return new PageResponse<>(
+            p.getContent(), p.getNumber(), p.getSize(), p.getTotalElements(), p.getTotalPages()
+        );
+    }
+
+    public static <S, U> PageResponse<U> map(Page<S> p, Function<S, U> mapper) {
+        return of(p.map(mapper));
+    }
 }

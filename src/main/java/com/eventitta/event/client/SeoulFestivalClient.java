@@ -1,7 +1,7 @@
 package com.eventitta.event.client;
 
 import com.eventitta.common.config.RestClientConfig.SeoulFestivalApi;
-import com.eventitta.event.dto.SeoulFestivalResponse;
+import com.eventitta.event.dto.response.SeoulFestivalResponse;
 import com.eventitta.event.service.PageResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

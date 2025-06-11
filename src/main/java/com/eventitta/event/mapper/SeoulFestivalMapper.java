@@ -10,7 +10,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
 
-import static com.eventitta.event.dto.SeoulFestivalResponse.SeoulEventItem;
+import static com.eventitta.event.dto.response.SeoulFestivalResponse.SeoulEventItem;
 
 @Slf4j
 @Component
@@ -45,11 +45,11 @@ public class SeoulFestivalMapper implements FestivalToEventMapper<SeoulEventItem
         // (2) 위도/경도 파싱
         BigDecimal latitude = null, longitude = null;
         try {
-            if (dto.getLot() != null && !dto.getLot().isBlank()) {
-                latitude = new BigDecimal(dto.getLot());
-            }
             if (dto.getLat() != null && !dto.getLat().isBlank()) {
-                longitude = new BigDecimal(dto.getLat());
+                latitude = new BigDecimal(dto.getLat());
+            }
+            if (dto.getLot() != null && !dto.getLot().isBlank()) {
+                longitude = new BigDecimal(dto.getLot());
             }
         } catch (NumberFormatException e) {
             log.error("SeoulMapper: 위도/경도 파싱 실패 → {}", e.getMessage());

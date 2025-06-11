@@ -1,4 +1,4 @@
-package com.eventitta.event.dto;
+package com.eventitta.event.dto.response;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -74,9 +74,9 @@ public class SeoulFestivalResponse {
         @JsonProperty("TICKET")
         private String ticket;
         @JsonProperty("STRTDATE")
-        private String startDate;    // 반드시 String
+        private String startDate;
         @JsonProperty("END_DATE")
-        private String endDate;      // 반드시 String
+        private String endDate;
         @JsonProperty("THEMECODE")
         private String themeCode;
         @JsonProperty("LOT")

@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.YearMonth;
 
-import static com.eventitta.event.dto.SeoulFestivalResponse.SeoulEventItem;
+import static com.eventitta.event.dto.response.SeoulFestivalResponse.SeoulEventItem;
 
 @Slf4j
 @Service

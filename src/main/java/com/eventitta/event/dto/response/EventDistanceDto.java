@@ -4,32 +4,20 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.time.LocalDateTime;
 
-public interface EventDistanceDto {
-    Long getId();
+public record EventDistanceDto(
+    Long id,
+    String title,
+    String place,
 
-    String getTitle();
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm", timezone = "Asia/Seoul")
+    LocalDateTime startTime,
 
-    String getPlace();
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm", timezone = "Asia/Seoul")
+    LocalDateTime endTime,
 
-    @JsonFormat(
-        shape = JsonFormat.Shape.STRING,
-        pattern = "yyyy-MM-dd HH:mm",
-        timezone = "Asia/Seoul"
-    )
-    LocalDateTime getStartTime();
-
-    @JsonFormat(
-        shape = JsonFormat.Shape.STRING,
-        pattern = "yyyy-MM-dd HH:mm",
-        timezone = "Asia/Seoul"
-    )
-    LocalDateTime getEndTime();
-
-    String getCategory();
-
-    Boolean getIsFree();
-
-    String getHomepageUrl();
-
-    Double getDistance();
+    String category,
+    Boolean isFree,
+    String homepageUrl,
+    Double distance
+) {
 }

@@ -34,6 +34,8 @@ public class Meeting {
 
     private Long leaderId;
 
+    private boolean deleted = false;
+
     @OneToMany(mappedBy = "meeting", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MeetingParticipant> participants = new ArrayList<>();
 
@@ -55,5 +57,12 @@ public class Meeting {
 
     public boolean isLeader(Long userId) {
         return this.leaderId.equals(userId);
+    }
+
+    /**
+     * 모임을 논리적으로 삭제합니다.
+     */
+    public void delete() {
+        this.deleted = true;
     }
 }

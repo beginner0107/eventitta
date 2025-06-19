@@ -55,4 +55,21 @@ public class MeetingController {
         meetingService.updateMeeting(userId, meetingId, request);
         return ResponseEntity.ok().build();
     }
+
+    @Operation(summary = "모임 삭제", description = "모임을 삭제합니다. 모임 리더만 삭제할 수 있습니다.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "모임 삭제 성공"),
+        @ApiResponse(responseCode = "403", description = "모임 리더가 아닌 경우",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+        @ApiResponse(responseCode = "404", description = "모임을 찾을 수 없는 경우",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+        @ApiResponse(responseCode = "400", description = "이미 삭제된 모임인 경우",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    })
+    @DeleteMapping("/{meetingId}")
+    public ResponseEntity<Void> deleteMeeting(@CurrentUser Long userId,
+                                              @PathVariable Long meetingId) {
+        meetingService.deleteMeeting(userId, meetingId);
+        return ResponseEntity.noContent().build();
+    }
 }

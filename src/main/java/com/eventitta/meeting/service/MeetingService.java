@@ -50,6 +50,22 @@ public class MeetingService {
         meetingMapper.updateMeetingFromDto(request, meeting);
     }
 
+    @Transactional
+    public void deleteMeeting(Long userId, Long meetingId) {
+        validateUser(userId);
+
+        Meeting meeting = meetingRepository.findById(meetingId)
+            .orElseThrow(MEETING_NOT_FOUND::defaultException);
+
+        if (meeting.isDeleted()) {
+            throw ALREADY_DELETED_MEETING.defaultException();
+        }
+
+        validateMeetingLeader(meeting, userId);
+
+        meeting.delete();
+    }
+
     private Meeting findMeetingById(Long meetingId) {
         return meetingRepository.findById(meetingId)
             .orElseThrow(MEETING_NOT_FOUND::defaultException);

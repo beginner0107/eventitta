@@ -47,17 +47,7 @@ public class MeetingService {
 
         validateMaxMembersForUpdate(request, meeting);
 
-        meeting.update(
-            request.title(),
-            request.description(),
-            request.startTime(),
-            request.endTime(),
-            request.maxMembers(),
-            request.address(),
-            request.latitude(),
-            request.longitude(),
-            request.status()
-        );
+        meetingMapper.updateMeetingFromDto(request, meeting);
     }
 
     private Meeting findMeetingById(Long meetingId) {

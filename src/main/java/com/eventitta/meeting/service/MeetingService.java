@@ -45,6 +45,8 @@ public class MeetingService {
         validateMeetingLeader(meeting, userId);
         validateMeetingTimeForUpdate(request);
 
+        validateMaxMembersForUpdate(request, meeting);
+
         meeting.update(
             request.title(),
             request.description(),
@@ -95,5 +97,11 @@ public class MeetingService {
             .build();
 
         participantRepository.save(leader);
+    }
+
+    private void validateMaxMembersForUpdate(MeetingUpdateRequest request, Meeting meeting) {
+        if (request.maxMembers() < meeting.getCurrentMembers()) {
+            throw TOO_SMALL_MAX_MEMBERS.defaultException();
+        }
     }
 }

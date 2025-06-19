@@ -52,4 +52,21 @@ public class Meeting {
         this.status = status;
         this.leaderId = leaderId;
     }
+
+    public void update(String title, String description, LocalDateTime startTime, LocalDateTime endTime,
+                       int maxMembers, String address, Double latitude, Double longitude, MeetingStatus status) {
+        this.title = title;
+        this.description = description;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.maxMembers = maxMembers;
+        this.address = address;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.status = status;
+    }
+
+    public boolean isLeader(Long userId) {
+        return this.leaderId.equals(userId);
+    }
 }

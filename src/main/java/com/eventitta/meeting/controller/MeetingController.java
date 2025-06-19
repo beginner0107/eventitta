@@ -3,6 +3,7 @@ package com.eventitta.meeting.controller;
 import com.eventitta.auth.annotation.CurrentUser;
 import com.eventitta.common.response.ApiErrorResponse;
 import com.eventitta.meeting.dto.MeetingCreateRequest;
+import com.eventitta.meeting.dto.MeetingUpdateRequest;
 import com.eventitta.meeting.service.MeetingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -12,10 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 
@@ -39,5 +37,22 @@ public class MeetingController {
                                               @RequestBody @Valid MeetingCreateRequest request) {
         Long meetingId = meetingService.createMeeting(userId, request);
         return ResponseEntity.created(URI.create("/api/v1/meetings/" + meetingId)).build();
+    }
+
+    @Operation(summary = "모임 수정", description = "모임 정보를 수정합니다. 모임 리더만 수정할 수 있습니다.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "모임 수정 성공",
+            content = @Content(schema = @Schema(hidden = true))),
+        @ApiResponse(responseCode = "403", description = "모임 리더가 아닌 경우",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+        @ApiResponse(responseCode = "404", description = "모임을 찾을 수 없는 경우",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    })
+    @PutMapping("/{meetingId}")
+    public ResponseEntity<Void> updateMeeting(@CurrentUser Long userId,
+                                              @PathVariable Long meetingId,
+                                              @RequestBody @Valid MeetingUpdateRequest request) {
+        meetingService.updateMeeting(userId, meetingId, request);
+        return ResponseEntity.ok().build();
     }
 }

@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 public enum MeetingErrorCode implements ErrorCode {
     MEETING_NOT_FOUND("존재하지 않는 모임입니다.", HttpStatus.NOT_FOUND),
     INVALID_MEETING_TIME("모임 종료 시간은 시작 시간 이후여야 합니다.", HttpStatus.BAD_REQUEST),
+    NOT_MEETING_LEADER("모임장이 아닙니다.", HttpStatus.FORBIDDEN),
     ;
 
     private final String message;

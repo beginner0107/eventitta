@@ -8,6 +8,7 @@ import com.eventitta.meeting.dto.MeetingUpdateRequest;
 import com.eventitta.meeting.mapper.MeetingMapper;
 import com.eventitta.meeting.repository.MeetingParticipantRepository;
 import com.eventitta.meeting.repository.MeetingRepository;
+import com.eventitta.user.domain.User;
 import com.eventitta.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,10 +28,10 @@ public class MeetingService {
 
     @Transactional
     public Long createMeeting(Long userId, MeetingCreateRequest request) {
-        validateUser(userId);
+        User leader = findUserById(userId);
         validateMeetingTime(request);
 
-        Meeting meeting = meetingMapper.toEntity(request, userId);
+        Meeting meeting = meetingMapper.toEntity(request, leader);
         Meeting savedMeeting = meetingRepository.save(meeting);
 
         addLeaderAsParticipant(savedMeeting, userId);
@@ -39,7 +40,7 @@ public class MeetingService {
 
     @Transactional
     public void updateMeeting(Long userId, Long meetingId, MeetingUpdateRequest request) {
-        validateUser(userId);
+        findUserById(userId);
 
         Meeting meeting = findMeetingById(meetingId);
         validateMeetingLeader(meeting, userId);
@@ -52,10 +53,9 @@ public class MeetingService {
 
     @Transactional
     public void deleteMeeting(Long userId, Long meetingId) {
-        validateUser(userId);
+        findUserById(userId);
 
-        Meeting meeting = meetingRepository.findById(meetingId)
-            .orElseThrow(MEETING_NOT_FOUND::defaultException);
+        Meeting meeting = findMeetingById(meetingId);
 
         if (meeting.isDeleted()) {
             throw ALREADY_DELETED_MEETING.defaultException();
@@ -71,6 +71,11 @@ public class MeetingService {
             .orElseThrow(MEETING_NOT_FOUND::defaultException);
     }
 
+    private User findUserById(Long userId) {
+        return userRepository.findById(userId)
+            .orElseThrow(NOT_FOUND_USER_ID::defaultException);
+    }
+
     private void validateMeetingLeader(Meeting meeting, Long userId) {
         if (!meeting.isLeader(userId)) {
             throw NOT_MEETING_LEADER.defaultException();
@@ -80,12 +85,6 @@ public class MeetingService {
     private void validateMeetingTimeForUpdate(MeetingUpdateRequest request) {
         if (request.endTime().isBefore(request.startTime())) {
             throw INVALID_MEETING_TIME.defaultException();
-        }
-    }
-
-    private void validateUser(Long userId) {
-        if (!userRepository.existsById(userId)) {
-            throw NOT_FOUND_USER_ID.defaultException();
         }
     }
 

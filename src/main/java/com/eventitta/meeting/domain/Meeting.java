@@ -1,18 +1,19 @@
 package com.eventitta.meeting.domain;
 
+import com.eventitta.user.domain.User;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
 public class Meeting {
 
     @Id
@@ -32,7 +33,9 @@ public class Meeting {
     @Enumerated(EnumType.STRING)
     private MeetingStatus status;
 
-    private Long leaderId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "leader_id")
+    private User leader;
 
     private boolean deleted = false;
 
@@ -42,7 +45,7 @@ public class Meeting {
     @Builder
     public Meeting(String title, String description, LocalDateTime startTime, LocalDateTime endTime,
                    int maxMembers, String address, Double latitude, Double longitude,
-                   MeetingStatus status, Long leaderId) {
+                   MeetingStatus status, User leader) {
         this.title = title;
         this.description = description;
         this.startTime = startTime;
@@ -52,16 +55,13 @@ public class Meeting {
         this.latitude = latitude;
         this.longitude = longitude;
         this.status = status;
-        this.leaderId = leaderId;
+        this.leader = leader;
     }
 
     public boolean isLeader(Long userId) {
-        return this.leaderId.equals(userId);
+        return leader != null && Objects.equals(leader.getId(), userId);
     }
 
-    /**
-     * 모임을 논리적으로 삭제합니다.
-     */
     public void delete() {
         this.deleted = true;
     }

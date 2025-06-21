@@ -3,9 +3,11 @@ package com.eventitta.meeting.controller;
 import com.eventitta.auth.annotation.CurrentUser;
 import com.eventitta.common.response.ApiErrorResponse;
 import com.eventitta.meeting.dto.MeetingCreateRequest;
+import com.eventitta.meeting.dto.MeetingDetailResponse;
 import com.eventitta.meeting.dto.MeetingUpdateRequest;
 import com.eventitta.meeting.service.MeetingService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -71,5 +73,23 @@ public class MeetingController {
                                               @PathVariable Long meetingId) {
         meetingService.deleteMeeting(userId, meetingId);
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "모임 상세 조회", description = "특정 모임의 상세 정보와 참여자 목록을 조회합니다. 인증된 사용자가 아니더라도 조회 가능합니다.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "모임 조회 성공",
+            content = @Content(schema = @Schema(implementation = MeetingDetailResponse.class))),
+        @ApiResponse(responseCode = "404", description = "모임을 찾을 수 없는 경우",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+        @ApiResponse(responseCode = "400", description = "이미 삭제된 모임인 경우",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    })
+    @GetMapping("/{meetingId}")
+    public ResponseEntity<MeetingDetailResponse> getMeetingDetail(
+        @Parameter(description = "모임 ID", required = true)
+        @PathVariable Long meetingId) {
+
+        MeetingDetailResponse response = meetingService.getMeetingDetail(meetingId);
+        return ResponseEntity.ok(response);
     }
 }

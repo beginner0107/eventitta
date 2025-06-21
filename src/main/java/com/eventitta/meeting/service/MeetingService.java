@@ -3,8 +3,7 @@ package com.eventitta.meeting.service;
 import com.eventitta.meeting.domain.Meeting;
 import com.eventitta.meeting.domain.MeetingParticipant;
 import com.eventitta.meeting.domain.ParticipantStatus;
-import com.eventitta.meeting.dto.MeetingCreateRequest;
-import com.eventitta.meeting.dto.MeetingUpdateRequest;
+import com.eventitta.meeting.dto.*;
 import com.eventitta.meeting.mapper.MeetingMapper;
 import com.eventitta.meeting.repository.MeetingParticipantRepository;
 import com.eventitta.meeting.repository.MeetingRepository;
@@ -13,6 +12,9 @@ import com.eventitta.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.eventitta.meeting.exception.MeetingErrorCode.*;
 import static com.eventitta.user.exception.UserErrorCode.NOT_FOUND_USER_ID;
@@ -64,6 +66,57 @@ public class MeetingService {
         validateMeetingLeader(meeting, userId);
 
         meeting.delete();
+    }
+
+    public MeetingDetailResponse getMeetingDetail(Long meetingId) {
+        Meeting meeting = findMeetingById(meetingId);
+
+        if (meeting.isDeleted()) {
+            throw ALREADY_DELETED_MEETING.defaultException();
+        }
+
+        User leader = meeting.getLeader();
+
+        List<MeetingParticipant> approvedParticipants = participantRepository
+            .findByMeetingAndStatus(meeting, ParticipantStatus.APPROVED);
+
+        List<ParticipantResponse> participantResponses = buildParticipantResponses(approvedParticipants);
+
+        return new MeetingDetailResponse(
+            meeting.getId(),
+            meeting.getTitle(),
+            meeting.getDescription(),
+            meeting.getStartTime(),
+            meeting.getEndTime(),
+            meeting.getMaxMembers(),
+            meeting.getCurrentMembers(),
+            meeting.getAddress(),
+            meeting.getLatitude(),
+            meeting.getLongitude(),
+            meeting.getStatus(),
+            leader.getId(),
+            leader.getNickname(),
+            leader.getProfilePictureUrl(),
+            participantResponses
+        );
+    }
+
+    private List<ParticipantResponse> buildParticipantResponses(List<MeetingParticipant> participants) {
+        return participants.stream()
+            .map(participant -> {
+                User user = userRepository.findById(participant.getUserId()).orElse(null);
+                String nickname = (user != null && user.getNickname() != null && !user.getNickname().isBlank())
+                    ? user.getNickname() : "닉네임 없음";
+                String profilePictureUrl = (user != null) ? user.getProfilePictureUrl() : null;
+                return new ParticipantResponse(
+                    participant.getId(),
+                    participant.getUserId(),
+                    nickname,
+                    profilePictureUrl,
+                    participant.getStatus()
+                );
+            })
+            .collect(Collectors.toList());
     }
 
     private Meeting findMeetingById(Long meetingId) {

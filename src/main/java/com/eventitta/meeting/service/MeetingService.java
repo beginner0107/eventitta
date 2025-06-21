@@ -3,6 +3,7 @@ package com.eventitta.meeting.service;
 import com.eventitta.common.response.PageResponse;
 import com.eventitta.meeting.domain.Meeting;
 import com.eventitta.meeting.domain.MeetingParticipant;
+import com.eventitta.meeting.domain.MeetingStatus;
 import com.eventitta.meeting.domain.ParticipantStatus;
 import com.eventitta.meeting.dto.*;
 import com.eventitta.meeting.mapper.MeetingMapper;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.eventitta.meeting.exception.MeetingErrorCode.*;
@@ -96,6 +98,45 @@ public class MeetingService {
         Pageable pageReq = PageRequest.of(filter.page(), filter.size());
         Page<MeetingSummaryResponse> page = meetingRepository.findMeetingsByFilter(filter, pageReq);
         return PageResponse.of(page);
+    }
+
+    @Transactional
+    public JoinMeetingResponse joinMeeting(Long userId, Long meetingId) {
+        findUserById(userId);
+        Meeting meeting = findMeetingById(meetingId);
+
+        if (meeting.isDeleted()) {
+            throw ALREADY_DELETED_MEETING.defaultException();
+        }
+        if (meeting.getStatus() != MeetingStatus.RECRUITING) {
+            throw MEETING_NOT_RECRUITING.defaultException();
+        }
+
+        Optional<MeetingParticipant> existingParticipant = participantRepository.findByMeetingIdAndUserId(meetingId, userId);
+
+        if (existingParticipant.isPresent()) {
+            throw ALREADY_JOINED_MEETING.defaultException();
+        }
+        if (meeting.getCurrentMembers() >= meeting.getMaxMembers()) {
+            throw MEETING_MAX_MEMBERS_REACHED.defaultException();
+        }
+
+        MeetingParticipant participant = MeetingParticipant.builder()
+            .meeting(meeting)
+            .userId(userId)
+            .status(ParticipantStatus.PENDING)
+            .build();
+
+        MeetingParticipant savedParticipant = participantRepository.save(participant);
+
+        String message = "모임 참가 신청이 완료되었습니다. 승인을 기다려주세요.";
+
+        return new JoinMeetingResponse(
+            savedParticipant.getId(),
+            meetingId,
+            savedParticipant.getStatus(),
+            message
+        );
     }
 
     private Meeting findMeetingById(Long meetingId) {

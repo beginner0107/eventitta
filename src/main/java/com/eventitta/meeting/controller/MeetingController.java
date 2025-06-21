@@ -102,4 +102,22 @@ public class MeetingController {
         PageResponse<MeetingSummaryResponse> response = meetingService.getMeetings(filter);
         return ResponseEntity.ok(response);
     }
+
+    @Operation(summary = "모임 참가 신청", description = "특정 모임에 참가 신청합니다. 중복 신청을 방지하고, 신청 시 대기 상태(PENDING)로 등록됩니다.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "참가 신청 성공",
+            content = @Content(schema = @Schema(implementation = JoinMeetingResponse.class))),
+        @ApiResponse(responseCode = "400", description = "이미 신청한 모임이거나, 모집 중이 아닌 모임, 또는 최대 인원 초과",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+        @ApiResponse(responseCode = "404", description = "모임을 찾을 수 없는 경우",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    })
+    @PostMapping("/{meetingId}/join")
+    public ResponseEntity<JoinMeetingResponse> joinMeeting(
+        @CurrentUser Long userId,
+        @Parameter(description = "참가 신청할 모임 ID", required = true)
+        @PathVariable Long meetingId) {
+        JoinMeetingResponse response = meetingService.joinMeeting(userId, meetingId);
+        return ResponseEntity.ok(response);
+    }
 }

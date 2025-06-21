@@ -11,6 +11,9 @@ public enum MeetingErrorCode implements ErrorCode {
     NOT_MEETING_LEADER("모임장이 아닙니다.", HttpStatus.FORBIDDEN),
     TOO_SMALL_MAX_MEMBERS("최대 인원은 현재 참여인원 이상이어야 합니다.", HttpStatus.BAD_REQUEST),
     ALREADY_DELETED_MEETING("이미 삭제된 모임입니다.", HttpStatus.BAD_REQUEST),
+    ALREADY_JOINED_MEETING("이미 참가 신청한 모임입니다.", HttpStatus.BAD_REQUEST),
+    MEETING_NOT_RECRUITING("모집 중인 모임이 아닙니다.", HttpStatus.BAD_REQUEST),
+    MEETING_MAX_MEMBERS_REACHED("모임 최대 인원에 도달했습니다.", HttpStatus.BAD_REQUEST),
     ;
 
     private final String message;

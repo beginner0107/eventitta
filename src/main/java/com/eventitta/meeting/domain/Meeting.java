@@ -1,5 +1,6 @@
 package com.eventitta.meeting.domain;
 
+import com.eventitta.meeting.dto.MeetingUpdateRequest;
 import com.eventitta.user.domain.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -60,6 +61,18 @@ public class Meeting {
 
     public boolean isLeader(Long userId) {
         return leader != null && Objects.equals(leader.getId(), userId);
+    }
+
+    public void update(MeetingUpdateRequest req) {
+        this.title = req.title();
+        this.description = req.description();
+        this.startTime = req.startTime();
+        this.endTime = req.endTime();
+        this.maxMembers = req.maxMembers();
+        this.address = req.address();
+        this.latitude = req.latitude();
+        this.longitude = req.longitude();
+        this.status = req.status();
     }
 
     public void delete() {

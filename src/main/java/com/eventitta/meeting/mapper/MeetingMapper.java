@@ -5,10 +5,11 @@ import com.eventitta.meeting.domain.Meeting;
 import com.eventitta.meeting.domain.MeetingParticipant;
 import com.eventitta.meeting.dto.MeetingCreateRequest;
 import com.eventitta.meeting.dto.MeetingDetailResponse;
-import com.eventitta.meeting.dto.MeetingUpdateRequest;
 import com.eventitta.meeting.dto.ParticipantResponse;
 import com.eventitta.user.domain.User;
-import org.mapstruct.*;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
 import java.util.List;
 
@@ -32,12 +33,6 @@ public interface MeetingMapper {
     @Mapping(target = "status", constant = "RECRUITING")
     @Mapping(source = "leader", target = "leader")
     Meeting toEntity(MeetingCreateRequest request, User leader);
-
-    @Mapping(target = "leader", ignore = true)
-    @Mapping(target = "currentMembers", ignore = true)
-    @Mapping(target = "deleted", ignore = true)
-    @Mapping(target = "participants", ignore = true)
-    void updateMeetingFromDto(MeetingUpdateRequest dto, @MappingTarget Meeting meeting);
 
     @Mapping(source = "meeting.id", target = "id")
     @Mapping(source = "meeting.title", target = "title")

@@ -2,9 +2,8 @@ package com.eventitta.meeting.controller;
 
 import com.eventitta.auth.annotation.CurrentUser;
 import com.eventitta.common.response.ApiErrorResponse;
-import com.eventitta.meeting.dto.MeetingCreateRequest;
-import com.eventitta.meeting.dto.MeetingDetailResponse;
-import com.eventitta.meeting.dto.MeetingUpdateRequest;
+import com.eventitta.common.response.PageResponse;
+import com.eventitta.meeting.dto.*;
 import com.eventitta.meeting.service.MeetingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -13,11 +12,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import jakarta.validation.Valid;
 
 import java.net.URI;
 
@@ -90,6 +88,18 @@ public class MeetingController {
         @PathVariable Long meetingId) {
 
         MeetingDetailResponse response = meetingService.getMeetingDetail(meetingId);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "모임 목록 조회", description = "다양한 필터 조건으로 모임 목록을 조회합니다. 인증 여부와 관계없이 조회 가능합니다.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "모임 목록 조회 성공")
+    })
+    @GetMapping
+    public ResponseEntity<PageResponse<MeetingSummaryResponse>> getMeetings(
+        @Valid MeetingFilter filter
+    ) {
+        PageResponse<MeetingSummaryResponse> response = meetingService.getMeetings(filter);
         return ResponseEntity.ok(response);
     }
 }

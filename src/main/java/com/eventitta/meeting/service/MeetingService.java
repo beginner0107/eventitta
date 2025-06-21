@@ -1,5 +1,6 @@
 package com.eventitta.meeting.service;
 
+import com.eventitta.common.response.PageResponse;
 import com.eventitta.meeting.domain.Meeting;
 import com.eventitta.meeting.domain.MeetingParticipant;
 import com.eventitta.meeting.domain.ParticipantStatus;
@@ -10,6 +11,9 @@ import com.eventitta.meeting.repository.MeetingRepository;
 import com.eventitta.user.domain.User;
 import com.eventitta.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,7 +54,7 @@ public class MeetingService {
 
         validateMaxMembersForUpdate(request, meeting);
 
-        meetingMapper.updateMeetingFromDto(request, meeting);
+        meeting.update(request);
     }
 
     @Transactional
@@ -86,6 +90,12 @@ public class MeetingService {
             .collect(Collectors.toList());
 
         return meetingMapper.toDetailResponse(meeting, participantResponses);
+    }
+
+    public PageResponse<MeetingSummaryResponse> getMeetings(MeetingFilter filter) {
+        Pageable pageReq = PageRequest.of(filter.page(), filter.size());
+        Page<MeetingSummaryResponse> page = meetingRepository.findMeetingsByFilter(filter, pageReq);
+        return PageResponse.of(page);
     }
 
     private Meeting findMeetingById(Long meetingId) {

@@ -34,7 +34,7 @@ public class MeetingRepositoryImpl implements MeetingRepositoryCustom {
         QMeeting m = QMeeting.meeting;
         QUser u = QUser.user;
 
-        // 1) 공통 where
+        // 1) 공통 where 절
         BooleanBuilder where = new BooleanBuilder(m.deleted.eq(false));
         if (StringUtils.hasText(filter.keyword())) {
             where.and(m.title.containsIgnoreCase(filter.keyword())
@@ -55,49 +55,67 @@ public class MeetingRepositoryImpl implements MeetingRepositoryCustom {
             where.and(m.status.eq(MeetingStatus.RECRUITING));
         }
 
-        // 2) 거리식 정의
-        NumberExpression<Double> distance = null;
-        if (filter.distance() != null
+        // 거리 필터 유무 체크
+        boolean hasDistanceFilter = filter.distance() != null
             && filter.latitude() != null
-            && filter.longitude() != null) {
+            && filter.longitude() != null;
 
-            distance = calculateDistance(
+        // 2) content Projection 쿼리 분기 작성
+        JPAQuery<MeetingSummaryResponse> contentQ;
+        if (hasDistanceFilter) {
+            NumberExpression<Double> distance = calculateDistance(
                 filter.latitude(), filter.longitude(),
                 m.latitude, m.longitude
             );
+            // 거리 조건 추가
             where.and(m.latitude.isNotNull()
                 .and(m.longitude.isNotNull())
                 .and(distance.loe(filter.distance())));
-        }
 
-        // 3) content 쿼리
-        JPAQuery<MeetingSummaryResponse> contentQ = qf
-            .select(Projections.constructor(
-                MeetingSummaryResponse.class,
-                m.id, m.title, m.description,
-                m.startTime, m.endTime,
-                m.maxMembers, m.currentMembers,
-                m.address, m.latitude, m.longitude,
-                m.status,
-                m.leader.id, m.leader.nickname,
-                distance
-            ))
-            .from(m)
-            .join(m.leader, u)
-            .where(where)
-            .orderBy(distance != null ? distance.asc() : m.startTime.asc())
-            .offset(pageable.getOffset())
-            .limit(pageable.getPageSize());
+            contentQ = qf.select(Projections.constructor(
+                    MeetingSummaryResponse.class,
+                    m.id, m.title, m.description,
+                    m.startTime, m.endTime,
+                    m.maxMembers, m.currentMembers,
+                    m.address, m.latitude, m.longitude,
+                    m.status,
+                    m.leader.id, m.leader.nickname,
+                    distance
+                ))
+                .from(m)
+                .join(m.leader, u)
+                .where(where)
+                .orderBy(distance.asc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize());
+        } else {
+            // 거리 필터 없을 때, 거리 필드는 항상 null
+            contentQ = qf.select(Projections.constructor(
+                    MeetingSummaryResponse.class,
+                    m.id, m.title, m.description,
+                    m.startTime, m.endTime,
+                    m.maxMembers, m.currentMembers,
+                    m.address, m.latitude, m.longitude,
+                    m.status,
+                    m.leader.id, m.leader.nickname,
+                    Expressions.nullExpression(Double.class)
+                ))
+                .from(m)
+                .join(m.leader, u)
+                .where(where)
+                .orderBy(m.startTime.asc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize());
+        }
 
         List<MeetingSummaryResponse> content = contentQ.fetch();
 
-        // 4) count 쿼리
-        JPAQuery<Long> countQ = qf
-            .select(m.count())
+        // 3) count 쿼리
+        JPAQuery<Long> countQ = qf.select(m.count())
             .from(m)
             .where(where);
 
-        // 5) Page 생성
+        // 4) Page 생성
         return PageableExecutionUtils.getPage(content, pageable, countQ::fetchOne);
     }
 
@@ -115,7 +133,8 @@ public class MeetingRepositoryImpl implements MeetingRepositoryCustom {
             dLat, Expressions.constant(radLat1), radLat2, dLon
         );
         NumberExpression<Double> c = Expressions.numberTemplate(Double.class,
-            "2 * ASIN(SQRT({0}))", a);
+            "2 * ASIN(SQRT({0}))", a
+        );
 
         return c.multiply(R);
     }

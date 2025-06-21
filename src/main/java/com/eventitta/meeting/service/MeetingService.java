@@ -75,48 +75,17 @@ public class MeetingService {
             throw ALREADY_DELETED_MEETING.defaultException();
         }
 
-        User leader = meeting.getLeader();
-
         List<MeetingParticipant> approvedParticipants = participantRepository
             .findByMeetingAndStatus(meeting, ParticipantStatus.APPROVED);
 
-        List<ParticipantResponse> participantResponses = buildParticipantResponses(approvedParticipants);
-
-        return new MeetingDetailResponse(
-            meeting.getId(),
-            meeting.getTitle(),
-            meeting.getDescription(),
-            meeting.getStartTime(),
-            meeting.getEndTime(),
-            meeting.getMaxMembers(),
-            meeting.getCurrentMembers(),
-            meeting.getAddress(),
-            meeting.getLatitude(),
-            meeting.getLongitude(),
-            meeting.getStatus(),
-            leader.getId(),
-            leader.getNickname(),
-            leader.getProfilePictureUrl(),
-            participantResponses
-        );
-    }
-
-    private List<ParticipantResponse> buildParticipantResponses(List<MeetingParticipant> participants) {
-        return participants.stream()
+        List<ParticipantResponse> participantResponses = approvedParticipants.stream()
             .map(participant -> {
                 User user = userRepository.findById(participant.getUserId()).orElse(null);
-                String nickname = (user != null && user.getNickname() != null && !user.getNickname().isBlank())
-                    ? user.getNickname() : "닉네임 없음";
-                String profilePictureUrl = (user != null) ? user.getProfilePictureUrl() : null;
-                return new ParticipantResponse(
-                    participant.getId(),
-                    participant.getUserId(),
-                    nickname,
-                    profilePictureUrl,
-                    participant.getStatus()
-                );
+                return meetingMapper.toParticipantResponse(participant, user);
             })
             .collect(Collectors.toList());
+
+        return meetingMapper.toDetailResponse(meeting, participantResponses);
     }
 
     private Meeting findMeetingById(Long meetingId) {

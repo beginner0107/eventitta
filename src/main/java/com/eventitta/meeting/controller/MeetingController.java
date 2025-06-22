@@ -120,4 +120,48 @@ public class MeetingController {
         JoinMeetingResponse response = meetingService.joinMeeting(userId, meetingId);
         return ResponseEntity.ok(response);
     }
+
+    @Operation(summary = "모임 참가 신청 승인", description = "모임 리더가 참가 신청을 승인합니다. 승인 시 참가자 상태가 APPROVED로 변경되고 모임 현재 인원이 증가합니다.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "참가 신청 승인 성공",
+            content = @Content(schema = @Schema(implementation = ParticipantResponse.class))),
+        @ApiResponse(responseCode = "400", description = "이미 승인/거절된 신청이거나, 최대 인원 초과",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+        @ApiResponse(responseCode = "403", description = "모임 리더가 아닌 경우",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+        @ApiResponse(responseCode = "404", description = "모임 또는 참가 신청을 찾을 수 없는 경우",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    })
+    @PutMapping("/{meetingId}/participants/{participantId}/approve")
+    public ResponseEntity<ParticipantResponse> approveParticipant(
+        @CurrentUser Long userId,
+        @Parameter(description = "모임 ID", required = true)
+        @PathVariable Long meetingId,
+        @Parameter(description = "참가 신청 ID", required = true)
+        @PathVariable Long participantId) {
+        ParticipantResponse response = meetingService.approveParticipant(userId, meetingId, participantId);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "모임 참가 신청 거절", description = "모임 리더가 참가 신청을 거절합니다. 거절 시 참가자 상태가 REJECTED로 변경됩니다.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "참가 신청 거절 성공",
+            content = @Content(schema = @Schema(implementation = ParticipantResponse.class))),
+        @ApiResponse(responseCode = "400", description = "이미 승인/거절된 신청인 경우",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+        @ApiResponse(responseCode = "403", description = "모임 리더가 아닌 경우",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+        @ApiResponse(responseCode = "404", description = "모임 또는 참가 신청을 찾을 수 없는 경우",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    })
+    @PutMapping("/{meetingId}/participants/{participantId}/reject")
+    public ResponseEntity<ParticipantResponse> rejectParticipant(
+        @CurrentUser Long userId,
+        @Parameter(description = "모임 ID", required = true)
+        @PathVariable Long meetingId,
+        @Parameter(description = "참가 신청 ID", required = true)
+        @PathVariable Long participantId) {
+        ParticipantResponse response = meetingService.rejectParticipant(userId, meetingId, participantId);
+        return ResponseEntity.ok(response);
+    }
 }

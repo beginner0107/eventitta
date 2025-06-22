@@ -85,10 +85,7 @@ public class MeetingService {
             .findByMeetingAndStatus(meeting, ParticipantStatus.APPROVED);
 
         List<ParticipantResponse> participantResponses = approvedParticipants.stream()
-            .map(participant -> {
-                User user = userRepository.findById(participant.getUserId()).orElse(null);
-                return meetingMapper.toParticipantResponse(participant, user);
-            })
+            .map(participant -> meetingMapper.toParticipantResponse(participant, participant.getUser()))
             .collect(Collectors.toList());
 
         return meetingMapper.toDetailResponse(meeting, participantResponses);
@@ -102,7 +99,7 @@ public class MeetingService {
 
     @Transactional
     public JoinMeetingResponse joinMeeting(Long userId, Long meetingId) {
-        findUserById(userId);
+        User user = findUserById(userId);
         Meeting meeting = findMeetingById(meetingId);
 
         if (meeting.isDeleted()) {
@@ -112,7 +109,7 @@ public class MeetingService {
             throw MEETING_NOT_RECRUITING.defaultException();
         }
 
-        Optional<MeetingParticipant> existingParticipant = participantRepository.findByMeetingIdAndUserId(meetingId, userId);
+        Optional<MeetingParticipant> existingParticipant = participantRepository.findByMeetingIdAndUser_Id(meetingId, userId);
 
         if (existingParticipant.isPresent()) {
             throw ALREADY_JOINED_MEETING.defaultException();
@@ -123,7 +120,7 @@ public class MeetingService {
 
         MeetingParticipant participant = MeetingParticipant.builder()
             .meeting(meeting)
-            .userId(userId)
+            .user(user)
             .status(ParticipantStatus.PENDING)
             .build();
 
@@ -137,6 +134,41 @@ public class MeetingService {
             savedParticipant.getStatus(),
             message
         );
+    }
+
+    @Transactional
+    public ParticipantResponse approveParticipant(Long userId, Long meetingId, Long participantId) {
+        findUserById(userId);
+        Meeting meeting = findMeetingById(meetingId);
+        validateMeetingLeader(meeting, userId);
+
+        MeetingParticipant participant = findParticipantById(participantId);
+        validateParticipantBelongsToMeeting(participant, meetingId);
+        validateParticipantStatus(participant, ParticipantStatus.PENDING);
+
+        if (meeting.getCurrentMembers() >= meeting.getMaxMembers()) {
+            throw MEETING_MAX_MEMBERS_REACHED.defaultException();
+        }
+
+        participant.approve();
+        meeting.incrementCurrentMembers();
+
+        return meetingMapper.toParticipantResponse(participant, participant.getUser());
+    }
+
+    @Transactional
+    public ParticipantResponse rejectParticipant(Long userId, Long meetingId, Long participantId) {
+        findUserById(userId);
+        Meeting meeting = findMeetingById(meetingId);
+        validateMeetingLeader(meeting, userId);
+
+        MeetingParticipant participant = findParticipantById(participantId);
+        validateParticipantBelongsToMeeting(participant, meetingId);
+        validateParticipantStatus(participant, ParticipantStatus.PENDING);
+
+        participant.reject();
+
+        return meetingMapper.toParticipantResponse(participant, participant.getUser());
     }
 
     private Meeting findMeetingById(Long meetingId) {
@@ -168,18 +200,37 @@ public class MeetingService {
     }
 
     private void addLeaderAsParticipant(Meeting meeting, Long userId) {
-        MeetingParticipant leader = MeetingParticipant.builder()
+        User leader = findUserById(userId);
+
+        MeetingParticipant participant = MeetingParticipant.builder()
             .meeting(meeting)
-            .userId(userId)
+            .user(leader)
             .status(ParticipantStatus.APPROVED)
             .build();
 
-        participantRepository.save(leader);
+        participantRepository.save(participant);
     }
 
     private void validateMaxMembersForUpdate(MeetingUpdateRequest request, Meeting meeting) {
         if (request.maxMembers() < meeting.getCurrentMembers()) {
             throw TOO_SMALL_MAX_MEMBERS.defaultException();
+        }
+    }
+
+    private MeetingParticipant findParticipantById(Long participantId) {
+        return participantRepository.findByIdWithMeeting(participantId)
+            .orElseThrow(PARTICIPANT_NOT_FOUND::defaultException);
+    }
+
+    private void validateParticipantBelongsToMeeting(MeetingParticipant participant, Long meetingId) {
+        if (!participant.getMeeting().getId().equals(meetingId)) {
+            throw PARTICIPANT_NOT_IN_MEETING.defaultException();
+        }
+    }
+
+    private void validateParticipantStatus(MeetingParticipant participant, ParticipantStatus expectedStatus) {
+        if (participant.getStatus() != expectedStatus) {
+            throw INVALID_PARTICIPANT_STATUS.defaultException();
         }
     }
 }

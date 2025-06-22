@@ -78,4 +78,8 @@ public class Meeting {
     public void delete() {
         this.deleted = true;
     }
+
+    public void incrementCurrentMembers() {
+        this.currentMembers++;
+    }
 }

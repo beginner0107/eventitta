@@ -14,6 +14,9 @@ public enum MeetingErrorCode implements ErrorCode {
     ALREADY_JOINED_MEETING("이미 참가 신청한 모임입니다.", HttpStatus.BAD_REQUEST),
     MEETING_NOT_RECRUITING("모집 중인 모임이 아닙니다.", HttpStatus.BAD_REQUEST),
     MEETING_MAX_MEMBERS_REACHED("모임 최대 인원에 도달했습니다.", HttpStatus.BAD_REQUEST),
+    PARTICIPANT_NOT_FOUND("참가 신청 정보를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    PARTICIPANT_NOT_IN_MEETING("해당 참가자는 이 모임에 속하지 않습니다.", HttpStatus.BAD_REQUEST),
+    INVALID_PARTICIPANT_STATUS("올바르지 않은 참가자 상태입니다.", HttpStatus.BAD_REQUEST),
     ;
 
     private final String message;

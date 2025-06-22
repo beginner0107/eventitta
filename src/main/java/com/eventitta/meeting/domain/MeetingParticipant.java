@@ -1,5 +1,6 @@
 package com.eventitta.meeting.domain;
 
+import com.eventitta.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -19,16 +20,22 @@ public class MeetingParticipant {
     @JoinColumn(name = "meeting_id")
     private Meeting meeting;
 
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
 
     @Enumerated(EnumType.STRING)
     private ParticipantStatus status;
 
     @Builder
-    public MeetingParticipant(Meeting meeting, Long userId, ParticipantStatus status) {
+    public MeetingParticipant(Meeting meeting, User user, ParticipantStatus status) {
         this.meeting = meeting;
-        this.userId = userId;
+        this.user = user;
         this.status = status;
+    }
+
+    public Long getUserId() {
+        return user != null ? user.getId() : null;
     }
 
     public void approve() {

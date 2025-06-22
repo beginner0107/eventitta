@@ -3,9 +3,9 @@ package com.eventitta.meeting.mapper;
 
 import com.eventitta.meeting.domain.Meeting;
 import com.eventitta.meeting.domain.MeetingParticipant;
-import com.eventitta.meeting.dto.MeetingCreateRequest;
-import com.eventitta.meeting.dto.MeetingDetailResponse;
-import com.eventitta.meeting.dto.ParticipantResponse;
+import com.eventitta.meeting.dto.request.MeetingCreateRequest;
+import com.eventitta.meeting.dto.response.MeetingDetailResponse;
+import com.eventitta.meeting.dto.response.ParticipantResponse;
 import com.eventitta.user.domain.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

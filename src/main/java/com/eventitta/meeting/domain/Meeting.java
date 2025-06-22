@@ -1,6 +1,6 @@
 package com.eventitta.meeting.domain;
 
-import com.eventitta.meeting.dto.MeetingUpdateRequest;
+import com.eventitta.meeting.dto.request.MeetingUpdateRequest;
 import com.eventitta.user.domain.User;
 import jakarta.persistence.*;
 import lombok.*;

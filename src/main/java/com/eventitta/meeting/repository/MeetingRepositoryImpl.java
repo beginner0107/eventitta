@@ -2,8 +2,8 @@ package com.eventitta.meeting.repository;
 
 import com.eventitta.meeting.domain.MeetingStatus;
 import com.eventitta.meeting.domain.QMeeting;
-import com.eventitta.meeting.dto.MeetingFilter;
-import com.eventitta.meeting.dto.MeetingSummaryResponse;
+import com.eventitta.meeting.dto.request.MeetingFilter;
+import com.eventitta.meeting.dto.response.MeetingSummaryResponse;
 import com.eventitta.user.domain.QUser;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Projections;

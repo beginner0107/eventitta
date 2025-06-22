@@ -8,6 +8,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
+@Table(
+    name = "meeting_participant",
+    uniqueConstraints = @UniqueConstraint(columnNames = {"meeting_id", "user_id"})
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MeetingParticipant {

@@ -73,4 +73,34 @@ public class User extends BaseEntity {
 
     @Column(name = "provider_id", length = 100)
     private String providerId;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean deleted = false;
+
+    public void updateProfile(
+        String nickname,
+        String profilePictureUrl,
+        String selfIntro,
+        List<String> interests,
+        String address,
+        BigDecimal latitude,
+        BigDecimal longitude
+    ) {
+        this.nickname = nickname;
+        this.profilePictureUrl = profilePictureUrl;
+        this.selfIntro = selfIntro;
+        this.interests = interests;
+        this.address = address;
+        this.latitude = latitude;
+        this.longitude = longitude;
+    }
+
+    public void changePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
+
+    public void delete() {
+        this.deleted = true;
+    }
 }

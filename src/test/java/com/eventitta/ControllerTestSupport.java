@@ -11,6 +11,8 @@ import com.eventitta.common.storage.FileStorageService;
 import com.eventitta.file.controller.FileUploadController;
 import com.eventitta.post.controller.PostController;
 import com.eventitta.post.service.PostService;
+import com.eventitta.user.controller.UserController;
+import com.eventitta.user.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -23,7 +25,8 @@ import org.springframework.test.web.servlet.MockMvc;
     AuthController.class,
     PostController.class,
     FileUploadController.class,
-    CommentController.class
+    CommentController.class,
+    UserController.class
 })
 @AutoConfigureMockMvc(addFilters = false)
 @Import({SecurityConfig.class})
@@ -52,4 +55,6 @@ public abstract class ControllerTestSupport {
     protected FileStorageService storageService;
     @MockitoBean
     protected CommentService commentService;
+    @MockitoBean
+    protected UserService userService;
 }

@@ -41,7 +41,7 @@ class CustomUserDetailsServiceTest {
             .role(Role.USER)
             .provider(Provider.LOCAL)
             .build();
-        given(userRepository.findByEmail("test@example.com"))
+        given(userRepository.findActiveByEmail("test@example.com"))
             .willReturn(Optional.of(user));
 
         UserDetails details = service.loadUserByUsername("test@example.com");
@@ -53,7 +53,7 @@ class CustomUserDetailsServiceTest {
     @Test
     @DisplayName("존재하지 않는 이메일을 입력하면 사용자를 찾을 수 없다는 오류가 발생한다")
     void loadUserByUsername_notFound_throws() {
-        given(userRepository.findByEmail("none@none.com"))
+        given(userRepository.findActiveByEmail("none@none.com"))
             .willReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.loadUserByUsername("none@none.com"))

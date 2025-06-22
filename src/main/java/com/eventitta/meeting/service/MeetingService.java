@@ -42,7 +42,7 @@ public class MeetingService {
         Meeting meeting = meetingMapper.toEntity(request, leader);
         Meeting savedMeeting = meetingRepository.save(meeting);
 
-        addLeaderAsParticipant(savedMeeting, userId);
+        addLeaderAsParticipant(savedMeeting, leader);
         return savedMeeting.getId();
     }
 
@@ -208,9 +208,7 @@ public class MeetingService {
         }
     }
 
-    private void addLeaderAsParticipant(Meeting meeting, Long userId) {
-        User leader = findUserById(userId);
-
+    private void addLeaderAsParticipant(Meeting meeting, User leader) {
         MeetingParticipant participant = MeetingParticipant.builder()
             .meeting(meeting)
             .user(leader)

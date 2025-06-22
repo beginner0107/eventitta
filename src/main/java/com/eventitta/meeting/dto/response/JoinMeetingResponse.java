@@ -1,4 +1,4 @@
-package com.eventitta.meeting.dto;
+package com.eventitta.meeting.dto.response;
 
 import com.eventitta.meeting.domain.ParticipantStatus;
 import io.swagger.v3.oas.annotations.media.Schema;

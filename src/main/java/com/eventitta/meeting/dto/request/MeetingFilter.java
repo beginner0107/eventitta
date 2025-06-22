@@ -1,4 +1,4 @@
-package com.eventitta.meeting.dto;
+package com.eventitta.meeting.dto.request;
 
 import com.eventitta.common.constants.ValidationMessage;
 import com.eventitta.meeting.domain.MeetingStatus;

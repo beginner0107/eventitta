@@ -1,5 +1,6 @@
-package com.eventitta.meeting.dto;
+package com.eventitta.meeting.dto.request;
 
+import com.eventitta.meeting.domain.MeetingStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.Min;
@@ -8,8 +9,8 @@ import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
 
-@Schema(description = "모임 생성 요청")
-public record MeetingCreateRequest(
+@Schema(description = "모임 수정 요청")
+public record MeetingUpdateRequest(
     @Schema(description = "모임 제목", example = "함께하는 스프링 스터디")
     @NotBlank(message = "모임 제목은 필수입니다.")
     String title,
@@ -38,6 +39,10 @@ public record MeetingCreateRequest(
     Double latitude,
 
     @Schema(description = "경도", example = "127.0396")
-    Double longitude
+    Double longitude,
+
+    @Schema(description = "모임 상태", example = "CLOSED")
+    @NotNull(message = "모임 상태는 필수입니다.")
+    MeetingStatus status
 ) {
 }

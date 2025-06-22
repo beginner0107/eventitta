@@ -4,9 +4,11 @@ import com.eventitta.meeting.domain.Meeting;
 import com.eventitta.meeting.domain.MeetingParticipant;
 import com.eventitta.meeting.domain.MeetingStatus;
 import com.eventitta.meeting.domain.ParticipantStatus;
-import com.eventitta.meeting.dto.MeetingCreateRequest;
-import com.eventitta.meeting.dto.MeetingUpdateRequest;
-import com.eventitta.meeting.dto.ParticipantResponse;
+import com.eventitta.meeting.dto.request.MeetingCreateRequest;
+import com.eventitta.meeting.dto.request.MeetingUpdateRequest;
+import com.eventitta.meeting.dto.response.ParticipantResponse;
+import com.eventitta.meeting.exception.MeetingErrorCode;
+import com.eventitta.meeting.exception.MeetingException;
 import com.eventitta.meeting.mapper.MeetingMapper;
 import com.eventitta.meeting.repository.MeetingParticipantRepository;
 import com.eventitta.meeting.repository.MeetingRepository;
@@ -25,6 +27,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
@@ -250,5 +253,80 @@ class MeetingServiceTest {
 
         // then
         assertThat(participant.getStatus()).isEqualTo(ParticipantStatus.REJECTED);
+    }
+
+    @Test
+    @DisplayName("cancelJoin 호출 시 APPROVED 상태 참여자 수가 감소한다")
+    void cancelJoin_approvedParticipant_decrementsCount() {
+        // given
+        Long userId = 3L;
+        Long meetingId = 600L;
+        User leader = createUser(1L);
+        User user = createUser(userId);
+        Meeting meeting = Meeting.builder()
+            .id(meetingId)
+            .title("t")
+            .startTime(LocalDateTime.now().plusDays(1))
+            .endTime(LocalDateTime.now().plusDays(2))
+            .maxMembers(10)
+            .currentMembers(2)
+            .status(MeetingStatus.RECRUITING)
+            .leader(leader)
+            .build();
+        MeetingParticipant participant = MeetingParticipant.builder()
+            .meeting(meeting)
+            .user(user)
+            .status(ParticipantStatus.APPROVED)
+            .build();
+
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(meetingRepository.findById(meetingId)).willReturn(Optional.of(meeting));
+        given(participantRepository.findByMeetingIdAndUser_Id(meetingId, userId))
+            .willReturn(Optional.of(participant));
+
+        // when
+        meetingService.cancelJoin(userId, meetingId);
+
+        // then
+        assertThat(meeting.getCurrentMembers()).isEqualTo(1);
+        verify(participantRepository).delete(participant);
+    }
+
+    @Test
+    @DisplayName("현재 인원이 가득 찼을 때 approveParticipant는 예외를 던진다")
+    void approveParticipant_whenFull_throwsException() {
+        // given
+        Long leaderId = 1L;
+        Long userId = 4L;
+        Long meetingId = 700L;
+        Long participantId = 20L;
+        User leader = createUser(leaderId);
+        User user = createUser(userId);
+        Meeting meeting = Meeting.builder()
+            .id(meetingId)
+            .title("full")
+            .startTime(LocalDateTime.now().plusDays(1))
+            .endTime(LocalDateTime.now().plusDays(2))
+            .maxMembers(2)
+            .currentMembers(2)
+            .status(MeetingStatus.RECRUITING)
+            .leader(leader)
+            .build();
+        MeetingParticipant participant = MeetingParticipant.builder()
+            .meeting(meeting)
+            .user(user)
+            .status(ParticipantStatus.PENDING)
+            .build();
+        org.springframework.test.util.ReflectionTestUtils.setField(participant, "id", participantId);
+
+        given(userRepository.findById(leaderId)).willReturn(Optional.of(leader));
+        given(meetingRepository.findById(meetingId)).willReturn(Optional.of(meeting));
+        given(participantRepository.findByIdWithMeeting(participantId)).willReturn(Optional.of(participant));
+
+        // when & then
+        assertThatThrownBy(() -> meetingService.approveParticipant(leaderId, meetingId, participantId))
+            .isInstanceOf(MeetingException.class)
+            .extracting("errorCode")
+            .isEqualTo(MeetingErrorCode.MEETING_MAX_MEMBERS_REACHED);
     }
 }

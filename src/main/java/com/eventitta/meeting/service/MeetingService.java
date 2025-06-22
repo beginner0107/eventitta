@@ -51,6 +51,9 @@ public class MeetingService {
         findUserById(userId);
 
         Meeting meeting = findMeetingById(meetingId);
+        if (meeting.isDeleted()) {
+            throw ALREADY_DELETED_MEETING.defaultException();
+        }
         validateMeetingLeader(meeting, userId);
         validateMeetingTimeForUpdate(request);
 
@@ -140,6 +143,9 @@ public class MeetingService {
     public ParticipantResponse approveParticipant(Long userId, Long meetingId, Long participantId) {
         findUserById(userId);
         Meeting meeting = findMeetingById(meetingId);
+        if (meeting.isDeleted()) {
+            throw ALREADY_DELETED_MEETING.defaultException();
+        }
         validateMeetingLeader(meeting, userId);
 
         MeetingParticipant participant = findParticipantById(participantId);
@@ -160,6 +166,9 @@ public class MeetingService {
     public ParticipantResponse rejectParticipant(Long userId, Long meetingId, Long participantId) {
         findUserById(userId);
         Meeting meeting = findMeetingById(meetingId);
+        if (meeting.isDeleted()) {
+            throw ALREADY_DELETED_MEETING.defaultException();
+        }
         validateMeetingLeader(meeting, userId);
 
         MeetingParticipant participant = findParticipantById(participantId);

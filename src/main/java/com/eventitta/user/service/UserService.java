@@ -19,15 +19,19 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     public UserProfileResponse getProfile(Long userId) {
-        User user = userRepository.findById(userId)
+        User user = userRepository.findActiveById(userId)
             .orElseThrow(UserErrorCode.NOT_FOUND_USER_ID::defaultException);
         return UserProfileResponse.from(user);
     }
 
     @Transactional
     public void updateProfile(Long userId, UpdateProfileRequest req) {
-        User user = userRepository.findById(userId)
+        User user = userRepository.findActiveById(userId)
             .orElseThrow(UserErrorCode.NOT_FOUND_USER_ID::defaultException);
+        if (!user.getNickname().equals(req.nickname()) &&
+            userRepository.existsByNickname(req.nickname())) {
+            throw UserErrorCode.CONFLICTED_NICKNAME.defaultException();
+        }
         user.updateProfile(
             req.nickname(),
             req.profilePictureUrl(),
@@ -41,13 +45,14 @@ public class UserService {
 
     @Transactional
     public void deleteUser(Long userId) {
-        User user = userRepository.findById(userId)
+        User user = userRepository.findActiveById(userId)
             .orElseThrow(UserErrorCode.NOT_FOUND_USER_ID::defaultException);
         userRepository.delete(user);
     }
 
+    @Transactional
     public void changePassword(Long userId, ChangePasswordRequest req) {
-        User user = userRepository.findById(userId)
+        User user = userRepository.findActiveById(userId)
             .orElseThrow(UserErrorCode.NOT_FOUND_USER_ID::defaultException);
         if (!passwordEncoder.matches(req.currentPassword(), user.getPassword())) {
             throw UserErrorCode.INVALID_CURRENT_PASSWORD.defaultException();

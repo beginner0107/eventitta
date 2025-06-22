@@ -74,6 +74,10 @@ public class User extends BaseEntity {
     @Column(name = "provider_id", length = 100)
     private String providerId;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean deleted = false;
+
     public void updateProfile(
         String nickname,
         String profilePictureUrl,
@@ -94,5 +98,9 @@ public class User extends BaseEntity {
 
     public void changePassword(String encodedPassword) {
         this.password = encodedPassword;
+    }
+
+    public void delete() {
+        this.deleted = true;
     }
 }

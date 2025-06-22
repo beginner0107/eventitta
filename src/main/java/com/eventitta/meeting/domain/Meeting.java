@@ -26,6 +26,7 @@ public class Meeting {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private int maxMembers;
+    @Builder.Default
     private int currentMembers = 1;
     private String address;
     private Double latitude;
@@ -41,6 +42,7 @@ public class Meeting {
     private boolean deleted = false;
 
     @OneToMany(mappedBy = "meeting", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<MeetingParticipant> participants = new ArrayList<>();
 
     @Builder

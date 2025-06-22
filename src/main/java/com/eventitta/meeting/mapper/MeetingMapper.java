@@ -17,7 +17,7 @@ import java.util.List;
 public interface MeetingMapper {
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "currentMembers", ignore = true)
+    @Mapping(target = "currentMembers", constant = "1")
     @Mapping(target = "deleted", ignore = true)
     @Mapping(target = "participants", ignore = true)
 

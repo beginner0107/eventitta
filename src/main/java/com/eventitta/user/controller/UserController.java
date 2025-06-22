@@ -1,10 +1,13 @@
 package com.eventitta.user.controller;
 
 import com.eventitta.auth.annotation.CurrentUser;
+import com.eventitta.user.dto.ChangePasswordRequest;
 import com.eventitta.user.dto.UpdateProfileRequest;
 import com.eventitta.user.dto.UserProfileResponse;
 import com.eventitta.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +42,19 @@ public class UserController {
     @DeleteMapping("/me")
     public ResponseEntity<Void> deleteMe(@CurrentUser Long userId) {
         userService.deleteUser(userId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "비밀번호 변경")
+    @ApiResponses({
+        @ApiResponse(responseCode = "204", description = "비밀번호 변경 성공"),
+    })
+    @PutMapping("/me/password")
+    public ResponseEntity<Void> changePassword(
+        @CurrentUser Long userId,
+        @Valid @RequestBody ChangePasswordRequest request
+    ) {
+        userService.changePassword(userId, request);
         return ResponseEntity.noContent().build();
     }
 }

@@ -1,0 +1,254 @@
+package com.eventitta.meeting.service;
+
+import com.eventitta.meeting.domain.Meeting;
+import com.eventitta.meeting.domain.MeetingParticipant;
+import com.eventitta.meeting.domain.MeetingStatus;
+import com.eventitta.meeting.domain.ParticipantStatus;
+import com.eventitta.meeting.dto.MeetingCreateRequest;
+import com.eventitta.meeting.dto.MeetingUpdateRequest;
+import com.eventitta.meeting.dto.ParticipantResponse;
+import com.eventitta.meeting.mapper.MeetingMapper;
+import com.eventitta.meeting.repository.MeetingParticipantRepository;
+import com.eventitta.meeting.repository.MeetingRepository;
+import com.eventitta.user.domain.Provider;
+import com.eventitta.user.domain.Role;
+import com.eventitta.user.domain.User;
+import com.eventitta.user.repository.UserRepository;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
+
+@ExtendWith(MockitoExtension.class)
+class MeetingServiceTest {
+
+    @Mock
+    MeetingRepository meetingRepository;
+    @Mock
+    MeetingParticipantRepository participantRepository;
+    @Mock
+    MeetingMapper meetingMapper;
+    @Mock
+    UserRepository userRepository;
+
+    @InjectMocks
+    MeetingService meetingService;
+
+    private User createUser(Long id) {
+        return User.builder()
+            .id(id)
+            .email("u" + id + "@test.com")
+            .password("pw")
+            .nickname("user" + id)
+            .role(Role.USER)
+            .provider(Provider.LOCAL)
+            .build();
+    }
+
+    @Test
+    @DisplayName("모임 생성 시 ID가 반환되고 리더가 참여자로 추가된다")
+    void createMeeting_returnsIdAndAddsLeader() {
+        // given
+        Long leaderId = 1L;
+        User leader = createUser(leaderId);
+        given(userRepository.findById(leaderId)).willReturn(Optional.of(leader));
+
+        MeetingCreateRequest req = new MeetingCreateRequest(
+            "title", null,
+            LocalDateTime.now().plusDays(1),
+            LocalDateTime.now().plusDays(2),
+            10, null, null, null
+        );
+        Meeting meetingEntity = Meeting.builder()
+            .title("title")
+            .startTime(req.startTime())
+            .endTime(req.endTime())
+            .maxMembers(10)
+            .status(MeetingStatus.RECRUITING)
+            .leader(leader)
+            .build();
+        Meeting savedMeeting = Meeting.builder()
+            .id(100L)
+            .title("title")
+            .startTime(req.startTime())
+            .endTime(req.endTime())
+            .maxMembers(10)
+            .status(MeetingStatus.RECRUITING)
+            .leader(leader)
+            .build();
+
+        given(meetingMapper.toEntity(any(MeetingCreateRequest.class), eq(leader)))
+            .willReturn(meetingEntity);
+        given(meetingRepository.save(any(Meeting.class))).willReturn(savedMeeting);
+
+        // when
+        Long id = meetingService.createMeeting(leaderId, req);
+
+        // then
+        assertThat(id).isEqualTo(100L);
+        verify(participantRepository).save(any(MeetingParticipant.class));
+    }
+
+    @Test
+    @DisplayName("모임 리더가 수정하면 정보가 변경된다")
+    void updateMeeting_updatesFields() {
+        // given
+        Long leaderId = 1L;
+        User leader = createUser(leaderId);
+        Meeting meeting = Meeting.builder()
+            .id(200L)
+            .title("old")
+            .description("old")
+            .startTime(LocalDateTime.now().plusDays(1))
+            .endTime(LocalDateTime.now().plusDays(2))
+            .maxMembers(10)
+            .status(MeetingStatus.RECRUITING)
+            .leader(leader)
+            .build();
+
+        given(userRepository.findById(leaderId)).willReturn(Optional.of(leader));
+        given(meetingRepository.findById(anyLong())).willReturn(Optional.of(meeting));
+
+        MeetingUpdateRequest req = new MeetingUpdateRequest(
+            "new", "desc",
+            LocalDateTime.now().plusDays(2),
+            LocalDateTime.now().plusDays(3),
+            20, null, null, null,
+            MeetingStatus.RECRUITING
+        );
+
+        // when
+        meetingService.updateMeeting(leaderId, meeting.getId(), req);
+
+        // then
+        assertThat(meeting.getTitle()).isEqualTo("new");
+        assertThat(meeting.getMaxMembers()).isEqualTo(20);
+    }
+
+    @Test
+    @DisplayName("모임 참가 신청 시 PENDING 상태의 참가자가 생성된다")
+    void joinMeeting_returnsPendingParticipant() {
+        // given
+        Long userId = 2L;
+        Long meetingId = 300L;
+        User user = createUser(userId);
+        User leader = createUser(1L);
+        Meeting meeting = Meeting.builder()
+            .id(meetingId)
+            .title("title")
+            .startTime(LocalDateTime.now().plusDays(1))
+            .endTime(LocalDateTime.now().plusDays(2))
+            .maxMembers(10)
+            .currentMembers(1)
+            .status(MeetingStatus.RECRUITING)
+            .leader(leader)
+            .build();
+
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(meetingRepository.findById(meetingId)).willReturn(Optional.of(meeting));
+        given(participantRepository.findByMeetingIdAndUser_Id(meetingId, userId))
+            .willReturn(Optional.empty());
+        MeetingParticipant saved = MeetingParticipant.builder()
+            .meeting(meeting)
+            .user(user)
+            .status(ParticipantStatus.PENDING)
+            .build();
+        org.springframework.test.util.ReflectionTestUtils.setField(saved, "id", 1L);
+        given(participantRepository.save(any(MeetingParticipant.class))).willReturn(saved);
+
+        // when
+        var resp = meetingService.joinMeeting(userId, meetingId);
+
+        // then
+        assertThat(resp.participantId()).isEqualTo(1L);
+        assertThat(resp.status()).isEqualTo(ParticipantStatus.PENDING);
+    }
+
+    @Test
+    @DisplayName("모임 리더가 참가자를 승인하면 상태가 변경된다")
+    void approveParticipant_changesStatus() {
+        // given
+        Long leaderId = 1L;
+        Long userId = 2L;
+        Long meetingId = 400L;
+        Long participantId = 10L;
+        User leader = createUser(leaderId);
+        User user = createUser(userId);
+        Meeting meeting = Meeting.builder()
+            .id(meetingId)
+            .title("t")
+            .startTime(LocalDateTime.now().plusDays(1))
+            .endTime(LocalDateTime.now().plusDays(2))
+            .maxMembers(10)
+            .currentMembers(1)
+            .status(MeetingStatus.RECRUITING)
+            .leader(leader)
+            .build();
+        MeetingParticipant participant = MeetingParticipant.builder()
+            .meeting(meeting)
+            .user(user)
+            .status(ParticipantStatus.PENDING)
+            .build();
+        org.springframework.test.util.ReflectionTestUtils.setField(participant, "id", participantId);
+
+        given(userRepository.findById(leaderId)).willReturn(Optional.of(leader));
+        given(meetingRepository.findById(meetingId)).willReturn(Optional.of(meeting));
+        given(participantRepository.findByIdWithMeeting(participantId)).willReturn(Optional.of(participant));
+        given(meetingMapper.toParticipantResponse(any(), any())).willReturn(new ParticipantResponse(participantId, userId, "nick", null, ParticipantStatus.APPROVED));
+
+        // when
+        meetingService.approveParticipant(leaderId, meetingId, participantId);
+
+        // then
+        assertThat(participant.getStatus()).isEqualTo(ParticipantStatus.APPROVED);
+        assertThat(meeting.getCurrentMembers()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("모임 리더가 참가자를 거절하면 상태가 변경된다")
+    void rejectParticipant_changesStatus() {
+        // given
+        Long leaderId = 1L;
+        Long userId = 2L;
+        Long meetingId = 500L;
+        Long participantId = 11L;
+        User leader = createUser(leaderId);
+        User user = createUser(userId);
+        Meeting meeting = Meeting.builder()
+            .id(meetingId)
+            .title("t")
+            .startTime(LocalDateTime.now().plusDays(1))
+            .endTime(LocalDateTime.now().plusDays(2))
+            .maxMembers(10)
+            .status(MeetingStatus.RECRUITING)
+            .leader(leader)
+            .build();
+        MeetingParticipant participant = MeetingParticipant.builder()
+            .meeting(meeting)
+            .user(user)
+            .status(ParticipantStatus.PENDING)
+            .build();
+        org.springframework.test.util.ReflectionTestUtils.setField(participant, "id", participantId);
+
+        given(userRepository.findById(leaderId)).willReturn(Optional.of(leader));
+        given(meetingRepository.findById(meetingId)).willReturn(Optional.of(meeting));
+        given(participantRepository.findByIdWithMeeting(participantId)).willReturn(Optional.of(participant));
+        given(meetingMapper.toParticipantResponse(any(), any())).willReturn(new ParticipantResponse(participantId, userId, "nick", null, ParticipantStatus.REJECTED));
+
+        // when
+        meetingService.rejectParticipant(leaderId, meetingId, participantId);
+
+        // then
+        assertThat(participant.getStatus()).isEqualTo(ParticipantStatus.REJECTED);
+    }
+}

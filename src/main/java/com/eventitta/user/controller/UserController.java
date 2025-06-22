@@ -34,4 +34,11 @@ public class UserController {
         userService.updateProfile(userId, request);
         return ResponseEntity.noContent().build();
     }
+
+    @Operation(summary = "회원 탈퇴")
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> deleteMe(@CurrentUser Long userId) {
+        userService.deleteUser(userId);
+        return ResponseEntity.noContent().build();
+    }
 }

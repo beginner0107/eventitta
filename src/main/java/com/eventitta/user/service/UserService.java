@@ -35,4 +35,11 @@ public class UserService {
             req.longitude()
         );
     }
+
+    @Transactional
+    public void deleteUser(Long userId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(UserErrorCode.NOT_FOUND_USER_ID::defaultException);
+        userRepository.delete(user);
+    }
 }

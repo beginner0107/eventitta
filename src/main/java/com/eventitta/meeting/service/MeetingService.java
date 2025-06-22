@@ -5,7 +5,13 @@ import com.eventitta.meeting.domain.Meeting;
 import com.eventitta.meeting.domain.MeetingParticipant;
 import com.eventitta.meeting.domain.MeetingStatus;
 import com.eventitta.meeting.domain.ParticipantStatus;
-import com.eventitta.meeting.dto.*;
+import com.eventitta.meeting.dto.request.MeetingCreateRequest;
+import com.eventitta.meeting.dto.request.MeetingFilter;
+import com.eventitta.meeting.dto.request.MeetingUpdateRequest;
+import com.eventitta.meeting.dto.response.JoinMeetingResponse;
+import com.eventitta.meeting.dto.response.MeetingDetailResponse;
+import com.eventitta.meeting.dto.response.MeetingSummaryResponse;
+import com.eventitta.meeting.dto.response.ParticipantResponse;
 import com.eventitta.meeting.mapper.MeetingMapper;
 import com.eventitta.meeting.repository.MeetingParticipantRepository;
 import com.eventitta.meeting.repository.MeetingRepository;
@@ -18,6 +24,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -198,6 +205,11 @@ public class MeetingService {
 
     private void validateMeetingTimeForUpdate(MeetingUpdateRequest request) {
         if (request.endTime().isBefore(request.startTime())) {
+            throw INVALID_MEETING_TIME.defaultException();
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        if (!request.startTime().isAfter(now) || !request.endTime().isAfter(now)) {
             throw INVALID_MEETING_TIME.defaultException();
         }
     }

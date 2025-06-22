@@ -47,7 +47,7 @@ public class UserService {
     public void deleteUser(Long userId) {
         User user = userRepository.findActiveById(userId)
             .orElseThrow(UserErrorCode.NOT_FOUND_USER_ID::defaultException);
-        userRepository.delete(user);
+        user.delete();
     }
 
     @Transactional

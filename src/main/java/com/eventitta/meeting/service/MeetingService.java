@@ -242,4 +242,29 @@ public class MeetingService {
             throw INVALID_PARTICIPANT_STATUS.defaultException();
         }
     }
+
+    @Transactional
+    public void cancelJoin(Long userId, Long meetingId) {
+        User user = findUserById(userId);
+        Meeting meeting = findMeetingById(meetingId);
+
+        if (meeting.isDeleted()) {
+            throw ALREADY_DELETED_MEETING.defaultException();
+        }
+
+        MeetingParticipant participant = participantRepository
+            .findByMeetingIdAndUser_Id(meetingId, userId)
+            .orElseThrow(PARTICIPANT_NOT_FOUND::defaultException);
+
+        if (participant.getStatus() == ParticipantStatus.REJECTED) {
+            throw INVALID_PARTICIPANT_STATUS.defaultException();
+        }
+
+        if (participant.getStatus() == ParticipantStatus.APPROVED) {
+            meeting.decrementCurrentMembers();
+        }
+
+        participantRepository.delete(participant);
+    }
+
 }

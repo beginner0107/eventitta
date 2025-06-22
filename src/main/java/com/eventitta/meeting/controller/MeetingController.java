@@ -164,4 +164,19 @@ public class MeetingController {
         ParticipantResponse response = meetingService.rejectParticipant(userId, meetingId, participantId);
         return ResponseEntity.ok(response);
     }
+
+    @Operation(summary = "모임 참가 취소", description = "대기 중이거나 승인된 사용자가 스스로 모임 참여를 취소합니다.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "참가 취소 성공"),
+        @ApiResponse(responseCode = "404", description = "모임 또는 참가 정보를 찾을 수 없는 경우",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    })
+    @DeleteMapping("/{meetingId}/join")
+    public ResponseEntity<Void> cancelJoin(
+        @CurrentUser Long userId,
+        @Parameter(description = "모임 ID", required = true)
+        @PathVariable Long meetingId) {
+        meetingService.cancelJoin(userId, meetingId);
+        return ResponseEntity.noContent().build();
+    }
 }

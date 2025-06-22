@@ -82,4 +82,10 @@ public class Meeting {
     public void incrementCurrentMembers() {
         this.currentMembers++;
     }
+
+    public void decrementCurrentMembers() {
+        if (this.currentMembers > 0) {
+            this.currentMembers--;
+        }
+    }
 }

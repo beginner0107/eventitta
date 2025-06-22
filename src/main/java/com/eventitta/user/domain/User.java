@@ -73,4 +73,22 @@ public class User extends BaseEntity {
 
     @Column(name = "provider_id", length = 100)
     private String providerId;
+
+    public void updateProfile(
+        String nickname,
+        String profilePictureUrl,
+        String selfIntro,
+        List<String> interests,
+        String address,
+        BigDecimal latitude,
+        BigDecimal longitude
+    ) {
+        this.nickname = nickname;
+        this.profilePictureUrl = profilePictureUrl;
+        this.selfIntro = selfIntro;
+        this.interests = interests;
+        this.address = address;
+        this.latitude = latitude;
+        this.longitude = longitude;
+    }
 }

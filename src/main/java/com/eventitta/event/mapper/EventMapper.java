@@ -4,11 +4,9 @@ import com.eventitta.event.dto.response.EventDistanceDto;
 import com.eventitta.event.dto.response.EventResponseDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.factory.Mappers;
 
 @Mapper(componentModel = "spring")
 public interface EventMapper {
-    EventMapper INSTANCE = Mappers.getMapper(EventMapper.class);
 
     @Mapping(source = "id", target = "id")
     @Mapping(source = "title", target = "title")

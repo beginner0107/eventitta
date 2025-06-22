@@ -27,7 +27,7 @@ public class MeetingController {
 
     private final MeetingService meetingService;
 
-    @Operation(summary = "모임 생성", description = "새로운 모임을 생성합니다. 인증된 사용자의 ID는 토큰에서 추출하여 사용합니다.")
+    @Operation(summary = "모임 생성", description = "새로운 모임을 생성합니다.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "모임 생성 성공",
             content = @Content(schema = @Schema(hidden = true))),
@@ -103,7 +103,7 @@ public class MeetingController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "모임 참가 신청", description = "특정 모임에 참가 신청합니다. 중복 신청을 방지하고, 신청 시 대기 상태(PENDING)로 등록됩니다.")
+    @Operation(summary = "모임 참가 신청", description = "특정 모임에 참가 신청합니다. 중복 신청을 방지하고, 신청 시 대기 상태로 등록됩니다.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "참가 신청 성공",
             content = @Content(schema = @Schema(implementation = JoinMeetingResponse.class))),
@@ -121,7 +121,7 @@ public class MeetingController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "모임 참가 신청 승인", description = "모임 리더가 참가 신청을 승인합니다. 승인 시 참가자 상태가 APPROVED로 변경되고 모임 현재 인원이 증가합니다.")
+    @Operation(summary = "모임 참가 신청 승인", description = "모임 리더가 참가 신청을 승인합니다.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "참가 신청 승인 성공",
             content = @Content(schema = @Schema(implementation = ParticipantResponse.class))),
@@ -143,7 +143,7 @@ public class MeetingController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "모임 참가 신청 거절", description = "모임 리더가 참가 신청을 거절합니다. 거절 시 참가자 상태가 REJECTED로 변경됩니다.")
+    @Operation(summary = "모임 참가 신청 거절", description = "모임 리더가 참가 신청을 거절합니다.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "참가 신청 거절 성공",
             content = @Content(schema = @Schema(implementation = ParticipantResponse.class))),

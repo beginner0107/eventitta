@@ -245,7 +245,7 @@ public class MeetingService {
 
     @Transactional
     public void cancelJoin(Long userId, Long meetingId) {
-        User user = findUserById(userId);
+        findUserById(userId);
         Meeting meeting = findMeetingById(meetingId);
 
         if (meeting.isDeleted()) {

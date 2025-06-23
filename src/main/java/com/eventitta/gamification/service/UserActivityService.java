@@ -16,6 +16,7 @@ import static com.eventitta.user.exception.UserErrorCode.NOT_FOUND_USER_ID;
 public class UserActivityService {
     private final UserActivityRepository userActivityRepository;
     private final UserRepository userRepository;
+    private final BadgeService badgeService;
 
     @Transactional
     public void recordActivity(Long userId, ActivityType activityType) {
@@ -28,5 +29,8 @@ public class UserActivityService {
 
         // 2. 사용자 포인트 업데이트
         user.addPoints(activityType.getPoints());
+
+        // 3. 배지 획득 조건 검사
+        badgeService.checkAndAwardBadges(user, activityType);
     }
 }

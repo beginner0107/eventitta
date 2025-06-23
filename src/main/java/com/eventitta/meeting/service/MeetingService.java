@@ -1,6 +1,7 @@
 package com.eventitta.meeting.service;
 
 import com.eventitta.common.response.PageResponse;
+import com.eventitta.gamification.service.UserActivityService;
 import com.eventitta.meeting.domain.Meeting;
 import com.eventitta.meeting.domain.MeetingParticipant;
 import com.eventitta.meeting.domain.MeetingStatus;
@@ -29,6 +30,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static com.eventitta.gamification.domain.ActivityType.JOIN_MEETING;
 import static com.eventitta.meeting.exception.MeetingErrorCode.*;
 import static com.eventitta.user.exception.UserErrorCode.NOT_FOUND_USER_ID;
 
@@ -40,6 +42,7 @@ public class MeetingService {
     private final MeetingParticipantRepository participantRepository;
     private final MeetingMapper meetingMapper;
     private final UserRepository userRepository;
+    private final UserActivityService userActivityService;
 
     @Transactional
     public Long createMeeting(Long userId, MeetingCreateRequest request) {
@@ -165,6 +168,8 @@ public class MeetingService {
 
         participant.approve();
         meeting.incrementCurrentMembers();
+
+        userActivityService.recordActivity(participant.getUser().getId(), JOIN_MEETING);
 
         return meetingMapper.toParticipantResponse(participant, participant.getUser());
     }

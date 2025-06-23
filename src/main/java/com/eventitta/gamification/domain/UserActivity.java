@@ -32,13 +32,17 @@ public class UserActivity {
     @Column(nullable = false)
     private int pointsEarned;
 
+    @Column(nullable = false)
+    private Long targetId;
+
     @CreatedDate
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
-    public UserActivity(User user, ActivityType activityType) {
+    public UserActivity(User user, ActivityType activityType, Long targetId) {
         this.user = user;
         this.activityType = activityType;
         this.pointsEarned = activityType.getPoints();
+        this.targetId = targetId;
     }
 }

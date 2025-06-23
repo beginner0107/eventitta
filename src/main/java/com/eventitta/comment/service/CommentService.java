@@ -6,6 +6,7 @@ import com.eventitta.comment.dto.query.CommentFlatDto;
 import com.eventitta.comment.dto.response.CommentWithChildrenDto;
 import com.eventitta.comment.exception.CommentException;
 import com.eventitta.comment.repository.CommentRepository;
+import com.eventitta.gamification.service.UserActivityService;
 import com.eventitta.post.domain.Post;
 import com.eventitta.post.exception.PostException;
 import com.eventitta.post.repository.PostRepository;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 import static com.eventitta.auth.exception.AuthErrorCode.NOT_FOUND_USER_ID;
 import static com.eventitta.comment.exception.CommentErrorCode.NOT_FOUND_COMMENT_ID;
 import static com.eventitta.comment.exception.CommentErrorCode.NO_AUTHORITY_TO_MODIFY_COMMENT;
+import static com.eventitta.gamification.domain.ActivityType.CREATE_COMMENT;
 import static com.eventitta.post.exception.PostErrorCode.NOT_FOUND_POST_ID;
 
 @Service
@@ -32,6 +34,7 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final UserActivityService userActivityService;
 
     public void writeComment(Long postId, Long userId, String content, Long parentCommentId) {
         Post post = postRepository.findById(postId)
@@ -53,6 +56,8 @@ public class CommentService {
             .build();
 
         commentRepository.save(comment);
+
+        userActivityService.recordActivity(userId, CREATE_COMMENT);
     }
 
     @Transactional(readOnly = true)

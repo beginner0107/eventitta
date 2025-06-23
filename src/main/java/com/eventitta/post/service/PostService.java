@@ -4,6 +4,7 @@ import com.eventitta.auth.exception.AuthErrorCode;
 import com.eventitta.auth.exception.AuthException;
 import com.eventitta.comment.repository.CommentRepository;
 import com.eventitta.common.response.PageResponse;
+import com.eventitta.gamification.service.UserActivityService;
 import com.eventitta.post.domain.Post;
 import com.eventitta.post.domain.PostImage;
 import com.eventitta.post.domain.PostLike;
@@ -31,6 +32,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static com.eventitta.gamification.domain.ActivityType.CREATE_POST;
 import static com.eventitta.post.exception.PostErrorCode.ACCESS_DENIED;
 import static com.eventitta.post.exception.PostErrorCode.NOT_FOUND_POST_ID;
 import static com.eventitta.region.exception.RegionErrorCode.NOT_FOUND_REGION_CODE;
@@ -45,6 +47,7 @@ public class PostService {
     private final RegionRepository regionRepository;
     private final PostLikeRepository postLikeRepository;
     private final CommentRepository commentRepository;
+    private final UserActivityService userActivityService;
 
 
     public Long create(Long userId, CreatePostRequest dto) {
@@ -59,7 +62,9 @@ public class PostService {
                 post.addImage(new PostImage(dto.imageUrls().get(i), i));
             }
         }
-        return postRepository.save(post).getId();
+        Post savedPost = postRepository.save(post);
+        userActivityService.recordActivity(userId, CREATE_POST);
+        return savedPost.getId();
     }
 
     public void update(Long postId, Long userId, UpdatePostRequest dto) {

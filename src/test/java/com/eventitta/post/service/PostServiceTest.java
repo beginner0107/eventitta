@@ -2,6 +2,7 @@ package com.eventitta.post.service;
 
 import com.eventitta.auth.exception.AuthException;
 import com.eventitta.comment.repository.CommentRepository;
+import com.eventitta.gamification.service.UserActivityService;
 import com.eventitta.post.domain.PostLike;
 import com.eventitta.post.repository.PostLikeRepository;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -38,11 +39,13 @@ import org.springframework.data.domain.*;
 import java.util.List;
 import java.util.Optional;
 
+import static com.eventitta.gamification.domain.ActivityType.CREATE_POST;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.Mockito.*;
 
 @DisplayName("동네 기반 게시글 단위 테스트")
@@ -59,6 +62,8 @@ class PostServiceTest {
     PostLikeRepository postLikeRepository;
     @Mock
     CommentRepository commentRepository;
+    @Mock
+    UserActivityService userActivityService;
 
     @InjectMocks
     PostService postService;
@@ -78,7 +83,8 @@ class PostServiceTest {
         Region region = createRegion(regionCode);
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
         given(regionRepository.findById(regionCode)).willReturn(Optional.of(region));
-
+        willDoNothing().given(userActivityService).recordActivity(userId, CREATE_POST);
+        
         Post savedPost = createPost(123L, user, createPostRequest.title(), createPostRequest.content(), region);
         savedPost.addImage(new PostImage("url1", 0));
         savedPost.addImage(new PostImage("url2", 1));
@@ -89,7 +95,6 @@ class PostServiceTest {
 
         // then
         assertThat(resultId).isEqualTo(123L);
-        // Verify that two images are added to the returned Post
         assertThat(savedPost.getImages()).hasSize(2);
     }
 

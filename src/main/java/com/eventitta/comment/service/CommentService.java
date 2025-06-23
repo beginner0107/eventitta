@@ -55,9 +55,9 @@ public class CommentService {
             .parent(parent)
             .build();
 
-        commentRepository.save(comment);
+        Comment savedComment = commentRepository.save(comment);
 
-        userActivityService.recordActivity(userId, CREATE_COMMENT);
+        userActivityService.recordActivity(userId, CREATE_COMMENT, savedComment.getId());
     }
 
     @Transactional(readOnly = true)
@@ -94,5 +94,6 @@ public class CommentService {
         }
 
         comment.softDelete();
+        userActivityService.revokeActivity(userId, CREATE_COMMENT, commentId);
     }
 }

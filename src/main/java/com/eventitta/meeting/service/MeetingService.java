@@ -169,7 +169,7 @@ public class MeetingService {
         participant.approve();
         meeting.incrementCurrentMembers();
 
-        userActivityService.recordActivity(participant.getUser().getId(), JOIN_MEETING);
+        userActivityService.recordActivity(participant.getUser().getId(), JOIN_MEETING, meetingId);
 
         return meetingMapper.toParticipantResponse(participant, participant.getUser());
     }
@@ -261,6 +261,7 @@ public class MeetingService {
     @Transactional
     public void cancelJoin(Long userId, Long meetingId) {
         findUserById(userId);
+
         Meeting meeting = findMeetingById(meetingId);
 
         if (meeting.isDeleted()) {
@@ -275,11 +276,17 @@ public class MeetingService {
             throw INVALID_PARTICIPANT_STATUS.defaultException();
         }
 
-        if (participant.getStatus() == ParticipantStatus.APPROVED) {
+        boolean wasApproved = participant.getStatus() == ParticipantStatus.APPROVED;
+
+        if (wasApproved) {
             meeting.decrementCurrentMembers();
         }
 
         participantRepository.delete(participant);
+
+        if (wasApproved) {
+            userActivityService.revokeActivity(userId, JOIN_MEETING, meetingId);
+        }
     }
 
 }

@@ -64,7 +64,7 @@ public class PostService {
             }
         }
         Post savedPost = postRepository.save(post);
-        userActivityService.recordActivity(userId, CREATE_POST);
+        userActivityService.recordActivity(userId, CREATE_POST, savedPost.getId());
         return savedPost.getId();
     }
 
@@ -97,6 +97,7 @@ public class PostService {
         }
         post.clearImages();
         post.softDelete();
+        userActivityService.revokeActivity(userId, CREATE_POST, postId);
     }
 
     @Transactional(readOnly = true)
@@ -138,7 +139,7 @@ public class PostService {
             PostLike like = new PostLike(post, user);
             postLikeRepository.save(like);
             post.incrementLikeCount();
-            userActivityService.recordActivity(userId, LIKE_POST);
+            userActivityService.recordActivity(userId, LIKE_POST, postId);
         }
     }
 

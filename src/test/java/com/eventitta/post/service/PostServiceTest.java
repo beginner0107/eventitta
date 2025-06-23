@@ -83,8 +83,13 @@ class PostServiceTest {
         Region region = createRegion(regionCode);
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
         given(regionRepository.findById(regionCode)).willReturn(Optional.of(region));
-        willDoNothing().given(userActivityService).recordActivity(userId, CREATE_POST);
-        
+        willDoNothing()
+            .given(userActivityService)
+            .recordActivity(
+                eq(userId),
+                eq(CREATE_POST),
+                anyLong()
+            );
         Post savedPost = createPost(123L, user, createPostRequest.title(), createPostRequest.content(), region);
         savedPost.addImage(new PostImage("url1", 0));
         savedPost.addImage(new PostImage("url2", 1));
@@ -407,6 +412,15 @@ class PostServiceTest {
         Region region = createRegion(regionCode);
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
         given(regionRepository.findById(regionCode)).willReturn(Optional.of(region));
+
+        willDoNothing()
+            .given(userActivityService)
+            .recordActivity(
+                eq(userId),
+                eq(CREATE_POST),
+                any()
+            );
+
         final Post[] createdPostHolder = new Post[1];
         given(postRepository.save(any())).willAnswer(invocation -> {
             Post post = invocation.getArgument(0);

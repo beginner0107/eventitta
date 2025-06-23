@@ -3,6 +3,7 @@ package com.eventitta.comment.service;
 import com.eventitta.comment.domain.Comment;
 import com.eventitta.comment.exception.CommentException;
 import com.eventitta.comment.repository.CommentRepository;
+import com.eventitta.gamification.service.UserActivityService;
 import com.eventitta.post.domain.Post;
 import com.eventitta.post.exception.PostException;
 import com.eventitta.post.repository.PostRepository;
@@ -18,11 +19,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Optional;
 
 import static com.eventitta.comment.exception.CommentErrorCode.NO_AUTHORITY_TO_MODIFY_COMMENT;
+import static com.eventitta.gamification.domain.ActivityType.CREATE_COMMENT;
+import static com.eventitta.gamification.domain.ActivityType.CREATE_POST;
 import static com.eventitta.post.exception.PostErrorCode.NOT_FOUND_POST_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -40,6 +44,9 @@ class CommentServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private UserActivityService userActivityService;
+
     private final Long postId = 1L;
     private final Long commentId = 100L;
     private final Long userId = 42L;
@@ -53,6 +60,20 @@ class CommentServiceTest {
 
         given(postRepository.findById(postId)).willReturn(Optional.of(post));
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        willDoNothing().given(userActivityService).recordActivity(
+            eq(userId),
+            eq(CREATE_COMMENT),
+            anyLong()
+        );
+
+        long fakeCommentId = 123L;
+        given(commentRepository.save(any(Comment.class)))
+            .willReturn(Comment.builder()
+                .id(fakeCommentId)
+                .post(post)
+                .user(user)
+                .content("내용")
+                .build());
 
         // when
         commentService.writeComment(postId, userId, "내용", null);

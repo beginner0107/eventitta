@@ -1,5 +1,6 @@
 package com.eventitta.meeting.service;
 
+import com.eventitta.gamification.service.UserActivityService;
 import com.eventitta.meeting.domain.Meeting;
 import com.eventitta.meeting.domain.MeetingParticipant;
 import com.eventitta.meeting.domain.MeetingStatus;
@@ -30,6 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -43,9 +45,12 @@ class MeetingServiceTest {
     MeetingMapper meetingMapper;
     @Mock
     UserRepository userRepository;
+    @Mock
+    UserActivityService userActivityService;
 
     @InjectMocks
     MeetingService meetingService;
+
 
     private User createUser(Long id) {
         return User.builder()
@@ -208,6 +213,8 @@ class MeetingServiceTest {
         given(meetingRepository.findById(meetingId)).willReturn(Optional.of(meeting));
         given(participantRepository.findByIdWithMeeting(participantId)).willReturn(Optional.of(participant));
         given(meetingMapper.toParticipantResponse(any(), any())).willReturn(new ParticipantResponse(participantId, userId, "nick", null, ParticipantStatus.APPROVED));
+        given(meetingMapper.toParticipantResponse(any(), any())).willReturn(new ParticipantResponse(participantId, userId, "nick", null, ParticipantStatus.APPROVED));
+
 
         // when
         meetingService.approveParticipant(leaderId, meetingId, participantId);
@@ -283,6 +290,7 @@ class MeetingServiceTest {
         given(meetingRepository.findById(meetingId)).willReturn(Optional.of(meeting));
         given(participantRepository.findByMeetingIdAndUser_Id(meetingId, userId))
             .willReturn(Optional.of(participant));
+        willDoNothing().given(userActivityService).revokeActivity(any(), any(), any());
 
         // when
         meetingService.cancelJoin(userId, meetingId);

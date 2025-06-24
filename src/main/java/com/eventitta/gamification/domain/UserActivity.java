@@ -14,7 +14,10 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
-@Table(name = "user_activities")
+@Table(
+    name = "user_activities",
+    uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "activity_type", "target_id"})
+)
 public class UserActivity {
 
     @Id

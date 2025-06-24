@@ -27,8 +27,12 @@ public class UserActivityService {
             .orElseThrow(NOT_FOUND_USER_ID::defaultException);
 
         // 1. 사용자 활동 내역 생성 및 저장
-        UserActivity activity = new UserActivity(user, activityType, targetId);
-        userActivityRepository.save(activity);
+        boolean exists = userActivityRepository
+            .findByUserIdAndActivityTypeAndTargetId(userId, activityType, targetId)
+            .isPresent();
+        if (exists) {
+            return;
+        }
 
         // 2. 사용자 포인트 업데이트
         user.addPoints(activityType.getPoints());

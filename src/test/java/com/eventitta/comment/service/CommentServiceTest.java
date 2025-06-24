@@ -60,11 +60,12 @@ class CommentServiceTest {
 
         given(postRepository.findById(postId)).willReturn(Optional.of(post));
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
-        willDoNothing().given(userActivityService).recordActivity(
+        given(userActivityService.recordActivity(
             eq(userId),
             eq(CREATE_COMMENT),
             anyLong()
-        );
+        )).willReturn(Optional.empty());
+
 
         long fakeCommentId = 123L;
         given(commentRepository.save(any(Comment.class)))

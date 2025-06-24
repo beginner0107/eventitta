@@ -7,8 +7,9 @@ import com.eventitta.common.response.PageResponse;
 import com.eventitta.post.domain.Post;
 import com.eventitta.post.dto.PostFilter;
 import com.eventitta.post.dto.request.CreatePostRequest;
-import com.eventitta.post.dto.response.PostDetailDto;
 import com.eventitta.post.dto.request.UpdatePostRequest;
+import com.eventitta.post.dto.response.CreatePostResponse;
+import com.eventitta.post.dto.response.PostDetailDto;
 import com.eventitta.post.dto.response.PostSummaryDto;
 import com.eventitta.post.exception.PostErrorCode;
 import com.eventitta.post.exception.PostException;
@@ -17,7 +18,6 @@ import com.eventitta.user.domain.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.ResultActions;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -44,7 +44,7 @@ class PostControllerTest extends ControllerTestSupport {
         CreatePostRequest req = new CreatePostRequest("제목", "내용", "1100110100", List.of());
 
         given(postService.create(eq(42L), any(CreatePostRequest.class)))
-            .willReturn(fakePostId);
+            .willReturn(new CreatePostResponse(fakePostId, null));
 
         // when & then
         mockMvc.perform(post("/api/v1/posts")

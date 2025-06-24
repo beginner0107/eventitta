@@ -22,7 +22,7 @@ public class UserActivityService {
     private final BadgeService badgeService;
 
     @Transactional
-    public void recordActivity(Long userId, ActivityType activityType, Long targetId) {
+    public Optional<String> recordActivity(Long userId, ActivityType activityType, Long targetId) {
         User user = userRepository.findById(userId)
             .orElseThrow(NOT_FOUND_USER_ID::defaultException);
 
@@ -31,14 +31,14 @@ public class UserActivityService {
             .findByUserIdAndActivityTypeAndTargetId(userId, activityType, targetId)
             .isPresent();
         if (exists) {
-            return;
+            return Optional.empty();
         }
 
         // 2. 사용자 포인트 업데이트
         user.addPoints(activityType.getPoints());
 
         // 3. 배지 획득 조건 검사
-        badgeService.checkAndAwardBadges(user, activityType);
+        return badgeService.checkAndAwardBadges(user, activityType);
     }
 
     @Transactional

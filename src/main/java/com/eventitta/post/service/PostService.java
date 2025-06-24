@@ -11,6 +11,7 @@ import com.eventitta.post.domain.PostLike;
 import com.eventitta.post.dto.PostFilter;
 import com.eventitta.post.dto.request.CreatePostRequest;
 import com.eventitta.post.dto.request.UpdatePostRequest;
+import com.eventitta.post.dto.response.CreatePostResponse;
 import com.eventitta.post.dto.response.PostDetailDto;
 import com.eventitta.post.dto.response.PostSummaryDto;
 import com.eventitta.post.exception.PostException;
@@ -51,7 +52,7 @@ public class PostService {
     private final UserActivityService userActivityService;
 
 
-    public Long create(Long userId, CreatePostRequest dto) {
+    public CreatePostResponse create(Long userId, CreatePostRequest dto) {
         User user = userRepository.findById(userId)
             .orElseThrow(NOT_FOUND_USER_ID::defaultException);
         Region region = regionRepository.findById(dto.regionCode())
@@ -64,8 +65,8 @@ public class PostService {
             }
         }
         Post savedPost = postRepository.save(post);
-        userActivityService.recordActivity(userId, CREATE_POST, savedPost.getId());
-        return savedPost.getId();
+        Optional<String> badge = userActivityService.recordActivity(userId, CREATE_POST, savedPost.getId());
+        return new CreatePostResponse(savedPost.getId(), badge.orElse(null));
     }
 
     public void update(Long postId, Long userId, UpdatePostRequest dto) {
@@ -125,7 +126,7 @@ public class PostService {
     }
 
     @Transactional
-    public void toggleLike(Long postId, Long userId) {
+    public Optional<String> toggleLike(Long postId, Long userId) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new AuthException(AuthErrorCode.NOT_FOUND_USER_ID));
         Post post = postRepository.findById(postId)
@@ -135,11 +136,12 @@ public class PostService {
         if (existing.isPresent()) {
             postLikeRepository.delete(existing.get());
             post.decrementLikeCount();
+            return Optional.empty();
         } else {
             PostLike like = new PostLike(post, user);
             postLikeRepository.save(like);
             post.incrementLikeCount();
-            userActivityService.recordActivity(userId, LIKE_POST, postId);
+            return userActivityService.recordActivity(userId, LIKE_POST, postId);
         }
     }
 

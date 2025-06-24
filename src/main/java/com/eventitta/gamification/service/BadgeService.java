@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class BadgeService {
@@ -20,7 +22,7 @@ public class BadgeService {
     private final UserActivityRepository userActivityRepository;
 
     @Transactional
-    public void checkAndAwardBadges(User user, ActivityType activityType) {
+    public Optional<String> checkAndAwardBadges(User user, ActivityType activityType) {
         for (BadgeRule rule : BadgeRule.values()) {
             if (rule.getActivityType() != activityType) {
                 continue;
@@ -28,16 +30,18 @@ public class BadgeService {
             long count = userActivityRepository.countByUserIdAndActivityType(user.getId(), rule.getActivityType());
             if (count >= rule.getThreshold()) {
                 awardBadge(user, rule.getBadgeName());
+                return awardBadge(user, rule.getBadgeName());
             }
         }
+        return Optional.empty();
     }
 
-    private void awardBadge(User user, String badgeName) {
-        badgeRepository.findByName(badgeName).ifPresent(badge -> {
-            boolean alreadyHasBadge = userBadgeRepository.existsByUserIdAndBadgeId(user.getId(), badge.getId());
-            if (!alreadyHasBadge) {
+    private Optional<String> awardBadge(User user, String badgeName) {
+        return badgeRepository.findByName(badgeName)
+            .filter(badge -> !userBadgeRepository.existsByUserIdAndBadgeId(user.getId(), badge.getId()))
+            .map(badge -> {
                 userBadgeRepository.save(new UserBadge(user, badge));
-            }
-        });
+                return badge.getName();
+            });
     }
 }

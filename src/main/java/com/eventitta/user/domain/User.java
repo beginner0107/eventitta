@@ -119,4 +119,8 @@ public class User extends BaseEntity {
     public void addPoints(int points) {
         this.points += points;
     }
+
+    public void subtractPoints(int amount) {
+        this.points = Math.max(0, this.points - amount);
+    }
 }

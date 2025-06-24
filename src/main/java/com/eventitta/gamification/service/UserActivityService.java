@@ -46,7 +46,7 @@ public class UserActivityService {
             .findByUserIdAndActivityTypeAndTargetId(userId, activityType, targetId);
 
         if (activityToRevoke.isPresent()) {
-            user.addPoints(-activityType.getPoints());
+            user.subtractPoints(activityType.getPoints());
             userActivityRepository.delete(activityToRevoke.get());
         }
     }

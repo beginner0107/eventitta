@@ -1,21 +1,28 @@
 package com.eventitta.gamification.domain;
 
+import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
+@Entity
 @Getter
-public enum BadgeRule {
-    FIRST_POST(ActivityType.CREATE_POST, 1, "첫 게시글"),
-    COMMENTER(ActivityType.CREATE_COMMENT, 10, "열혈 댓글러"),
-    PRO_LIKER(ActivityType.LIKE_POST, 50, "프로 좋아요꾼"),
-    FIRST_MEETING(ActivityType.JOIN_MEETING, 1, "첫 모임 참가");
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "badge_rules")
+public class BadgeRule {
 
-    private final ActivityType activityType;
-    private final long threshold;
-    private final String badgeName;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    BadgeRule(ActivityType activityType, long threshold, String badgeName) {
-        this.activityType = activityType;
-        this.threshold = threshold;
-        this.badgeName = badgeName;
-    }
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "badge_id", nullable = false)
+    private Badge badge;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ActivityType activityType;
+
+    @Column(nullable = false)
+    private long threshold;
 }

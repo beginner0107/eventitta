@@ -65,8 +65,8 @@ public class PostService {
             }
         }
         Post savedPost = postRepository.save(post);
-        Optional<String> badge = userActivityService.recordActivity(userId, CREATE_POST, savedPost.getId());
-        return new CreatePostResponse(savedPost.getId(), badge.orElse(null));
+        List<String> badges = userActivityService.recordActivity(userId, CREATE_POST, savedPost.getId());
+        return new CreatePostResponse(savedPost.getId(), badges);
     }
 
     public void update(Long postId, Long userId, UpdatePostRequest dto) {
@@ -126,7 +126,7 @@ public class PostService {
     }
 
     @Transactional
-    public Optional<String> toggleLike(Long postId, Long userId) {
+    public List<String> toggleLike(Long postId, Long userId) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new AuthException(AuthErrorCode.NOT_FOUND_USER_ID));
         Post post = postRepository.findById(postId)
@@ -136,7 +136,8 @@ public class PostService {
         if (existing.isPresent()) {
             postLikeRepository.delete(existing.get());
             post.decrementLikeCount();
-            return Optional.empty();
+            userActivityService.revokeActivity(userId, LIKE_POST, postId);
+            return List.of();
         } else {
             PostLike like = new PostLike(post, user);
             postLikeRepository.save(like);

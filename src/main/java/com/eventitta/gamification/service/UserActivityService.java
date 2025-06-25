@@ -2,6 +2,7 @@ package com.eventitta.gamification.service;
 
 import com.eventitta.gamification.domain.ActivityType;
 import com.eventitta.gamification.domain.UserActivity;
+import com.eventitta.gamification.dto.query.ActivitySummary;
 import com.eventitta.gamification.repository.UserActivityRepository;
 import com.eventitta.user.domain.User;
 import com.eventitta.user.exception.UserErrorCode;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 import static com.eventitta.user.exception.UserErrorCode.NOT_FOUND_USER_ID;
@@ -22,7 +24,7 @@ public class UserActivityService {
     private final BadgeService badgeService;
 
     @Transactional
-    public Optional<String> recordActivity(Long userId, ActivityType activityType, Long targetId) {
+    public List<String> recordActivity(Long userId, ActivityType activityType, Long targetId) {
         User user = userRepository.findById(userId)
             .orElseThrow(NOT_FOUND_USER_ID::defaultException);
 
@@ -31,11 +33,14 @@ public class UserActivityService {
             .findByUserIdAndActivityTypeAndTargetId(userId, activityType, targetId)
             .isPresent();
         if (exists) {
-            return Optional.empty();
+            return List.of();
         }
 
         // 2. 사용자 포인트 업데이트
         user.addPoints(activityType.getPoints());
+        userActivityRepository.save(
+            new UserActivity(user, activityType, targetId)
+        );
 
         // 3. 배지 획득 조건 검사
         return badgeService.checkAndAwardBadges(user, activityType);
@@ -53,5 +58,9 @@ public class UserActivityService {
             user.subtractPoints(activityType.getPoints());
             userActivityRepository.delete(activityToRevoke.get());
         }
+    }
+
+    public List<ActivitySummary> getActivitySummary(Long userId) {
+        return userActivityRepository.countActivitiesByUser(userId);
     }
 }

@@ -36,7 +36,7 @@ public class CommentService {
     private final UserRepository userRepository;
     private final UserActivityService userActivityService;
 
-    public void writeComment(Long postId, Long userId, String content, Long parentCommentId) {
+    public List<String> writeComment(Long postId, Long userId, String content, Long parentCommentId) {
         Post post = postRepository.findById(postId)
             .orElseThrow(() -> new PostException(NOT_FOUND_POST_ID));
         User user = userRepository.findById(userId)
@@ -57,7 +57,7 @@ public class CommentService {
 
         Comment savedComment = commentRepository.save(comment);
 
-        userActivityService.recordActivity(userId, CREATE_COMMENT, savedComment.getId());
+        return userActivityService.recordActivity(userId, CREATE_COMMENT, savedComment.getId());
     }
 
     @Transactional(readOnly = true)

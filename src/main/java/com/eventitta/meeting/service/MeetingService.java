@@ -169,6 +169,8 @@ public class MeetingService {
         participant.approve();
         meeting.incrementCurrentMembers();
 
+        userActivityService.recordActivity(participant.getUser().getId(), JOIN_MEETING, meetingId);
+
         return meetingMapper.toParticipantResponse(participant, participant.getUser());
     }
 

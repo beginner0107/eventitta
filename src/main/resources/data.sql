@@ -22,3 +22,13 @@ VALUES ('1100000000', '서울특별시', NULL, 1),
        ('2801000000', '대구광역시 중구', '2800000000', 2),
        ('2801010100', '대구광역시 중구 동성로1가', '2801000000', 3),
        ('2900000000', '인천광역시', NULL, 1);
+
+INSERT INTO badges (id, name, description, icon_url)
+VALUES (1, '첫 게시글', '첫 번째 게시글을 작성하여 커뮤니티 활동을 시작했습니다.', 'https://eventitta.com/icons/first_post.png'),
+       (2, '열혈 댓글러', '댓글을 10개 이상 작성하여 활발하게 소통했습니다.', 'https://eventitta.com/icons/commenter.png'),
+       (3, '첫 모임 참가', '첫 번째 모임에 참가하여 새로운 인연을 만들었습니다.', 'https://eventitta.com/icons/first_meeting.png'),
+       (4, '프로 좋아요꾼', '다른 사람의 게시글에 좋아요를 50회 이상 눌렀습니다.', 'https://eventitta.com/icons/pro_liker.png')
+ON DUPLICATE KEY UPDATE name        = VALUES(name),
+                        description = VALUES(description),
+                        icon_url    = VALUES(icon_url);
+

@@ -2,20 +2,20 @@ package com.eventitta.post.service;
 
 import com.eventitta.auth.exception.AuthException;
 import com.eventitta.comment.repository.CommentRepository;
-import com.eventitta.post.domain.PostLike;
-import com.eventitta.post.repository.PostLikeRepository;
-import org.springframework.test.util.ReflectionTestUtils;
-
 import com.eventitta.common.response.PageResponse;
+import com.eventitta.gamification.service.UserActivityService;
 import com.eventitta.post.domain.Post;
 import com.eventitta.post.domain.PostImage;
+import com.eventitta.post.domain.PostLike;
 import com.eventitta.post.dto.PostFilter;
 import com.eventitta.post.dto.request.CreatePostRequest;
-import com.eventitta.post.dto.response.PostDetailDto;
 import com.eventitta.post.dto.request.UpdatePostRequest;
+import com.eventitta.post.dto.response.CreatePostResponse;
+import com.eventitta.post.dto.response.PostDetailDto;
 import com.eventitta.post.dto.response.PostSummaryDto;
 import com.eventitta.post.exception.PostErrorCode;
 import com.eventitta.post.exception.PostException;
+import com.eventitta.post.repository.PostLikeRepository;
 import com.eventitta.post.repository.PostRepository;
 import com.eventitta.region.domain.Region;
 import com.eventitta.region.exception.RegionErrorCode;
@@ -34,10 +34,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.Optional;
 
+import static com.eventitta.gamification.domain.ActivityType.CREATE_POST;
+import static com.eventitta.gamification.domain.ActivityType.LIKE_POST;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -59,6 +62,8 @@ class PostServiceTest {
     PostLikeRepository postLikeRepository;
     @Mock
     CommentRepository commentRepository;
+    @Mock
+    UserActivityService userActivityService;
 
     @InjectMocks
     PostService postService;
@@ -78,21 +83,24 @@ class PostServiceTest {
         Region region = createRegion(regionCode);
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
         given(regionRepository.findById(regionCode)).willReturn(Optional.of(region));
-
+        given(userActivityService.recordActivity(
+            eq(userId),
+            eq(CREATE_POST),
+            anyLong()
+        )).willReturn(List.of());
         Post savedPost = createPost(123L, user, createPostRequest.title(), createPostRequest.content(), region);
         savedPost.addImage(new PostImage("url1", 0));
         savedPost.addImage(new PostImage("url2", 1));
         given(postRepository.save(any(Post.class))).willReturn(savedPost);
 
         // when
-        Long resultId = postService.create(userId, createPostRequest);
+        CreatePostResponse result = postService.create(userId, createPostRequest);
 
         // then
-        assertThat(resultId).isEqualTo(123L);
-        // Verify that two images are added to the returned Post
+        assertThat(result.id()).isEqualTo(123L);
+        assertThat(result.badgeNames()).isEmpty();
         assertThat(savedPost.getImages()).hasSize(2);
     }
-
 
     @Test
     @DisplayName("존재하지 않는 사용자 ID로 생성 시 예외가 반환된다.")
@@ -402,6 +410,13 @@ class PostServiceTest {
         Region region = createRegion(regionCode);
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
         given(regionRepository.findById(regionCode)).willReturn(Optional.of(region));
+
+        given(userActivityService.recordActivity(
+            eq(userId),
+            eq(CREATE_POST),
+            any()
+        )).willReturn(List.of());
+
         final Post[] createdPostHolder = new Post[1];
         given(postRepository.save(any())).willAnswer(invocation -> {
             Post post = invocation.getArgument(0);
@@ -410,7 +425,7 @@ class PostServiceTest {
         });
 
         // when
-        Long id = postService.create(userId, dto);
+        CreatePostResponse result = postService.create(userId, dto);
 
         // then
         Post createdPost = createdPostHolder[0];
@@ -454,12 +469,15 @@ class PostServiceTest {
             ReflectionTestUtils.setField(post, "id", 123L);
             return post;
         });
+        given(userActivityService.recordActivity(eq(userId), eq(CREATE_POST), anyLong()))
+            .willReturn(List.of());
 
         // when
-        Long postId = postService.create(userId, dto);
+        CreatePostResponse response = postService.create(userId, dto);
+
 
         // then
-        assertThat(postId).isNotNull();
+        assertThat(response.id()).isNotNull();
     }
 
     @Test
@@ -475,13 +493,15 @@ class PostServiceTest {
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
         given(postRepository.findById(postId)).willReturn(Optional.of(post));
         given(postLikeRepository.findByPostIdAndUserId(postId, userId)).willReturn(Optional.empty());
+        given(userActivityService.recordActivity(userId, LIKE_POST, postId)).willReturn(List.of());
 
         // when
-        postService.toggleLike(postId, userId);
+        List<String> badges = postService.toggleLike(postId, userId);
 
         // then
         verify(postLikeRepository).save(any(PostLike.class));
         verify(post).incrementLikeCount();
+        assertThat(badges).isEmpty();
     }
 
     @Test
@@ -500,11 +520,12 @@ class PostServiceTest {
         given(postLikeRepository.findByPostIdAndUserId(postId, userId)).willReturn(Optional.of(like));
 
         // when
-        postService.toggleLike(postId, userId);
+        List<String> badges = postService.toggleLike(postId, userId);
 
         // then
         verify(postLikeRepository).delete(like);
         verify(post).decrementLikeCount();
+        assertThat(badges).isEmpty();
     }
 
     @Test

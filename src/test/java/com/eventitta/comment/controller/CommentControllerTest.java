@@ -30,7 +30,8 @@ class CommentControllerTest extends ControllerTestSupport {
     void createComment_withValidInput_returnsCreated() throws Exception {
         // given
         CommentRequestDto request = new CommentRequestDto("댓글 내용입니다.", null);
-        doNothing().when(commentService).writeComment(postId, userId, request.content(), request.parentCommentId());
+        given(commentService.writeComment(postId, userId, request.content(), request.parentCommentId()))
+            .willReturn(List.of("첫 댓글 작성 성공"));
 
         // when & then
         mockMvc.perform(post("/api/v1/posts/{postId}/comments", postId)

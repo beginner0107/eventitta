@@ -2,6 +2,8 @@ package com.eventitta.user.controller;
 
 import com.eventitta.auth.annotation.CurrentUser;
 import com.eventitta.common.response.ApiErrorResponse;
+import com.eventitta.gamification.dto.response.ActivitySummaryResponse;
+import com.eventitta.gamification.service.UserActivityService;
 import com.eventitta.user.dto.ChangePasswordRequest;
 import com.eventitta.user.dto.UpdateProfileRequest;
 import com.eventitta.user.dto.UserProfileResponse;
@@ -17,12 +19,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Tag(name = "사용자 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/users")
 public class UserController {
     private final UserService userService;
+    private final UserActivityService userActivityService;
 
     @Operation(summary = "내 프로필 조회", description = "인증된 사용자의 프로필 정보를 조회합니다.")
     @ApiResponses({
@@ -75,5 +80,13 @@ public class UserController {
     ) {
         userService.changePassword(userId, request);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/me/activities")
+    public ResponseEntity<List<ActivitySummaryResponse>> getMyActivitySummary(@CurrentUser Long userId) {
+        List<ActivitySummaryResponse> result = userActivityService.getActivitySummary(userId).stream()
+            .map(summary -> new ActivitySummaryResponse(summary.getActivityType().toString(), summary.getCount()))
+            .toList();
+        return ResponseEntity.ok(result);
     }
 }

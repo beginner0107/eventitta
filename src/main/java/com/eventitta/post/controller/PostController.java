@@ -42,10 +42,10 @@ public class PostController {
         @CurrentUser Long userId,
         @Valid @RequestBody CreatePostRequest request
     ) {
-        Long id = postService.create(userId, request);
+        CreatePostResponse response = postService.create(userId, request);
         return ResponseEntity
-            .created(URI.create("/api/v1/posts/" + id))
-            .body(new CreatePostResponse(id));
+            .created(URI.create("/api/v1/posts/" + response.id()))
+            .body(response);
     }
 
     @Operation(summary = "게시글 목록 조회")

@@ -4,12 +4,14 @@ import com.eventitta.auth.exception.AuthErrorCode;
 import com.eventitta.auth.exception.AuthException;
 import com.eventitta.comment.repository.CommentRepository;
 import com.eventitta.common.response.PageResponse;
+import com.eventitta.gamification.service.UserActivityService;
 import com.eventitta.post.domain.Post;
 import com.eventitta.post.domain.PostImage;
 import com.eventitta.post.domain.PostLike;
 import com.eventitta.post.dto.PostFilter;
 import com.eventitta.post.dto.request.CreatePostRequest;
 import com.eventitta.post.dto.request.UpdatePostRequest;
+import com.eventitta.post.dto.response.CreatePostResponse;
 import com.eventitta.post.dto.response.PostDetailDto;
 import com.eventitta.post.dto.response.PostSummaryDto;
 import com.eventitta.post.exception.PostException;
@@ -31,6 +33,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static com.eventitta.gamification.domain.ActivityType.CREATE_POST;
+import static com.eventitta.gamification.domain.ActivityType.LIKE_POST;
 import static com.eventitta.post.exception.PostErrorCode.ACCESS_DENIED;
 import static com.eventitta.post.exception.PostErrorCode.NOT_FOUND_POST_ID;
 import static com.eventitta.region.exception.RegionErrorCode.NOT_FOUND_REGION_CODE;
@@ -45,9 +49,10 @@ public class PostService {
     private final RegionRepository regionRepository;
     private final PostLikeRepository postLikeRepository;
     private final CommentRepository commentRepository;
+    private final UserActivityService userActivityService;
 
 
-    public Long create(Long userId, CreatePostRequest dto) {
+    public CreatePostResponse create(Long userId, CreatePostRequest dto) {
         User user = userRepository.findById(userId)
             .orElseThrow(NOT_FOUND_USER_ID::defaultException);
         Region region = regionRepository.findById(dto.regionCode())
@@ -59,7 +64,9 @@ public class PostService {
                 post.addImage(new PostImage(dto.imageUrls().get(i), i));
             }
         }
-        return postRepository.save(post).getId();
+        Post savedPost = postRepository.save(post);
+        List<String> badges = userActivityService.recordActivity(userId, CREATE_POST, savedPost.getId());
+        return new CreatePostResponse(savedPost.getId(), badges);
     }
 
     public void update(Long postId, Long userId, UpdatePostRequest dto) {
@@ -91,6 +98,7 @@ public class PostService {
         }
         post.clearImages();
         post.softDelete();
+        userActivityService.revokeActivity(userId, CREATE_POST, postId);
     }
 
     @Transactional(readOnly = true)
@@ -118,7 +126,7 @@ public class PostService {
     }
 
     @Transactional
-    public void toggleLike(Long postId, Long userId) {
+    public List<String> toggleLike(Long postId, Long userId) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new AuthException(AuthErrorCode.NOT_FOUND_USER_ID));
         Post post = postRepository.findById(postId)
@@ -128,10 +136,13 @@ public class PostService {
         if (existing.isPresent()) {
             postLikeRepository.delete(existing.get());
             post.decrementLikeCount();
+            userActivityService.revokeActivity(userId, LIKE_POST, postId);
+            return List.of();
         } else {
             PostLike like = new PostLike(post, user);
             postLikeRepository.save(like);
             post.incrementLikeCount();
+            return userActivityService.recordActivity(userId, LIKE_POST, postId);
         }
     }
 

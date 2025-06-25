@@ -2,22 +2,20 @@ package com.eventitta.post.service;
 
 import com.eventitta.auth.exception.AuthException;
 import com.eventitta.comment.repository.CommentRepository;
-import com.eventitta.gamification.service.UserActivityService;
-import com.eventitta.post.domain.PostLike;
-import com.eventitta.post.dto.response.CreatePostResponse;
-import com.eventitta.post.repository.PostLikeRepository;
-import org.springframework.test.util.ReflectionTestUtils;
-
 import com.eventitta.common.response.PageResponse;
+import com.eventitta.gamification.service.UserActivityService;
 import com.eventitta.post.domain.Post;
 import com.eventitta.post.domain.PostImage;
+import com.eventitta.post.domain.PostLike;
 import com.eventitta.post.dto.PostFilter;
 import com.eventitta.post.dto.request.CreatePostRequest;
-import com.eventitta.post.dto.response.PostDetailDto;
 import com.eventitta.post.dto.request.UpdatePostRequest;
+import com.eventitta.post.dto.response.CreatePostResponse;
+import com.eventitta.post.dto.response.PostDetailDto;
 import com.eventitta.post.dto.response.PostSummaryDto;
 import com.eventitta.post.exception.PostErrorCode;
 import com.eventitta.post.exception.PostException;
+import com.eventitta.post.repository.PostLikeRepository;
 import com.eventitta.post.repository.PostRepository;
 import com.eventitta.region.domain.Region;
 import com.eventitta.region.exception.RegionErrorCode;
@@ -36,6 +34,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -47,7 +46,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.Mockito.*;
 
 @DisplayName("동네 기반 게시글 단위 테스트")
@@ -89,7 +87,7 @@ class PostServiceTest {
             eq(userId),
             eq(CREATE_POST),
             anyLong()
-        )).willReturn(Optional.empty());
+        )).willReturn(List.of());
         Post savedPost = createPost(123L, user, createPostRequest.title(), createPostRequest.content(), region);
         savedPost.addImage(new PostImage("url1", 0));
         savedPost.addImage(new PostImage("url2", 1));
@@ -100,7 +98,7 @@ class PostServiceTest {
 
         // then
         assertThat(result.id()).isEqualTo(123L);
-        assertThat(result.badgeName()).isNull();
+        assertThat(result.badgeNames()).isEmpty();
         assertThat(savedPost.getImages()).hasSize(2);
     }
 
@@ -417,7 +415,7 @@ class PostServiceTest {
             eq(userId),
             eq(CREATE_POST),
             any()
-        )).willReturn(Optional.empty());
+        )).willReturn(List.of());
 
         final Post[] createdPostHolder = new Post[1];
         given(postRepository.save(any())).willAnswer(invocation -> {
@@ -472,7 +470,7 @@ class PostServiceTest {
             return post;
         });
         given(userActivityService.recordActivity(eq(userId), eq(CREATE_POST), anyLong()))
-            .willReturn(Optional.empty());
+            .willReturn(List.of());
 
         // when
         CreatePostResponse response = postService.create(userId, dto);
@@ -495,15 +493,15 @@ class PostServiceTest {
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
         given(postRepository.findById(postId)).willReturn(Optional.of(post));
         given(postLikeRepository.findByPostIdAndUserId(postId, userId)).willReturn(Optional.empty());
-        given(userActivityService.recordActivity(userId, LIKE_POST, postId)).willReturn(Optional.empty());
+        given(userActivityService.recordActivity(userId, LIKE_POST, postId)).willReturn(List.of());
 
         // when
-        Optional<String> badge = postService.toggleLike(postId, userId);
+        List<String> badges = postService.toggleLike(postId, userId);
 
         // then
         verify(postLikeRepository).save(any(PostLike.class));
         verify(post).incrementLikeCount();
-        assertThat(badge).isEmpty();
+        assertThat(badges).isEmpty();
     }
 
     @Test
@@ -522,12 +520,12 @@ class PostServiceTest {
         given(postLikeRepository.findByPostIdAndUserId(postId, userId)).willReturn(Optional.of(like));
 
         // when
-        Optional<String> badge = postService.toggleLike(postId, userId);
+        List<String> badges = postService.toggleLike(postId, userId);
 
         // then
         verify(postLikeRepository).delete(like);
         verify(post).decrementLikeCount();
-        assertThat(badge).isEmpty();
+        assertThat(badges).isEmpty();
     }
 
     @Test

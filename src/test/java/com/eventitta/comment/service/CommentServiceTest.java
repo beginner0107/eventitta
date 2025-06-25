@@ -16,6 +16,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static com.eventitta.comment.exception.CommentErrorCode.NO_AUTHORITY_TO_MODIFY_COMMENT;
@@ -64,7 +65,7 @@ class CommentServiceTest {
             eq(userId),
             eq(CREATE_COMMENT),
             anyLong()
-        )).willReturn(Optional.empty());
+        )).willReturn(List.of());
 
 
         long fakeCommentId = 123L;

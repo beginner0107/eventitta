@@ -23,6 +23,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -92,7 +93,9 @@ class MeetingControllerTest {
     @WithMockCustomUser
     @DisplayName("참가 신청 승인 시 200을 반환한다")
     void approveParticipant_returnsOk() throws Exception {
-        ParticipantResponse resp = new ParticipantResponse(1L, 2L, "nick", null, ParticipantStatus.APPROVED);
+        ParticipantResponse resp = new ParticipantResponse(
+            10L, 42L, "스프링러버", "https://example.com/profile.jpg",
+            ParticipantStatus.APPROVED);
         given(meetingService.approveParticipant(42L, 1L, 10L)).willReturn(resp);
 
         mockMvc.perform(put("/api/v1/meetings/1/participants/10/approve"))

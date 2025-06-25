@@ -212,12 +212,11 @@ class MeetingServiceTest {
         given(userRepository.findById(leaderId)).willReturn(Optional.of(leader));
         given(meetingRepository.findById(meetingId)).willReturn(Optional.of(meeting));
         given(participantRepository.findByIdWithMeeting(participantId)).willReturn(Optional.of(participant));
-        given(meetingMapper.toParticipantResponse(any(), any())).willReturn(new ParticipantResponse(participantId, userId, "nick", null, ParticipantStatus.APPROVED));
-        given(meetingMapper.toParticipantResponse(any(), any())).willReturn(new ParticipantResponse(participantId, userId, "nick", null, ParticipantStatus.APPROVED));
-
-
+        given(meetingMapper.toParticipantResponse(any(), any())).willReturn(
+            new ParticipantResponse(participantId, userId, "nick", null, ParticipantStatus.APPROVED)
+        );
         // when
-        meetingService.approveParticipant(leaderId, meetingId, participantId);
+        ParticipantResponse response = meetingService.approveParticipant(leaderId, meetingId, participantId);
 
         // then
         assertThat(participant.getStatus()).isEqualTo(ParticipantStatus.APPROVED);
@@ -253,7 +252,6 @@ class MeetingServiceTest {
         given(userRepository.findById(leaderId)).willReturn(Optional.of(leader));
         given(meetingRepository.findById(meetingId)).willReturn(Optional.of(meeting));
         given(participantRepository.findByIdWithMeeting(participantId)).willReturn(Optional.of(participant));
-        given(meetingMapper.toParticipantResponse(any(), any())).willReturn(new ParticipantResponse(participantId, userId, "nick", null, ParticipantStatus.REJECTED));
 
         // when
         meetingService.rejectParticipant(leaderId, meetingId, participantId);

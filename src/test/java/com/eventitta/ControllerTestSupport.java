@@ -9,6 +9,7 @@ import com.eventitta.common.config.CustomAuthenticationEntryPoint;
 import com.eventitta.common.config.SecurityConfig;
 import com.eventitta.common.storage.FileStorageService;
 import com.eventitta.file.controller.FileUploadController;
+import com.eventitta.gamification.service.UserActivityService;
 import com.eventitta.post.controller.PostController;
 import com.eventitta.post.service.PostService;
 import com.eventitta.user.controller.UserController;
@@ -57,4 +58,6 @@ public abstract class ControllerTestSupport {
     protected CommentService commentService;
     @MockitoBean
     protected UserService userService;
+    @MockitoBean
+    protected UserActivityService userActivityService;
 }

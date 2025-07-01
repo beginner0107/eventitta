@@ -30,8 +30,7 @@ public class UserActivityService {
 
         // 1. 사용자 활동 내역 생성 및 저장
         boolean exists = userActivityRepository
-            .findByUserIdAndActivityTypeAndTargetId(userId, activityType, targetId)
-            .isPresent();
+            .existsByUserIdAndActivityTypeAndTargetId(userId, activityType, targetId);
         if (exists) {
             return List.of();
         }

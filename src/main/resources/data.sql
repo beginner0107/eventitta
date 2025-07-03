@@ -32,3 +32,9 @@ ON DUPLICATE KEY UPDATE name        = VALUES(name),
                         description = VALUES(description),
                         icon_url    = VALUES(icon_url);
 
+INSERT INTO badge_rules (badge_id, activity_type, threshold)
+VALUES (1, 'POST', 1),
+       (2, 'COMMENT', 10),
+       (3, 'MEETING_PARTICIPATION', 1),
+       (4, 'LIKE', 50);
+

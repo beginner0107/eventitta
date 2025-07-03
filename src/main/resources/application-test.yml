@@ -20,13 +20,53 @@ spring:
       enabled: true
       path: /h2-console
 
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+    with-credentials: true
+    persist-authorization: true
+
 jwt:
   secret: eb583f5872f5bde4833167f91002f263fdec66cc9b3be80eb3517692dd8c245b
   access-token-validity-ms: 3600000
   refresh-token-validity-ms: 86400000
+
+file:
+  storage:
+    location: ./test-uploads
 
 logging:
   level:
     root: DEBUG
     org.hibernate.SQL: DEBUG
 
+festival:
+  schedule:
+    enabled: false
+
+  national:
+    base-url: http://api.data.go.kr/openapi/tn_pubr_public_cltur_fstvl_api
+    service-key: test-service-key
+    schedule-cron: 0 0 0 1 1,4,7,10 *
+    import:
+      page-size: 100
+      source: NATIONAL
+
+  seoul:
+    base-url: http://openapi.seoul.go.kr:8088
+    service-key: test-service-key
+    file-type: json
+    service-name: culturalEventInfo
+    schedule-cron: 0 0 11 * * *
+    import:
+      page-size: 50
+      source: SEOUL

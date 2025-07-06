@@ -1,6 +1,8 @@
 package com.eventitta.gamification;
 
+import com.eventitta.gamification.constant.ActivityCodes;
 import com.eventitta.gamification.domain.ActivityType;
+import com.eventitta.gamification.repository.ActivityTypeRepository;
 import com.eventitta.gamification.service.UserActivityService;
 import com.eventitta.user.domain.Provider;
 import com.eventitta.user.domain.Role;
@@ -27,15 +29,19 @@ class UserActivityConcurrencyTest {
 
     @Autowired
     private UserRepository userRepository;
+
     @Autowired
     private UserActivityService userActivityService;
+
+    @Autowired
+    private ActivityTypeRepository activityTypeRepository;
 
     private User testUser;
 
     @BeforeEach
     void setUp() {
-        // 기존 데이터 정리
         userRepository.deleteAll();
+        activityTypeRepository.deleteAll();
 
         testUser = userRepository.save(User.builder()
             .email("test@example.com")
@@ -45,11 +51,15 @@ class UserActivityConcurrencyTest {
             .provider(Provider.LOCAL)
             .points(0)
             .build());
+
+        if (activityTypeRepository.findByCode(ActivityCodes.CREATE_POST).isEmpty()) {
+            activityTypeRepository.save(new ActivityType(ActivityCodes.CREATE_POST, "게시글 작성", 10));
+        }
     }
 
     @Test
-    @DisplayName("동시에 두 활동이 발생하면 포인트 중 하나만 정상적으로 더해진다.")
-    void givenConcurrentActivities_whenRecordActivity_thenPointsAreNotDuplicated() throws InterruptedException {
+    @DisplayName("동시에 두 활동이 발생하면 포인트가 중복되지 않고 정확히 합산된다.")
+    void givenConcurrentActivities_whenRecordActivity_thenPointsAddedOncePerActivity() throws InterruptedException {
         // given
         Long userId = testUser.getId();
         Long targetId1 = 100L;
@@ -58,10 +68,10 @@ class UserActivityConcurrencyTest {
         ExecutorService executor = Executors.newFixedThreadPool(2);
         CountDownLatch latch = new CountDownLatch(2);
 
-        // when: 두 개의 활동을 동시에 수행
+        // when
         executor.submit(() -> {
             try {
-                userActivityService.recordActivity(userId, ActivityType.CREATE_POST, targetId1);
+                userActivityService.recordActivity(userId, ActivityCodes.CREATE_POST, targetId1);
             } finally {
                 latch.countDown();
             }
@@ -69,7 +79,7 @@ class UserActivityConcurrencyTest {
 
         executor.submit(() -> {
             try {
-                userActivityService.recordActivity(userId, ActivityType.CREATE_POST, targetId2);
+                userActivityService.recordActivity(userId, ActivityCodes.CREATE_POST, targetId2);
             } finally {
                 latch.countDown();
             }
@@ -80,8 +90,11 @@ class UserActivityConcurrencyTest {
 
         // then
         User updatedUser = userRepository.findById(userId).orElseThrow();
-        int expected = ActivityType.CREATE_POST.getPoints() * 2;
-        assertThat(updatedUser.getPoints()).isNotEqualTo(expected);
-//        assertThat(updatedUser.getPoints()).isEqualTo(expected);
+
+        ActivityType activityType = activityTypeRepository.findByCode(ActivityCodes.CREATE_POST)
+            .orElseThrow(() -> new IllegalStateException("ActivityType not found"));
+
+        int expected = activityType.getDefaultPoint() * 2;
+        assertThat(updatedUser.getPoints()).isEqualTo(expected);
     }
 }

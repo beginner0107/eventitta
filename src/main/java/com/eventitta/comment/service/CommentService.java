@@ -6,7 +6,8 @@ import com.eventitta.comment.dto.query.CommentFlatDto;
 import com.eventitta.comment.dto.response.CommentWithChildrenDto;
 import com.eventitta.comment.exception.CommentException;
 import com.eventitta.comment.repository.CommentRepository;
-import com.eventitta.gamification.service.UserActivityService;
+import com.eventitta.gamification.activitylog.ActivityEventPublisher;
+import com.eventitta.gamification.constant.ActivityCodes;
 import com.eventitta.post.domain.Post;
 import com.eventitta.post.exception.PostException;
 import com.eventitta.post.repository.PostRepository;
@@ -34,9 +35,9 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
     private final UserRepository userRepository;
-    private final UserActivityService userActivityService;
+    private final ActivityEventPublisher activityEventPublisher;
 
-    public List<String> writeComment(Long postId, Long userId, String content, Long parentCommentId) {
+    public void writeComment(Long postId, Long userId, String content, Long parentCommentId) {
         Post post = postRepository.findById(postId)
             .orElseThrow(() -> new PostException(NOT_FOUND_POST_ID));
         User user = userRepository.findById(userId)
@@ -57,7 +58,7 @@ public class CommentService {
 
         Comment savedComment = commentRepository.save(comment);
 
-        return userActivityService.recordActivity(userId, CREATE_COMMENT, savedComment.getId());
+        activityEventPublisher.publish(CREATE_COMMENT, userId, savedComment.getId());
     }
 
     @Transactional(readOnly = true)
@@ -94,6 +95,5 @@ public class CommentService {
         }
 
         comment.softDelete();
-        userActivityService.revokeActivity(userId, CREATE_COMMENT, commentId);
     }
 }

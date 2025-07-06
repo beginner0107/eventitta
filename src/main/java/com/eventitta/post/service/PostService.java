@@ -4,7 +4,7 @@ import com.eventitta.auth.exception.AuthErrorCode;
 import com.eventitta.auth.exception.AuthException;
 import com.eventitta.comment.repository.CommentRepository;
 import com.eventitta.common.response.PageResponse;
-import com.eventitta.gamification.service.UserActivityService;
+import com.eventitta.gamification.activitylog.ActivityEventPublisher;
 import com.eventitta.post.domain.Post;
 import com.eventitta.post.domain.PostImage;
 import com.eventitta.post.domain.PostLike;
@@ -49,8 +49,7 @@ public class PostService {
     private final RegionRepository regionRepository;
     private final PostLikeRepository postLikeRepository;
     private final CommentRepository commentRepository;
-    private final UserActivityService userActivityService;
-
+    private final ActivityEventPublisher activityEventPublisher;
 
     public CreatePostResponse create(Long userId, CreatePostRequest dto) {
         User user = userRepository.findById(userId)
@@ -65,8 +64,10 @@ public class PostService {
             }
         }
         Post savedPost = postRepository.save(post);
-        List<String> badges = userActivityService.recordActivity(userId, CREATE_POST, savedPost.getId());
-        return new CreatePostResponse(savedPost.getId(), badges);
+
+        activityEventPublisher.publish(CREATE_POST, userId, savedPost.getId());
+
+        return new CreatePostResponse(savedPost.getId());
     }
 
     public void update(Long postId, Long userId, UpdatePostRequest dto) {
@@ -98,7 +99,6 @@ public class PostService {
         }
         post.clearImages();
         post.softDelete();
-        userActivityService.revokeActivity(userId, CREATE_POST, postId);
     }
 
     @Transactional(readOnly = true)
@@ -126,7 +126,7 @@ public class PostService {
     }
 
     @Transactional
-    public List<String> toggleLike(Long postId, Long userId) {
+    public void toggleLike(Long postId, Long userId) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new AuthException(AuthErrorCode.NOT_FOUND_USER_ID));
         Post post = postRepository.findById(postId)
@@ -136,13 +136,11 @@ public class PostService {
         if (existing.isPresent()) {
             postLikeRepository.delete(existing.get());
             post.decrementLikeCount();
-            userActivityService.revokeActivity(userId, LIKE_POST, postId);
-            return List.of();
         } else {
             PostLike like = new PostLike(post, user);
             postLikeRepository.save(like);
             post.incrementLikeCount();
-            return userActivityService.recordActivity(userId, LIKE_POST, postId);
+            activityEventPublisher.publish(LIKE_POST, userId, postId);
         }
     }
 

@@ -44,7 +44,7 @@ class PostControllerTest extends ControllerTestSupport {
         CreatePostRequest req = new CreatePostRequest("제목", "내용", "1100110100", List.of());
 
         given(postService.create(eq(42L), any(CreatePostRequest.class)))
-            .willReturn(new CreatePostResponse(fakePostId, null));
+            .willReturn(new CreatePostResponse(fakePostId)); // 수정: 파라미터 개수 변경
 
         // when & then
         mockMvc.perform(post("/api/v1/posts")

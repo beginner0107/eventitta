@@ -1,7 +1,7 @@
 package com.eventitta.meeting.service;
 
 import com.eventitta.common.response.PageResponse;
-import com.eventitta.gamification.service.UserActivityService;
+import com.eventitta.gamification.activitylog.ActivityEventPublisher;
 import com.eventitta.meeting.domain.Meeting;
 import com.eventitta.meeting.domain.MeetingParticipant;
 import com.eventitta.meeting.domain.MeetingStatus;
@@ -42,7 +42,7 @@ public class MeetingService {
     private final MeetingParticipantRepository participantRepository;
     private final MeetingMapper meetingMapper;
     private final UserRepository userRepository;
-    private final UserActivityService userActivityService;
+    private final ActivityEventPublisher activityEventPublisher;
 
     @Transactional
     public Long createMeeting(Long userId, MeetingCreateRequest request) {
@@ -169,7 +169,7 @@ public class MeetingService {
         participant.approve();
         meeting.incrementCurrentMembers();
 
-        userActivityService.recordActivity(participant.getUser().getId(), JOIN_MEETING, meetingId);
+        activityEventPublisher.publish(JOIN_MEETING, participant.getUser().getId(), meetingId);
 
         return meetingMapper.toParticipantResponse(participant, participant.getUser());
     }
@@ -284,9 +284,10 @@ public class MeetingService {
 
         participantRepository.delete(participant);
 
-        if (wasApproved) {
-            userActivityService.revokeActivity(userId, JOIN_MEETING, meetingId);
-        }
+        // 활동 취소는 별도 처리 필요시 구현
+        // if (wasApproved) {
+        //     // 활동 취소 이벤트 발행 가능
+        // }
     }
 
 }

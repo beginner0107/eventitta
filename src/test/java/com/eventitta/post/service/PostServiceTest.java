@@ -39,8 +39,8 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.util.List;
 import java.util.Optional;
 
-import static com.eventitta.gamification.domain.ActivityType.CREATE_POST;
-import static com.eventitta.gamification.domain.ActivityType.LIKE_POST;
+import static com.eventitta.gamification.constant.ActivityCodes.CREATE_POST;
+import static com.eventitta.gamification.constant.ActivityCodes.LIKE_POST;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;

@@ -3,6 +3,8 @@ package com.eventitta.comment.service;
 import com.eventitta.comment.domain.Comment;
 import com.eventitta.comment.exception.CommentException;
 import com.eventitta.comment.repository.CommentRepository;
+import com.eventitta.gamification.constant.ActivityCodes;
+import com.eventitta.gamification.domain.ActivityType;
 import com.eventitta.gamification.service.UserActivityService;
 import com.eventitta.post.domain.Post;
 import com.eventitta.post.exception.PostException;
@@ -20,14 +22,11 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.eventitta.comment.exception.CommentErrorCode.NO_AUTHORITY_TO_MODIFY_COMMENT;
-import static com.eventitta.gamification.domain.ActivityType.CREATE_COMMENT;
-import static com.eventitta.gamification.domain.ActivityType.CREATE_POST;
 import static com.eventitta.post.exception.PostErrorCode.NOT_FOUND_POST_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -63,7 +62,7 @@ class CommentServiceTest {
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
         given(userActivityService.recordActivity(
             eq(userId),
-            eq(CREATE_COMMENT),
+            eq(ActivityCodes.CREATE_COMMENT),
             anyLong()
         )).willReturn(List.of());
 

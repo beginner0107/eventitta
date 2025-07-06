@@ -3,9 +3,8 @@ package com.eventitta.comment.service;
 import com.eventitta.comment.domain.Comment;
 import com.eventitta.comment.exception.CommentException;
 import com.eventitta.comment.repository.CommentRepository;
+import com.eventitta.gamification.activitylog.ActivityEventPublisher;
 import com.eventitta.gamification.constant.ActivityCodes;
-import com.eventitta.gamification.domain.ActivityType;
-import com.eventitta.gamification.service.UserActivityService;
 import com.eventitta.post.domain.Post;
 import com.eventitta.post.exception.PostException;
 import com.eventitta.post.repository.PostRepository;
@@ -18,7 +17,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
 import java.util.Optional;
 
 import static com.eventitta.comment.exception.CommentErrorCode.NO_AUTHORITY_TO_MODIFY_COMMENT;
@@ -45,7 +43,7 @@ class CommentServiceTest {
     private UserRepository userRepository;
 
     @Mock
-    private UserActivityService userActivityService;
+    private ActivityEventPublisher activityEventPublisher;
 
     private final Long postId = 1L;
     private final Long commentId = 100L;
@@ -60,12 +58,6 @@ class CommentServiceTest {
 
         given(postRepository.findById(postId)).willReturn(Optional.of(post));
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
-        given(userActivityService.recordActivity(
-            eq(userId),
-            eq(ActivityCodes.CREATE_COMMENT),
-            anyLong()
-        )).willReturn(List.of());
-
 
         long fakeCommentId = 123L;
         given(commentRepository.save(any(Comment.class)))
@@ -81,6 +73,7 @@ class CommentServiceTest {
 
         // then
         verify(commentRepository).save(any(Comment.class));
+        verify(activityEventPublisher).publish(ActivityCodes.CREATE_COMMENT, userId, fakeCommentId);
     }
 
     @Test

@@ -1,6 +1,6 @@
 package com.eventitta.meeting.service;
 
-import com.eventitta.gamification.service.UserActivityService;
+import com.eventitta.gamification.activitylog.ActivityEventPublisher;
 import com.eventitta.meeting.domain.Meeting;
 import com.eventitta.meeting.domain.MeetingParticipant;
 import com.eventitta.meeting.domain.MeetingStatus;
@@ -27,6 +27,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import static com.eventitta.gamification.constant.ActivityCodes.JOIN_MEETING;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
@@ -46,7 +47,7 @@ class MeetingServiceTest {
     @Mock
     UserRepository userRepository;
     @Mock
-    UserActivityService userActivityService;
+    ActivityEventPublisher activityEventPublisher;
 
     @InjectMocks
     MeetingService meetingService;
@@ -215,12 +216,16 @@ class MeetingServiceTest {
         given(meetingMapper.toParticipantResponse(any(), any())).willReturn(
             new ParticipantResponse(participantId, userId, "nick", null, ParticipantStatus.APPROVED)
         );
+
         // when
         ParticipantResponse response = meetingService.approveParticipant(leaderId, meetingId, participantId);
 
         // then
         assertThat(participant.getStatus()).isEqualTo(ParticipantStatus.APPROVED);
         assertThat(meeting.getCurrentMembers()).isEqualTo(2);
+
+        // 이벤트 발행 검증
+        verify(activityEventPublisher).publish(JOIN_MEETING, userId, meetingId);
     }
 
     @Test
@@ -288,7 +293,6 @@ class MeetingServiceTest {
         given(meetingRepository.findById(meetingId)).willReturn(Optional.of(meeting));
         given(participantRepository.findByMeetingIdAndUser_Id(meetingId, userId))
             .willReturn(Optional.of(participant));
-        willDoNothing().given(userActivityService).revokeActivity(any(), any(), any());
 
         // when
         meetingService.cancelJoin(userId, meetingId);
@@ -296,6 +300,9 @@ class MeetingServiceTest {
         // then
         assertThat(meeting.getCurrentMembers()).isEqualTo(1);
         verify(participantRepository).delete(participant);
+
+        // 활동 취소 이벤트는 현재 구현하지 않았으므로 검증하지 않음
+        // 필요시 별도 이벤트 타입으로 구현 가능
     }
 
     @Test

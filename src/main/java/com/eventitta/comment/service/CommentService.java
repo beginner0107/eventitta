@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 import static com.eventitta.auth.exception.AuthErrorCode.NOT_FOUND_USER_ID;
 import static com.eventitta.comment.exception.CommentErrorCode.NOT_FOUND_COMMENT_ID;
 import static com.eventitta.comment.exception.CommentErrorCode.NO_AUTHORITY_TO_MODIFY_COMMENT;
-import static com.eventitta.gamification.domain.ActivityType.CREATE_COMMENT;
+import static com.eventitta.gamification.constant.ActivityCodes.CREATE_COMMENT;
 import static com.eventitta.post.exception.PostErrorCode.NOT_FOUND_POST_ID;
 
 @Service

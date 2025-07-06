@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.eventitta.gamification.domain.ActivityType.JOIN_MEETING;
+import static com.eventitta.gamification.constant.ActivityCodes.JOIN_MEETING;
 import static com.eventitta.meeting.exception.MeetingErrorCode.*;
 import static com.eventitta.user.exception.UserErrorCode.NOT_FOUND_USER_ID;
 

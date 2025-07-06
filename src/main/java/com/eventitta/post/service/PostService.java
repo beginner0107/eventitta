@@ -33,8 +33,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.eventitta.gamification.domain.ActivityType.CREATE_POST;
-import static com.eventitta.gamification.domain.ActivityType.LIKE_POST;
+import static com.eventitta.gamification.constant.ActivityCodes.CREATE_POST;
+import static com.eventitta.gamification.constant.ActivityCodes.LIKE_POST;
 import static com.eventitta.post.exception.PostErrorCode.ACCESS_DENIED;
 import static com.eventitta.post.exception.PostErrorCode.NOT_FOUND_POST_ID;
 import static com.eventitta.region.exception.RegionErrorCode.NOT_FOUND_REGION_CODE;

@@ -25,7 +25,7 @@ public class UserActivityService {
     private final BadgeService badgeService;
 
     @Transactional
-    public List<String> recordActivity(Long userId, String activityCode, Long targetId) {
+    public void recordActivity(Long userId, String activityCode, Long targetId) {
         User user = userRepository.findById(userId)
             .orElseThrow(NOT_FOUND_USER_ID::defaultException);
 
@@ -33,13 +33,13 @@ public class UserActivityService {
             .orElseThrow(() -> new IllegalArgumentException("Invalid activityCode: " + activityCode));
 
         if (userActivityRepository.existsByUserIdAndActivityType_IdAndTargetId(userId, activityType.getId(), targetId)) {
-            return List.of();
+            return;
         }
 
         user.addPoints(activityType.getDefaultPoint());
         userActivityRepository.save(new UserActivity(user, activityType, targetId));
 
-        return badgeService.checkAndAwardBadges(user);
+        badgeService.checkAndAwardBadges(user);
     }
 
     @Transactional

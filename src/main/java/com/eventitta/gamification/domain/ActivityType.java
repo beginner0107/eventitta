@@ -26,6 +26,14 @@ public class ActivityType {
     private int defaultPoint;
 
     @Builder
+    public ActivityType(Long id, String code, String name, int defaultPoint) {
+        this.id = id;
+        this.code = code;
+        this.name = name;
+        this.defaultPoint = defaultPoint;
+    }
+
+    @Builder
     public ActivityType(String code, String name, int defaultPoint) {
         this.code = code;
         this.name = name;

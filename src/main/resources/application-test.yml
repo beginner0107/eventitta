@@ -70,3 +70,7 @@ festival:
     import:
       page-size: 50
       source: SEOUL
+async:
+  core-pool-size: 4
+  max-pool-size: 20
+  queue-capacity: 200

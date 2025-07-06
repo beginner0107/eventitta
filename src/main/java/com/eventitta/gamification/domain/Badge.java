@@ -25,7 +25,8 @@ public class Badge {
     private String iconUrl;
 
     @Builder
-    public Badge(String name, String description, String iconUrl) {
+    public Badge(Long id, String name, String description, String iconUrl) {
+        this.id = id;
         this.name = name;
         this.description = description;
         this.iconUrl = iconUrl;

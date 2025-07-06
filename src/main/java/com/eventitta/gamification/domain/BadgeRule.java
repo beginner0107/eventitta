@@ -20,20 +20,22 @@ public class BadgeRule {
     @JoinColumn(name = "badge_id", nullable = false)
     private Badge badge;
 
-    @Column(name = "condition_json", columnDefinition = "TEXT", nullable = false)
-    private String conditionJson;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "activity_type_id", nullable = false)
+    private ActivityType activityType;
 
-    @Column(name = "description")
-    private String description;
+    @Column(nullable = false)
+    private int threshold;
 
     @Column(nullable = false)
     private boolean enabled;
 
     @Builder
-    public BadgeRule(Badge badge, String conditionJson, String description, boolean enabled) {
+    public BadgeRule(Long id, Badge badge, ActivityType activityType, int threshold, boolean enabled) {
+        this.id = id;
         this.badge = badge;
-        this.conditionJson = conditionJson;
-        this.description = description;
+        this.activityType = activityType;
+        this.threshold = threshold;
         this.enabled = enabled;
     }
 }

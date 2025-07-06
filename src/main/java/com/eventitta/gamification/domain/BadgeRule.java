@@ -2,6 +2,7 @@ package com.eventitta.gamification.domain;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -19,10 +20,20 @@ public class BadgeRule {
     @JoinColumn(name = "badge_id", nullable = false)
     private Badge badge;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private ActivityType activityType;
+    @Column(name = "condition_json", columnDefinition = "TEXT", nullable = false)
+    private String conditionJson;
+
+    @Column(name = "description")
+    private String description;
 
     @Column(nullable = false)
-    private long threshold;
+    private boolean enabled;
+
+    @Builder
+    public BadgeRule(Badge badge, String conditionJson, String description, boolean enabled) {
+        this.badge = badge;
+        this.conditionJson = conditionJson;
+        this.description = description;
+        this.enabled = enabled;
+    }
 }

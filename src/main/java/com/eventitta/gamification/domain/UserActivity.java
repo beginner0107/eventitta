@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @EntityListeners(AuditingEntityListener.class)
 @Table(
     name = "user_activities",
-    uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "activity_type", "target_id"})
+    uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "activity_type_id", "target_id"})
 )
 public class UserActivity {
 
@@ -28,8 +28,8 @@ public class UserActivity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "activity_type_id", nullable = false)
     private ActivityType activityType;
 
     @Column(nullable = false)
@@ -45,7 +45,7 @@ public class UserActivity {
     public UserActivity(User user, ActivityType activityType, Long targetId) {
         this.user = user;
         this.activityType = activityType;
-        this.pointsEarned = activityType.getPoints();
+        this.pointsEarned = activityType.getDefaultPoint();
         this.targetId = targetId;
     }
 }

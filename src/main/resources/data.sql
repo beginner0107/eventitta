@@ -32,9 +32,15 @@ ON DUPLICATE KEY UPDATE name        = VALUES(name),
                         description = VALUES(description),
                         icon_url    = VALUES(icon_url);
 
-INSERT INTO badge_rules (badge_id, activity_type, threshold)
-VALUES (1, 'POST', 1),
-       (2, 'COMMENT', 10),
-       (3, 'MEETING_PARTICIPATION', 1),
-       (4, 'LIKE', 50);
+INSERT INTO badge_rules (badge_id, condition_json, description, enabled)
+VALUES (1, '{"type":"ACTIVITY_COUNT", "activityCode":"CREATE_POST", "threshold":1}', '첫 게시글 달성', true),
+       (2, '{"type":"ACTIVITY_COUNT", "activityCode":"CREATE_COMMENT", "threshold":10}', '열혈 댓글러', true),
+       (3, '{"type":"ACTIVITY_COUNT", "activityCode":"JOIN_MEETING", "threshold":1}', '첫 모임 참가', true),
+       (4, '{"type":"ACTIVITY_COUNT", "activityCode":"LIKE_POST", "threshold":50}', '프로 좋아요꾼', true);
 
+
+INSERT INTO activity_types (code, name, default_point)
+VALUES ('CREATE_POST', '게시글 작성', 10),
+       ('CREATE_COMMENT', '댓글 작성', 5),
+       ('LIKE_POST', '게시글 좋아요', 1),
+       ('JOIN_MEETING', '모임 참여', 20);

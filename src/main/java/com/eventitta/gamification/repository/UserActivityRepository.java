@@ -1,6 +1,5 @@
 package com.eventitta.gamification.repository;
 
-import com.eventitta.gamification.domain.ActivityType;
 import com.eventitta.gamification.domain.UserActivity;
 import com.eventitta.gamification.dto.query.ActivitySummary;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,12 +10,12 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UserActivityRepository extends JpaRepository<UserActivity, Long> {
-    long countByUserIdAndActivityType(Long userId, ActivityType activityType);
+    Optional<UserActivity> findByUserIdAndActivityType_IdAndTargetId(Long userId, Long activityTypeId, Long targetId);
 
-    Optional<UserActivity> findByUserIdAndActivityTypeAndTargetId(Long userId, ActivityType activityType, Long targetId);
+    boolean existsByUserIdAndActivityType_IdAndTargetId(Long userId, Long activityTypeId, Long targetId);
 
-    boolean existsByUserIdAndActivityTypeAndTargetId(Long userId, ActivityType activityType, Long targetId);
-
+    long countByUserIdAndActivityType_Id(Long userId, Long activityTypeId);
+    
     @Query("SELECT ua.activityType AS activityType, COUNT(ua) AS count " +
         "FROM UserActivity ua " +
         "WHERE ua.user.id = :userId " +

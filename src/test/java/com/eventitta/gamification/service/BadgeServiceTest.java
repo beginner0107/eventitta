@@ -4,8 +4,9 @@ import com.eventitta.gamification.domain.ActivityType;
 import com.eventitta.gamification.domain.Badge;
 import com.eventitta.gamification.domain.BadgeRule;
 import com.eventitta.gamification.domain.UserBadge;
+import com.eventitta.gamification.domain.UserPoints;
+import com.eventitta.gamification.evaluator.BadgeRuleEvaluator;
 import com.eventitta.gamification.repository.BadgeRuleRepository;
-import com.eventitta.gamification.repository.UserActivityRepository;
 import com.eventitta.gamification.repository.UserBadgeRepository;
 import com.eventitta.user.domain.User;
 import org.junit.jupiter.api.DisplayName;
@@ -32,7 +33,10 @@ class BadgeServiceTest {
     private UserBadgeRepository userBadgeRepository;
 
     @Mock
-    private UserActivityRepository userActivityRepository;
+    private List<BadgeRuleEvaluator> evaluators;
+
+    @Mock
+    private BadgeRuleEvaluator mockEvaluator;
 
     @InjectMocks
     private BadgeService badgeService;
@@ -47,6 +51,8 @@ class BadgeServiceTest {
             .nickname("testUser")
             .build();
 
+        UserPoints userPoints = new UserPoints(user);
+
         ActivityType activityType = ActivityType.builder()
             .id(1L)
             .code("CREATE_POST")
@@ -69,11 +75,13 @@ class BadgeServiceTest {
             .build();
 
         given(badgeRuleRepository.findAll()).willReturn(List.of(rule));
-        given(userActivityRepository.countByUserIdAndActivityType_Id(user.getId(), activityType.getId())).willReturn(1L);
+        given(evaluators.iterator()).willReturn(List.of(mockEvaluator).iterator());
+        given(mockEvaluator.supports(rule)).willReturn(true);
+        given(mockEvaluator.isSatisfied(user, rule)).willReturn(true);
         given(userBadgeRepository.existsByUserIdAndBadgeId(user.getId(), badge.getId())).willReturn(false);
 
         // when
-        List<String> result = badgeService.checkAndAwardBadges(user);
+        List<String> result = badgeService.checkAndAwardBadges(user, userPoints);
 
         // then
         assertThat(result).containsExactly("첫 게시글");
@@ -85,6 +93,7 @@ class BadgeServiceTest {
     void givenAlreadyAwardedBadge_whenCheckAndAward_thenNoDuplicateIssue() {
         // given
         User user = User.builder().id(1L).email("test@test.com").nickname("testUser").build();
+        UserPoints userPoints = new UserPoints(user);
 
         ActivityType activityType = ActivityType.builder()
             .id(1L)
@@ -108,11 +117,13 @@ class BadgeServiceTest {
             .build();
 
         given(badgeRuleRepository.findAll()).willReturn(List.of(rule));
-        given(userActivityRepository.countByUserIdAndActivityType_Id(user.getId(), activityType.getId())).willReturn(1L);
+        given(evaluators.iterator()).willReturn(List.of(mockEvaluator).iterator());
+        given(mockEvaluator.supports(rule)).willReturn(true);
+        given(mockEvaluator.isSatisfied(user, rule)).willReturn(true);
         given(userBadgeRepository.existsByUserIdAndBadgeId(user.getId(), badge.getId())).willReturn(true);
 
         // when
-        List<String> result = badgeService.checkAndAwardBadges(user);
+        List<String> result = badgeService.checkAndAwardBadges(user, userPoints);
 
         // then
         assertThat(result).isEmpty();
@@ -124,6 +135,7 @@ class BadgeServiceTest {
     void givenDisabledRule_whenCheckAndAward_thenRuleIgnored() {
         // given
         User user = User.builder().id(1L).email("test@test.com").nickname("testUser").build();
+        UserPoints userPoints = new UserPoints(user);
 
         ActivityType activityType = ActivityType.builder()
             .id(1L)
@@ -149,11 +161,10 @@ class BadgeServiceTest {
         given(badgeRuleRepository.findAll()).willReturn(List.of(rule));
 
         // when
-        List<String> result = badgeService.checkAndAwardBadges(user);
+        List<String> result = badgeService.checkAndAwardBadges(user, userPoints);
 
         // then
         assertThat(result).isEmpty();
-        verify(userActivityRepository, never()).countByUserIdAndActivityType_Id(any(), any());
         verify(userBadgeRepository, never()).save(any());
     }
 
@@ -162,6 +173,7 @@ class BadgeServiceTest {
     void givenThresholdNotMet_whenCheckAndAward_thenNoBadgeIssued() {
         // given
         User user = User.builder().id(1L).email("test@test.com").nickname("testUser").build();
+        UserPoints userPoints = new UserPoints(user);
 
         ActivityType activityType = ActivityType.builder()
             .id(1L)
@@ -185,10 +197,12 @@ class BadgeServiceTest {
             .build();
 
         given(badgeRuleRepository.findAll()).willReturn(List.of(rule));
-        given(userActivityRepository.countByUserIdAndActivityType_Id(user.getId(), activityType.getId())).willReturn(5L);
+        given(evaluators.iterator()).willReturn(List.of(mockEvaluator).iterator());
+        given(mockEvaluator.supports(rule)).willReturn(true);
+        given(mockEvaluator.isSatisfied(user, rule)).willReturn(false);
 
         // when
-        List<String> result = badgeService.checkAndAwardBadges(user);
+        List<String> result = badgeService.checkAndAwardBadges(user, userPoints);
 
         // then
         assertThat(result).isEmpty();
@@ -200,9 +214,12 @@ class BadgeServiceTest {
     void givenMultipleRules_whenCheckAndAward_thenOnlyQualifiedBadgesIssued() {
         // given
         User user = User.builder().id(1L).email("test@test.com").nickname("testUser").build();
+        UserPoints userPoints = new UserPoints(user);
 
-        ActivityType postActivityType = ActivityType.builder().id(1L).code("CREATE_POST").name("게시글 작성").defaultPoint(10).build();
-        ActivityType commentActivityType = ActivityType.builder().id(2L).code("CREATE_COMMENT").name("댓글 작성").defaultPoint(5).build();
+        ActivityType postActivityType = ActivityType.builder()
+            .id(1L).code("CREATE_POST").name("게시글 작성").defaultPoint(10).build();
+        ActivityType commentActivityType = ActivityType.builder()
+            .id(2L).code("CREATE_COMMENT").name("댓글 작성").defaultPoint(5).build();
 
         Badge badge1 = Badge.builder().id(1L).name("첫 게시글").description("첫 번째 게시글 작성").build();
         Badge badge2 = Badge.builder().id(2L).name("첫 댓글").description("첫 번째 댓글 작성").build();
@@ -211,15 +228,16 @@ class BadgeServiceTest {
         BadgeRule rule2 = BadgeRule.builder().id(2L).badge(badge2).activityType(commentActivityType).threshold(1).enabled(true).build();
 
         given(badgeRuleRepository.findAll()).willReturn(List.of(rule1, rule2));
+        given(evaluators.iterator()).willReturn(List.of(mockEvaluator).iterator());
 
-        // rule1: 조건 만족
-        given(userActivityRepository.countByUserIdAndActivityType_Id(user.getId(), postActivityType.getId())).willReturn(1L);
+        given(mockEvaluator.supports(any(BadgeRule.class))).willReturn(true);
+        given(mockEvaluator.isSatisfied(user, rule1)).willReturn(true);
+        lenient().when(mockEvaluator.isSatisfied(user, rule2)).thenReturn(false); // 🔧 lenient 처리
+
         given(userBadgeRepository.existsByUserIdAndBadgeId(user.getId(), badge1.getId())).willReturn(false);
 
-        // rule2는 조건 미충족 → stubbing 생략
-
         // when
-        List<String> result = badgeService.checkAndAwardBadges(user);
+        List<String> result = badgeService.checkAndAwardBadges(user, userPoints);
 
         // then
         assertThat(result).containsExactly("첫 게시글");

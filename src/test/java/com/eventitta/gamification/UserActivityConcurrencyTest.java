@@ -2,7 +2,9 @@ package com.eventitta.gamification;
 
 import com.eventitta.gamification.constant.ActivityCodes;
 import com.eventitta.gamification.domain.ActivityType;
+import com.eventitta.gamification.domain.UserPoints;
 import com.eventitta.gamification.repository.ActivityTypeRepository;
+import com.eventitta.gamification.repository.UserPointsRepository;
 import com.eventitta.gamification.service.UserActivityService;
 import com.eventitta.user.domain.Provider;
 import com.eventitta.user.domain.Role;
@@ -36,12 +38,16 @@ class UserActivityConcurrencyTest {
     @Autowired
     private ActivityTypeRepository activityTypeRepository;
 
+    @Autowired
+    private UserPointsRepository userPointsRepository;
+
     private User testUser;
 
     @BeforeEach
     void setUp() {
         userRepository.deleteAll();
         activityTypeRepository.deleteAll();
+        userPointsRepository.deleteAll();
 
         testUser = userRepository.save(User.builder()
             .email("test@example.com")
@@ -49,7 +55,6 @@ class UserActivityConcurrencyTest {
             .nickname("testuser")
             .role(Role.USER)
             .provider(Provider.LOCAL)
-            .points(0)
             .build());
 
         if (activityTypeRepository.findByCode(ActivityCodes.CREATE_POST).isEmpty()) {
@@ -89,12 +94,13 @@ class UserActivityConcurrencyTest {
         executor.shutdown();
 
         // then
-        User updatedUser = userRepository.findById(userId).orElseThrow();
+        UserPoints userPoints = userPointsRepository.findById(userId)
+            .orElseThrow(() -> new IllegalStateException("UserPoints not found"));
 
         ActivityType activityType = activityTypeRepository.findByCode(ActivityCodes.CREATE_POST)
             .orElseThrow(() -> new IllegalStateException("ActivityType not found"));
 
         int expected = activityType.getDefaultPoint() * 2;
-        assertThat(updatedUser.getPoints()).isEqualTo(expected);
+        assertThat(userPoints.getPoints()).isEqualTo(expected);
     }
 }

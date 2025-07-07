@@ -26,4 +26,15 @@ public class UserActivityEventListener {
                 event.userId(), event.activityCode(), event.targetId(), e);
         }
     }
+
+    @Async
+    @TransactionalEventListener(phase = AFTER_COMMIT)
+    public void handleUserActivityRevoke(UserActivityRevokeRequestedEvent event) {
+        try {
+            userActivityService.revokeActivity(event.userId(), event.activityCode(), event.targetId());
+        } catch (Exception e) {
+            log.error("[활동 취소 실패] userId={}, activityCode={}, targetId={}",
+                event.userId(), event.activityCode(), event.targetId(), e);
+        }
+    }
 }

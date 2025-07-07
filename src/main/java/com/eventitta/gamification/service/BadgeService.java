@@ -3,8 +3,9 @@ package com.eventitta.gamification.service;
 import com.eventitta.gamification.domain.Badge;
 import com.eventitta.gamification.domain.BadgeRule;
 import com.eventitta.gamification.domain.UserBadge;
+import com.eventitta.gamification.domain.UserPoints;
+import com.eventitta.gamification.evaluator.BadgeRuleEvaluator;
 import com.eventitta.gamification.repository.BadgeRuleRepository;
-import com.eventitta.gamification.repository.UserActivityRepository;
 import com.eventitta.gamification.repository.UserBadgeRepository;
 import com.eventitta.user.domain.User;
 import lombok.RequiredArgsConstructor;
@@ -21,19 +22,21 @@ public class BadgeService {
 
     private final BadgeRuleRepository badgeRuleRepository;
     private final UserBadgeRepository userBadgeRepository;
-    private final UserActivityRepository userActivityRepository;
+    private final List<BadgeRuleEvaluator> evaluators;
 
     @Transactional
-    public List<String> checkAndAwardBadges(User user) {
+    public List<String> checkAndAwardBadges(User user, UserPoints userPoints) {
         List<BadgeRule> rules = badgeRuleRepository.findAll();
         List<String> awarded = new ArrayList<>();
 
         for (BadgeRule rule : rules) {
             if (!rule.isEnabled()) continue;
 
-            long count = userActivityRepository.countByUserIdAndActivityType_Id(user.getId(), rule.getActivityType().getId());
-            if (count >= rule.getThreshold()) {
-                awardBadge(user, rule.getBadge()).ifPresent(awarded::add);
+            for (BadgeRuleEvaluator evaluator : evaluators) {
+                if (evaluator.supports(rule) && evaluator.isSatisfied(user, rule)) {
+                    awardBadge(user, rule.getBadge()).ifPresent(awarded::add);
+                    break;
+                }
             }
         }
 

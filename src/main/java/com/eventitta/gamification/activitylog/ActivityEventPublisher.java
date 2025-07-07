@@ -13,4 +13,8 @@ public class ActivityEventPublisher {
     public void publish(String activityCode, Long userId, Long targetId) {
         eventPublisher.publishEvent(new UserActivityLogRequestedEvent(userId, activityCode, targetId));
     }
+
+    public void publishRevoke(String activityCode, Long userId, Long targetId) {
+        eventPublisher.publishEvent(new UserActivityRevokeRequestedEvent(userId, activityCode, targetId));
+    }
 }

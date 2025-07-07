@@ -7,7 +7,6 @@ import com.eventitta.comment.dto.response.CommentWithChildrenDto;
 import com.eventitta.comment.exception.CommentException;
 import com.eventitta.comment.repository.CommentRepository;
 import com.eventitta.gamification.activitylog.ActivityEventPublisher;
-import com.eventitta.gamification.constant.ActivityCodes;
 import com.eventitta.post.domain.Post;
 import com.eventitta.post.exception.PostException;
 import com.eventitta.post.repository.PostRepository;
@@ -93,7 +92,7 @@ public class CommentService {
         if (!comment.getUser().getId().equals(userId)) {
             throw new CommentException(NO_AUTHORITY_TO_MODIFY_COMMENT);
         }
-
         comment.softDelete();
+        activityEventPublisher.publishRevoke(CREATE_COMMENT, userId, commentId);
     }
 }

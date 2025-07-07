@@ -280,14 +280,10 @@ public class MeetingService {
 
         if (wasApproved) {
             meeting.decrementCurrentMembers();
+
+            activityEventPublisher.publishRevoke(JOIN_MEETING, userId, meetingId);
         }
-
         participantRepository.delete(participant);
-
-        // 활동 취소는 별도 처리 필요시 구현
-        // if (wasApproved) {
-        //     // 활동 취소 이벤트 발행 가능
-        // }
     }
 
 }

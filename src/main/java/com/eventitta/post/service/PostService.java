@@ -5,6 +5,7 @@ import com.eventitta.auth.exception.AuthException;
 import com.eventitta.comment.repository.CommentRepository;
 import com.eventitta.common.response.PageResponse;
 import com.eventitta.gamification.activitylog.ActivityEventPublisher;
+import com.eventitta.gamification.service.UserActivityService;
 import com.eventitta.post.domain.Post;
 import com.eventitta.post.domain.PostImage;
 import com.eventitta.post.domain.PostLike;
@@ -50,6 +51,7 @@ public class PostService {
     private final PostLikeRepository postLikeRepository;
     private final CommentRepository commentRepository;
     private final ActivityEventPublisher activityEventPublisher;
+    private final UserActivityService userActivityService;
 
     public CreatePostResponse create(Long userId, CreatePostRequest dto) {
         User user = userRepository.findById(userId)
@@ -136,6 +138,7 @@ public class PostService {
         if (existing.isPresent()) {
             postLikeRepository.delete(existing.get());
             post.decrementLikeCount();
+            activityEventPublisher.publishRevoke(LIKE_POST, userId, postId);
         } else {
             PostLike like = new PostLike(post, user);
             postLikeRepository.save(like);

@@ -342,4 +342,232 @@ class MeetingServiceTest {
             .extracting("errorCode")
             .isEqualTo(MeetingErrorCode.MEETING_MAX_MEMBERS_REACHED);
     }
+
+    @Test
+    @DisplayName("이미 참가한 모임에 다시 참여하려 하면 예외가 발생한다")
+    void joinMeeting_whenAlreadyJoined_throwsException() {
+        // given
+        Long userId = 5L;
+        Long meetingId = 800L;
+        User user = createUser(userId);
+        User leader = createUser(1L);
+        Meeting meeting = Meeting.builder()
+            .id(meetingId)
+            .title("t")
+            .startTime(LocalDateTime.now().plusDays(1))
+            .endTime(LocalDateTime.now().plusDays(2))
+            .maxMembers(10)
+            .currentMembers(1)
+            .status(MeetingStatus.RECRUITING)
+            .leader(leader)
+            .build();
+        MeetingParticipant participant = MeetingParticipant.builder()
+            .meeting(meeting)
+            .user(user)
+            .status(ParticipantStatus.PENDING)
+            .build();
+
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(meetingRepository.findById(meetingId)).willReturn(Optional.of(meeting));
+        given(participantRepository.findByMeetingIdAndUser_Id(meetingId, userId))
+            .willReturn(Optional.of(participant));
+
+        // when & then
+        assertThatThrownBy(() -> meetingService.joinMeeting(userId, meetingId))
+            .isInstanceOf(MeetingException.class)
+            .extracting("errorCode")
+            .isEqualTo(MeetingErrorCode.ALREADY_JOINED_MEETING);
+    }
+
+    @Test
+    @DisplayName("모집 중이 아닌 모임 참가 신청 시 예외가 발생한다")
+    void joinMeeting_whenNotRecruiting_throwsException() {
+        // given
+        Long userId = 6L;
+        Long meetingId = 801L;
+        User user = createUser(userId);
+        User leader = createUser(1L);
+        Meeting meeting = Meeting.builder()
+            .id(meetingId)
+            .title("t")
+            .startTime(LocalDateTime.now().plusDays(1))
+            .endTime(LocalDateTime.now().plusDays(2))
+            .maxMembers(10)
+            .currentMembers(1)
+            .status(MeetingStatus.CLOSED)
+            .leader(leader)
+            .build();
+
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(meetingRepository.findById(meetingId)).willReturn(Optional.of(meeting));
+
+        // when & then
+        assertThatThrownBy(() -> meetingService.joinMeeting(userId, meetingId))
+            .isInstanceOf(MeetingException.class)
+            .extracting("errorCode")
+            .isEqualTo(MeetingErrorCode.MEETING_NOT_RECRUITING);
+    }
+
+    @Test
+    @DisplayName("삭제된 모임에 대한 수정 요청 시 예외가 발생한다")
+    void updateMeeting_onDeletedMeeting_throwsException() {
+        // given
+        Long leaderId = 1L;
+        User leader = createUser(leaderId);
+        Meeting meeting = Meeting.builder()
+            .id(900L)
+            .title("t")
+            .startTime(LocalDateTime.now().plusDays(1))
+            .endTime(LocalDateTime.now().plusDays(2))
+            .maxMembers(10)
+            .status(MeetingStatus.RECRUITING)
+            .leader(leader)
+            .build();
+        meeting.delete();
+
+        given(userRepository.findById(leaderId)).willReturn(Optional.of(leader));
+        given(meetingRepository.findById(meeting.getId())).willReturn(Optional.of(meeting));
+
+        MeetingUpdateRequest req = new MeetingUpdateRequest(
+            "n", null,
+            LocalDateTime.now().plusDays(2),
+            LocalDateTime.now().plusDays(3),
+            10, null, null, null,
+            MeetingStatus.RECRUITING
+        );
+
+        // when & then
+        assertThatThrownBy(() -> meetingService.updateMeeting(leaderId, meeting.getId(), req))
+            .isInstanceOf(MeetingException.class)
+            .extracting("errorCode")
+            .isEqualTo(MeetingErrorCode.ALREADY_DELETED_MEETING);
+    }
+
+    @Test
+    @DisplayName("삭제된 모임 삭제 시 예외가 발생한다")
+    void deleteMeeting_onDeletedMeeting_throwsException() {
+        // given
+        Long leaderId = 1L;
+        User leader = createUser(leaderId);
+        Meeting meeting = Meeting.builder()
+            .id(901L)
+            .title("t")
+            .startTime(LocalDateTime.now().plusDays(1))
+            .endTime(LocalDateTime.now().plusDays(2))
+            .maxMembers(10)
+            .status(MeetingStatus.RECRUITING)
+            .leader(leader)
+            .build();
+        meeting.delete();
+
+        given(userRepository.findById(leaderId)).willReturn(Optional.of(leader));
+        given(meetingRepository.findById(meeting.getId())).willReturn(Optional.of(meeting));
+
+        // when & then
+        assertThatThrownBy(() -> meetingService.deleteMeeting(leaderId, meeting.getId()))
+            .isInstanceOf(MeetingException.class)
+            .extracting("errorCode")
+            .isEqualTo(MeetingErrorCode.ALREADY_DELETED_MEETING);
+    }
+
+    @Test
+    @DisplayName("삭제된 모임 참가 신청 시 예외가 발생한다")
+    void joinMeeting_onDeletedMeeting_throwsException() {
+        // given
+        Long userId = 7L;
+        Long meetingId = 902L;
+        User user = createUser(userId);
+        User leader = createUser(1L);
+        Meeting meeting = Meeting.builder()
+            .id(meetingId)
+            .title("t")
+            .startTime(LocalDateTime.now().plusDays(1))
+            .endTime(LocalDateTime.now().plusDays(2))
+            .maxMembers(10)
+            .currentMembers(1)
+            .status(MeetingStatus.RECRUITING)
+            .leader(leader)
+            .build();
+        meeting.delete();
+
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(meetingRepository.findById(meetingId)).willReturn(Optional.of(meeting));
+
+        // when & then
+        assertThatThrownBy(() -> meetingService.joinMeeting(userId, meetingId))
+            .isInstanceOf(MeetingException.class)
+            .extracting("errorCode")
+            .isEqualTo(MeetingErrorCode.ALREADY_DELETED_MEETING);
+    }
+
+    @Test
+    @DisplayName("승인된 참가자가 취소될 때 활동 취소 이벤트가 발행된다")
+    void cancelJoin_approvedParticipant_publishesRevoke() {
+        // given
+        Long userId = 8L;
+        Long meetingId = 903L;
+        User leader = createUser(1L);
+        User user = createUser(userId);
+        Meeting meeting = Meeting.builder()
+            .id(meetingId)
+            .title("t")
+            .startTime(LocalDateTime.now().plusDays(1))
+            .endTime(LocalDateTime.now().plusDays(2))
+            .maxMembers(10)
+            .currentMembers(2)
+            .status(MeetingStatus.RECRUITING)
+            .leader(leader)
+            .build();
+        MeetingParticipant participant = MeetingParticipant.builder()
+            .meeting(meeting)
+            .user(user)
+            .status(ParticipantStatus.APPROVED)
+            .build();
+
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(meetingRepository.findById(meetingId)).willReturn(Optional.of(meeting));
+        given(participantRepository.findByMeetingIdAndUser_Id(meetingId, userId))
+            .willReturn(Optional.of(participant));
+
+        // when
+        meetingService.cancelJoin(userId, meetingId);
+
+        // then
+        verify(activityEventPublisher).publishRevoke(JOIN_MEETING, userId, meetingId);
+    }
+
+    @Test
+    @DisplayName("거절된 참가자가 취소를 시도하면 예외가 발생한다")
+    void cancelJoin_rejectedParticipant_throwsException() {
+        // given
+        Long userId = 9L;
+        Long meetingId = 904L;
+        User leader = createUser(1L);
+        User user = createUser(userId);
+        Meeting meeting = Meeting.builder()
+            .id(meetingId)
+            .title("t")
+            .startTime(LocalDateTime.now().plusDays(1))
+            .endTime(LocalDateTime.now().plusDays(2))
+            .maxMembers(10)
+            .status(MeetingStatus.RECRUITING)
+            .leader(leader)
+            .build();
+        MeetingParticipant participant = MeetingParticipant.builder()
+            .meeting(meeting)
+            .user(user)
+            .status(ParticipantStatus.REJECTED)
+            .build();
+
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(meetingRepository.findById(meetingId)).willReturn(Optional.of(meeting));
+        given(participantRepository.findByMeetingIdAndUser_Id(meetingId, userId))
+            .willReturn(Optional.of(participant));
+
+        // when & then
+        assertThatThrownBy(() -> meetingService.cancelJoin(userId, meetingId))
+            .isInstanceOf(MeetingException.class)
+            .extracting("errorCode")
+            .isEqualTo(MeetingErrorCode.INVALID_PARTICIPANT_STATUS);
+    }
 }

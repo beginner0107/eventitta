@@ -19,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
+import static com.eventitta.comment.exception.CommentErrorCode.NOT_FOUND_COMMENT_ID;
 import static com.eventitta.comment.exception.CommentErrorCode.NO_AUTHORITY_TO_MODIFY_COMMENT;
 import static com.eventitta.post.exception.PostErrorCode.NOT_FOUND_POST_ID;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -163,5 +164,73 @@ class CommentServiceTest {
             commentService.deleteComment(commentId, userId)
         ).isInstanceOf(CommentException.class)
             .hasMessageContaining(NO_AUTHORITY_TO_MODIFY_COMMENT.defaultMessage());
+    }
+
+    @Test
+    @DisplayName("부모 댓글 ID가 잘못된 경우 CommentException이 발생한다")
+    void givenInvalidParentId_whenWriteComment_thenThrowCommentException() {
+        // given
+        Post post = Post.builder().id(postId).build();
+        User user = User.builder().id(userId).build();
+        Long invalidParentId = 999L;
+
+        given(postRepository.findById(postId)).willReturn(Optional.of(post));
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(commentRepository.findById(invalidParentId)).willReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() ->
+            commentService.writeComment(postId, userId, "내용", invalidParentId)
+        ).isInstanceOf(CommentException.class)
+            .hasMessageContaining(NOT_FOUND_COMMENT_ID.defaultMessage());
+    }
+
+    @Test
+    @DisplayName("대상 댓글이 없으면 댓글 수정에 실패한다")
+    void givenCommentNotFound_whenUpdateComment_thenThrowCommentException() {
+        // given
+        given(commentRepository.findById(commentId)).willReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() ->
+            commentService.updateComment(commentId, userId, "수정 내용")
+        ).isInstanceOf(CommentException.class)
+            .hasMessageContaining(NOT_FOUND_COMMENT_ID.defaultMessage());
+    }
+
+    @Test
+    @DisplayName("대상 댓글이 없으면 댓글 삭제에 실패한다")
+    void givenCommentNotFound_whenDeleteComment_thenThrowCommentException() {
+        // given
+        given(commentRepository.findById(commentId)).willReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() ->
+            commentService.deleteComment(commentId, userId)
+        ).isInstanceOf(CommentException.class)
+            .hasMessageContaining(NOT_FOUND_COMMENT_ID.defaultMessage());
+    }
+
+    @Test
+    @DisplayName("댓글 삭제 시 활동 취소 이벤트가 발행된다")
+    void givenCommentOwner_whenDeleteComment_thenPublishRevokeEvent() {
+        // given
+        Comment comment = createComment(commentId, userId, false);
+        given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
+
+        // when
+        commentService.deleteComment(commentId, userId);
+
+        // then
+        verify(activityEventPublisher).publishRevoke(ActivityCodes.CREATE_COMMENT, userId, commentId);
+    }
+
+    private Comment createComment(Long id, Long authorId, boolean deleted) {
+        return Comment.builder()
+            .id(id)
+            .user(User.builder().id(authorId).build())
+            .content("내용")
+            .deleted(deleted)
+            .build();
     }
 }

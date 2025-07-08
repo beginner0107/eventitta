@@ -503,8 +503,8 @@ class PostServiceTest {
         verify(postLikeRepository).delete(like);
         verify(post).decrementLikeCount();
 
-        // 이벤트가 발행되지 않음을 검증
-        verify(activityEventPublisher, never()).publish(any(), any(), any());
+        // 이벤트 발행 검증
+        verify(activityEventPublisher).publishRevoke(LIKE_POST, userId, postId);
     }
 
     @Test

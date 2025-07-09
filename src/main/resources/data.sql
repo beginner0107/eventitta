@@ -23,6 +23,16 @@ VALUES ('1100000000', '서울특별시', NULL, 1),
        ('2801010100', '대구광역시 중구 동성로1가', '2801000000', 3),
        ('2900000000', '인천광역시', NULL, 1);
 
+INSERT INTO activity_types (id, code, name, default_point)
+VALUES (1, 'CREATE_POST', '게시글 작성', 10),
+       (2, 'CREATE_COMMENT', '댓글 작성', 5),
+       (3, 'LIKE_POST', '게시글 좋아요', 1),
+       (4, 'JOIN_MEETING', '모임 참여', 20)
+ON DUPLICATE KEY UPDATE code          = VALUES(code),
+                        name          = VALUES(name),
+                        default_point = VALUES(default_point);
+
+-- 배지 삽입
 INSERT INTO badges (id, name, description, icon_url)
 VALUES (1, '첫 게시글', '첫 번째 게시글을 작성하여 커뮤니티 활동을 시작했습니다.', 'https://eventitta.com/icons/first_post.png'),
        (2, '열혈 댓글러', '댓글을 10개 이상 작성하여 활발하게 소통했습니다.', 'https://eventitta.com/icons/commenter.png'),
@@ -32,3 +42,13 @@ ON DUPLICATE KEY UPDATE name        = VALUES(name),
                         description = VALUES(description),
                         icon_url    = VALUES(icon_url);
 
+-- 배지 규칙 삽입
+INSERT INTO badge_rules (id, badge_id, activity_type_id, threshold, enabled)
+VALUES (1, 1, 1, 1, true),  -- CREATE_POST
+       (2, 2, 2, 10, true), -- CREATE_COMMENT
+       (3, 3, 4, 1, true),  -- JOIN_MEETING
+       (4, 4, 3, 50, true)  -- LIKE_POST
+ON DUPLICATE KEY UPDATE badge_id         = VALUES(badge_id),
+                        activity_type_id = VALUES(activity_type_id),
+                        threshold        = VALUES(threshold),
+                        enabled          = VALUES(enabled);

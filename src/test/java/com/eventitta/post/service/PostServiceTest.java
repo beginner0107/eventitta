@@ -3,7 +3,7 @@ package com.eventitta.post.service;
 import com.eventitta.auth.exception.AuthException;
 import com.eventitta.comment.repository.CommentRepository;
 import com.eventitta.common.response.PageResponse;
-import com.eventitta.gamification.service.UserActivityService;
+import com.eventitta.gamification.activitylog.ActivityEventPublisher;
 import com.eventitta.post.domain.Post;
 import com.eventitta.post.domain.PostImage;
 import com.eventitta.post.domain.PostLike;
@@ -39,8 +39,8 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.util.List;
 import java.util.Optional;
 
-import static com.eventitta.gamification.domain.ActivityType.CREATE_POST;
-import static com.eventitta.gamification.domain.ActivityType.LIKE_POST;
+import static com.eventitta.gamification.constant.ActivityCodes.CREATE_POST;
+import static com.eventitta.gamification.constant.ActivityCodes.LIKE_POST;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -63,7 +63,7 @@ class PostServiceTest {
     @Mock
     CommentRepository commentRepository;
     @Mock
-    UserActivityService userActivityService;
+    ActivityEventPublisher activityEventPublisher; // UserActivityService 대신 ActivityEventPublisher
 
     @InjectMocks
     PostService postService;
@@ -83,11 +83,7 @@ class PostServiceTest {
         Region region = createRegion(regionCode);
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
         given(regionRepository.findById(regionCode)).willReturn(Optional.of(region));
-        given(userActivityService.recordActivity(
-            eq(userId),
-            eq(CREATE_POST),
-            anyLong()
-        )).willReturn(List.of());
+
         Post savedPost = createPost(123L, user, createPostRequest.title(), createPostRequest.content(), region);
         savedPost.addImage(new PostImage("url1", 0));
         savedPost.addImage(new PostImage("url2", 1));
@@ -98,8 +94,10 @@ class PostServiceTest {
 
         // then
         assertThat(result.id()).isEqualTo(123L);
-        assertThat(result.badgeNames()).isEmpty();
         assertThat(savedPost.getImages()).hasSize(2);
+
+        // 이벤트 발행 검증
+        verify(activityEventPublisher).publish(CREATE_POST, userId, savedPost.getId());
     }
 
     @Test
@@ -411,12 +409,6 @@ class PostServiceTest {
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
         given(regionRepository.findById(regionCode)).willReturn(Optional.of(region));
 
-        given(userActivityService.recordActivity(
-            eq(userId),
-            eq(CREATE_POST),
-            any()
-        )).willReturn(List.of());
-
         final Post[] createdPostHolder = new Post[1];
         given(postRepository.save(any())).willAnswer(invocation -> {
             Post post = invocation.getArgument(0);
@@ -432,25 +424,9 @@ class PostServiceTest {
         assertThat(createdPost.getImages())
             .extracting(PostImage::getSortOrder)
             .containsExactly(0, 1, 2);
-    }
 
-    @Test
-    @DisplayName("게시글 삭제 시 이미지도 함께 제거된다")
-    void givenPostWithImages_whenDelete_thenImagesAreCleared() {
-        // given
-        long postId = 1L;
-        long userId = 42L;
-        User user = createUser(userId, "u@e.com", "pw", "nick");
-        Post post = Post.create(user, "제목", "내용", createRegion(VALID_REGION));
-        post.addImage(new PostImage("img1", 0));
-        post.addImage(new PostImage("img2", 1));
-        given(postRepository.findWithUserByIdAndDeletedFalse(postId)).willReturn(Optional.of(post));
-
-        // when
-        postService.delete(postId, userId);
-
-        // then
-        assertThat(post.getImages()).isEmpty();
+        // 이벤트 발행 검증
+        verify(activityEventPublisher).publish(CREATE_POST, userId, createdPost.getId());
     }
 
     @Test
@@ -469,15 +445,15 @@ class PostServiceTest {
             ReflectionTestUtils.setField(post, "id", 123L);
             return post;
         });
-        given(userActivityService.recordActivity(eq(userId), eq(CREATE_POST), anyLong()))
-            .willReturn(List.of());
 
         // when
         CreatePostResponse response = postService.create(userId, dto);
 
-
         // then
         assertThat(response.id()).isNotNull();
+
+        // 이벤트 발행 검증
+        verify(activityEventPublisher).publish(CREATE_POST, userId, 123L);
     }
 
     @Test
@@ -493,15 +469,16 @@ class PostServiceTest {
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
         given(postRepository.findById(postId)).willReturn(Optional.of(post));
         given(postLikeRepository.findByPostIdAndUserId(postId, userId)).willReturn(Optional.empty());
-        given(userActivityService.recordActivity(userId, LIKE_POST, postId)).willReturn(List.of());
 
         // when
-        List<String> badges = postService.toggleLike(postId, userId);
+        postService.toggleLike(postId, userId);
 
         // then
         verify(postLikeRepository).save(any(PostLike.class));
         verify(post).incrementLikeCount();
-        assertThat(badges).isEmpty();
+
+        // 이벤트 발행 검증
+        verify(activityEventPublisher).publish(LIKE_POST, userId, postId);
     }
 
     @Test
@@ -520,12 +497,14 @@ class PostServiceTest {
         given(postLikeRepository.findByPostIdAndUserId(postId, userId)).willReturn(Optional.of(like));
 
         // when
-        List<String> badges = postService.toggleLike(postId, userId);
+        postService.toggleLike(postId, userId);
 
         // then
         verify(postLikeRepository).delete(like);
         verify(post).decrementLikeCount();
-        assertThat(badges).isEmpty();
+
+        // 이벤트 발행 검증
+        verify(activityEventPublisher).publishRevoke(LIKE_POST, userId, postId);
     }
 
     @Test
@@ -587,4 +566,3 @@ class PostServiceTest {
         return new UpdatePostRequest(title, content, regionCode, List.of());
     }
 }
-

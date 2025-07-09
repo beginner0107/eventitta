@@ -2,6 +2,7 @@ package com.eventitta.gamification.domain;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -22,4 +23,12 @@ public class Badge {
     private String description;
 
     private String iconUrl;
+
+    @Builder
+    public Badge(Long id, String name, String description, String iconUrl) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.iconUrl = iconUrl;
+    }
 }

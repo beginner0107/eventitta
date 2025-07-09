@@ -6,7 +6,7 @@ import com.eventitta.comment.dto.query.CommentFlatDto;
 import com.eventitta.comment.dto.response.CommentWithChildrenDto;
 import com.eventitta.comment.exception.CommentException;
 import com.eventitta.comment.repository.CommentRepository;
-import com.eventitta.gamification.service.UserActivityService;
+import com.eventitta.gamification.activitylog.ActivityEventPublisher;
 import com.eventitta.post.domain.Post;
 import com.eventitta.post.exception.PostException;
 import com.eventitta.post.repository.PostRepository;
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 import static com.eventitta.auth.exception.AuthErrorCode.NOT_FOUND_USER_ID;
 import static com.eventitta.comment.exception.CommentErrorCode.NOT_FOUND_COMMENT_ID;
 import static com.eventitta.comment.exception.CommentErrorCode.NO_AUTHORITY_TO_MODIFY_COMMENT;
-import static com.eventitta.gamification.domain.ActivityType.CREATE_COMMENT;
+import static com.eventitta.gamification.constant.ActivityCodes.CREATE_COMMENT;
 import static com.eventitta.post.exception.PostErrorCode.NOT_FOUND_POST_ID;
 
 @Service
@@ -34,9 +34,9 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
     private final UserRepository userRepository;
-    private final UserActivityService userActivityService;
+    private final ActivityEventPublisher activityEventPublisher;
 
-    public List<String> writeComment(Long postId, Long userId, String content, Long parentCommentId) {
+    public void writeComment(Long postId, Long userId, String content, Long parentCommentId) {
         Post post = postRepository.findById(postId)
             .orElseThrow(() -> new PostException(NOT_FOUND_POST_ID));
         User user = userRepository.findById(userId)
@@ -57,7 +57,7 @@ public class CommentService {
 
         Comment savedComment = commentRepository.save(comment);
 
-        return userActivityService.recordActivity(userId, CREATE_COMMENT, savedComment.getId());
+        activityEventPublisher.publish(CREATE_COMMENT, userId, savedComment.getId());
     }
 
     @Transactional(readOnly = true)
@@ -92,8 +92,7 @@ public class CommentService {
         if (!comment.getUser().getId().equals(userId)) {
             throw new CommentException(NO_AUTHORITY_TO_MODIFY_COMMENT);
         }
-
         comment.softDelete();
-        userActivityService.revokeActivity(userId, CREATE_COMMENT, commentId);
+        activityEventPublisher.publishRevoke(CREATE_COMMENT, userId, commentId);
     }
 }

@@ -8,6 +8,8 @@ import com.eventitta.comment.service.CommentService;
 import com.eventitta.common.config.CustomAuthenticationEntryPoint;
 import com.eventitta.common.config.SecurityConfig;
 import com.eventitta.common.storage.FileStorageService;
+import com.eventitta.dashboard.controller.DashboardController;
+import com.eventitta.dashboard.service.DashboardService;
 import com.eventitta.file.controller.FileUploadController;
 import com.eventitta.gamification.service.UserActivityService;
 import com.eventitta.post.controller.PostController;
@@ -27,7 +29,8 @@ import org.springframework.test.web.servlet.MockMvc;
     PostController.class,
     FileUploadController.class,
     CommentController.class,
-    UserController.class
+    UserController.class,
+    DashboardController.class
 })
 @AutoConfigureMockMvc(addFilters = false)
 @Import({SecurityConfig.class})
@@ -60,4 +63,6 @@ public abstract class ControllerTestSupport {
     protected UserService userService;
     @MockitoBean
     protected UserActivityService userActivityService;
+    @MockitoBean
+    protected DashboardService dashboardService;
 }

@@ -2,6 +2,7 @@ package com.eventitta.event.schedule;
 
 import com.eventitta.event.service.NationalFestivalImportService;
 import com.eventitta.event.service.SeoulFestivalImportService;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -26,7 +27,8 @@ public class FestivalBackfillJob {
      * 애플리케이션이 완전히 기동된 뒤에 한 번만 실행되도록 스케줄러에 등록함.
      * (예: 매일 새벽 2시 30분마다, 최초 1회 또는 주기별로 백필이 필요하다면 이곳을 수정)
      */
-    @Scheduled(cron = "0 30 2 * * *", zone = "Asia/Seoul")
+//    @Scheduled(cron = "0 30 2 * * *", zone = "Asia/Seoul")
+//    @PostConstruct
     public void runBackfillOnce() {
         log.info("[InitialImportJob] 초기 축제 데이터 백필 시작");
 
@@ -58,3 +60,4 @@ public class FestivalBackfillJob {
         log.info("[InitialImportJob] 초기 축제 데이터 백필 완료");
     }
 }
+

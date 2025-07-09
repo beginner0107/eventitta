@@ -1,24 +1,40 @@
 package com.eventitta.gamification.domain;
 
-public enum ActivityType {
-    CREATE_POST(10, "게시글 작성"),
-    CREATE_COMMENT(5, "댓글 작성"),
-    LIKE_POST(1, "게시글 좋아요"),
-    JOIN_MEETING(20, "모임 참여");
+import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-    private final int points;
-    private final String description;
+@Entity
+@Table(name = "activity_types")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class ActivityType {
 
-    ActivityType(int points, String description) {
-        this.points = points;
-        this.description = description;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, unique = true)
+    private String code; // e.g., CREATE_COMMENT
+
+    @Column(nullable = false)
+    private String name; // e.g., 댓글 작성
+
+    @Column(nullable = false)
+    private int defaultPoint;
+
+    @Builder
+    public ActivityType(Long id, String code, String name, int defaultPoint) {
+        this.id = id;
+        this.code = code;
+        this.name = name;
+        this.defaultPoint = defaultPoint;
     }
 
-    public int getPoints() {
-        return points;
-    }
-
-    public String getDescription() {
-        return description;
+    public ActivityType(String code, String name, int defaultPoint) {
+        this(null, code, name, defaultPoint);
     }
 }
+

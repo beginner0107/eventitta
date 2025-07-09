@@ -41,10 +41,12 @@ public class User extends BaseEntity {
 
     @NotBlank
     @Size(min = 8, max = 255)
+    @Column(nullable = false)
     private String password;
 
     @NotBlank
     @Size(max = 100)
+    @Column(nullable = false)
     private String nickname;
 
     @Column(name = "profile_picture_url", length = 512)
@@ -76,9 +78,6 @@ public class User extends BaseEntity {
 
     @Column(name = "provider_id", length = 100)
     private String providerId;
-
-    @Column(nullable = false)
-    private int points = 0;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserActivity> activities = new ArrayList<>();
@@ -114,13 +113,5 @@ public class User extends BaseEntity {
 
     public void delete() {
         this.deleted = true;
-    }
-
-    public void addPoints(int points) {
-        this.points += points;
-    }
-
-    public void subtractPoints(int amount) {
-        this.points = Math.max(0, this.points - amount);
     }
 }

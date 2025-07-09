@@ -99,6 +99,7 @@ public class PostService {
         }
         post.clearImages();
         post.softDelete();
+
         activityEventPublisher.publishRevoke(CREATE_POST, userId, postId);
     }
 

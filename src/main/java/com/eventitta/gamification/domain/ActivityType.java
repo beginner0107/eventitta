@@ -33,11 +33,8 @@ public class ActivityType {
         this.defaultPoint = defaultPoint;
     }
 
-    @Builder
     public ActivityType(String code, String name, int defaultPoint) {
-        this.code = code;
-        this.name = name;
-        this.defaultPoint = defaultPoint;
+        this(null, code, name, defaultPoint);
     }
 }
 

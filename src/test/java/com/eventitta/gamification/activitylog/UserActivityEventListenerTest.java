@@ -71,7 +71,7 @@ class UserActivityEventListenerTest {
 
     @Test
     @DisplayName("트랜잭션 롤백 시 활동 로그가 남지 않는다")
-    void givenLogEvent_whenRollback_thenRecordActivityNotInvoked() {
+    void givenLogEvent_whenRollback_thenRecordActivityNotInvoked() throws InterruptedException {
         doNothing().when(userActivityService).recordActivity(anyLong(), anyString(), anyLong());
 
         TransactionTemplate tx = new TransactionTemplate(txManager);
@@ -81,7 +81,7 @@ class UserActivityEventListenerTest {
             status.setRollbackOnly();
         });
 
-        verify(userActivityService, timeout(1000).times(0)).recordActivity(anyLong(), anyString(), anyLong());
+        verify(userActivityService, never()).recordActivity(anyLong(), anyString(), anyLong());
     }
 
     @Test

@@ -15,7 +15,7 @@ public interface UserActivityRepository extends JpaRepository<UserActivity, Long
     boolean existsByUserIdAndActivityType_IdAndTargetId(Long userId, Long activityTypeId, Long targetId);
 
     long countByUserIdAndActivityType_Id(Long userId, Long activityTypeId);
-    
+
     @Query("SELECT ua.activityType AS activityType, COUNT(ua) AS count " +
         "FROM UserActivity ua " +
         "WHERE ua.user.id = :userId " +

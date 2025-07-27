@@ -10,6 +10,7 @@ import com.eventitta.gamification.repository.UserBadgeRepository;
 import com.eventitta.user.domain.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
@@ -24,7 +25,7 @@ public class BadgeService {
     private final UserBadgeRepository userBadgeRepository;
     private final List<BadgeRuleEvaluator> evaluators;
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public List<String> checkAndAwardBadges(User user, UserPoints userPoints) {
         List<BadgeRule> rules = badgeRuleRepository.findAll();
         List<String> awarded = new ArrayList<>();

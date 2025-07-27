@@ -23,6 +23,7 @@ import com.eventitta.region.repository.RegionRepository;
 import com.eventitta.user.domain.User;
 import com.eventitta.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -40,6 +41,7 @@ import static com.eventitta.post.exception.PostErrorCode.NOT_FOUND_POST_ID;
 import static com.eventitta.region.exception.RegionErrorCode.NOT_FOUND_REGION_CODE;
 import static com.eventitta.user.exception.UserErrorCode.NOT_FOUND_USER_ID;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -66,7 +68,7 @@ public class PostService {
         Post savedPost = postRepository.save(post);
 
         activityEventPublisher.publish(CREATE_POST, userId, savedPost.getId());
-
+        
         return new CreatePostResponse(savedPost.getId());
     }
 
@@ -117,6 +119,7 @@ public class PostService {
         );
     }
 
+    // Autocommit
     @Transactional(readOnly = true)
     public PostDetailDto getPost(Long postId) {
         Post post = postRepository.findDetailByIdAndDeletedFalse(postId)

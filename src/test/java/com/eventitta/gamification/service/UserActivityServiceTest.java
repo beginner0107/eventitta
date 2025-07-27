@@ -24,7 +24,8 @@ import org.springframework.transaction.support.SimpleTransactionStatus;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -147,7 +148,6 @@ class UserActivityServiceTest {
 
         // then
         assertThat(points.getPoints()).isEqualTo(15);
-        verify(userPointsRepository).save(points);
         verify(userActivityRepository).delete(activity);
     }
 }

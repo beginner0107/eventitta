@@ -4,6 +4,7 @@ import com.eventitta.meeting.domain.MeetingStatus;
 import com.eventitta.meeting.repository.MeetingRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +19,7 @@ public class MeetingStatusScheduler {
     private final MeetingRepository meetingRepository;
 
     @Scheduled(cron = "0 * * * * *", zone = "Asia/Seoul")
+    @SchedulerLock(name = "markFinishedMeetings")
     @Transactional
     public void markFinishedMeetings() {
         LocalDateTime now = LocalDateTime.now();

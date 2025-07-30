@@ -60,6 +60,10 @@ dependencies {
     implementation 'org.mapstruct:mapstruct:1.5.5.Final'
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
 
+    // ShedLock
+    implementation 'net.javacrumbs.shedlock:shedlock-spring:6.6.0'
+    implementation 'net.javacrumbs.shedlock:shedlock-provider-jdbc-template:6.6.0'
+
     runtimeOnly 'p6spy:p6spy:3.9.1'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'

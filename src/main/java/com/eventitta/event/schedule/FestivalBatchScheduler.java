@@ -3,6 +3,7 @@ package com.eventitta.event.schedule;
 import com.eventitta.event.service.NationalFestivalImportService;
 import com.eventitta.event.service.SeoulFestivalImportService;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -34,6 +35,7 @@ public class FestivalBatchScheduler {
      * 전국 축제: 분기별(1,4,7,10월 1일 00:00) Upsert
      */
     @Scheduled(cron = "${festival.national.schedule-cron}", zone = "Asia/Seoul")
+    @SchedulerLock(name = "runNationalQuarterlyImport")
     public void runNationalQuarterlyImport() {
         log.info("[Scheduler] 전국 축제 (분기별) upsert 시작");
         try {
@@ -48,6 +50,7 @@ public class FestivalBatchScheduler {
      * 서울시 축제: 매일 11시 현재 월(YYYY-MM) 단위 Upsert
      */
     @Scheduled(cron = "${festival.seoul.schedule-cron}", zone = "Asia/Seoul")
+    @SchedulerLock(name = "runSeoulDailyImport")
     public void runSeoulDailyImport() {
         String ym = Year.now().getValue() + "-" + String.format("%02d", now().getMonthValue());
         log.info("[Scheduler] 서울시 축제 ({} Upsert) 시작", ym);

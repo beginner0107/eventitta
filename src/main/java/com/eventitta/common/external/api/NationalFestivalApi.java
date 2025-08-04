@@ -1,6 +1,6 @@
 package com.eventitta.common.external.api;
 
-import com.eventitta.event.dto.response.NationalFestivalResponse;
+import com.eventitta.festival.dto.NationalFestivalResponse;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.service.annotation.GetExchange;
 

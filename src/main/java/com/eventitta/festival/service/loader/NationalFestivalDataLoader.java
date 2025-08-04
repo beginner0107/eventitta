@@ -1,9 +1,10 @@
 package com.eventitta.festival.service.loader;
 
 import com.eventitta.common.external.api.NationalFestivalApi;
-import com.eventitta.event.dto.response.NationalFestivalResponse;
 import com.eventitta.festival.config.NationalFestivalConfig;
 import com.eventitta.festival.domain.CulturalEvent;
+import com.eventitta.festival.dto.NationalFestivalItem;
+import com.eventitta.festival.dto.NationalFestivalResponse;
 import com.eventitta.festival.mapper.CulturalEventMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +27,7 @@ public class NationalFestivalDataLoader {
         return new NationalEventIterator(serviceKey);
     }
 
-    private List<NationalFestivalResponse.FestivalItem> fetchPage(String serviceKey, int page) {
+    private List<NationalFestivalItem> fetchPage(String serviceKey, int page) {
         NationalFestivalResponse response = callNationalApi(serviceKey, page);
         return extractItems(response);
     }
@@ -40,7 +41,7 @@ public class NationalFestivalDataLoader {
         );
     }
 
-    private List<NationalFestivalResponse.FestivalItem> extractItems(NationalFestivalResponse response) {
+    private List<NationalFestivalItem> extractItems(NationalFestivalResponse response) {
         if (response.getResponse() != null &&
             response.getResponse().getBody() != null &&
             response.getResponse().getBody().getItems() != null) {
@@ -65,13 +66,13 @@ public class NationalFestivalDataLoader {
 
         @Override
         public CulturalEvent next() {
-            NationalFestivalResponse.FestivalItem item = batchLoader.next();
+            NationalFestivalItem item = batchLoader.next();
             return mapper.from(item);
         }
 
         private class BatchLoader {
             private int currentPage = 1;
-            private List<NationalFestivalResponse.FestivalItem> currentBatch = List.of();
+            private List<NationalFestivalItem> currentBatch = List.of();
             private int currentIndex = 0;
             private boolean hasMorePages = true;
 
@@ -83,7 +84,7 @@ public class NationalFestivalDataLoader {
                 return hasCurrentItem() || canLoadMore();
             }
 
-            public NationalFestivalResponse.FestivalItem next() {
+            public NationalFestivalItem next() {
                 ensureCurrentItem();
                 return getCurrentItem();
             }
@@ -102,7 +103,7 @@ public class NationalFestivalDataLoader {
                 }
             }
 
-            private NationalFestivalResponse.FestivalItem getCurrentItem() {
+            private NationalFestivalItem getCurrentItem() {
                 return currentBatch.get(currentIndex++);
             }
 

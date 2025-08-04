@@ -2,8 +2,8 @@ package com.eventitta.festival.mapper;
 
 import com.eventitta.festival.domain.CulturalEvent;
 import com.eventitta.festival.domain.DataSource;
+import com.eventitta.festival.dto.NationalFestivalItem;
 import com.eventitta.festival.dto.SeoulFestivalRow;
-import com.eventitta.event.dto.response.NationalFestivalResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.util.DigestUtils;
 
@@ -44,16 +44,18 @@ public class CulturalEventMapper {
         return event;
     }
 
-    public CulturalEvent from(NationalFestivalResponse.FestivalItem item) {
+    public CulturalEvent from(NationalFestivalItem item) {
         CulturalEvent event = new CulturalEvent();
 
-        event.setTitle(validateTitle(item.getFestivalName()));
-        event.setVenue(item.getPlace());
-        event.setStartDate(parseNationalDate(item.getStartDate()));
-        event.setEndDate(parseNationalDate(item.getEndDate()));
-        event.setContent(item.getDescription());
-        event.setOrganizer(item.getOrganizerName());
+        event.setTitle(validateTitle(item.getFstvlNm()));
+        event.setVenue(item.getOpar());
+        event.setStartDate(parseNationalDate(item.getFstvlStartDate()));
+        event.setEndDate(parseNationalDate(item.getFstvlEndDate()));
+        event.setContent(item.getFstvlCo());
+        event.setOrganizer(item.getMnnstNm());
         event.setHomepageUrl(item.getHomepageUrl());
+        event.setLatitude(toDecimal(item.getLatitude()));
+        event.setLongitude(toDecimal(item.getLongitude()));
         event.setDataSource(DataSource.NATIONAL_FESTIVAL);
         event.setExternalId(generateNationalExternalId(item));
         event.setContentHash(generateNationalContentHash(item));
@@ -113,20 +115,20 @@ public class CulturalEventMapper {
         return DigestUtils.md5DigestAsHex(base.getBytes(StandardCharsets.UTF_8));
     }
 
-    private String generateNationalExternalId(NationalFestivalResponse.FestivalItem item) {
-        String title = validateTitle(item.getFestivalName());
-        String place = item.getPlace() != null ? item.getPlace() : "";
-        String startDate = item.getStartDate() != null ? item.getStartDate() : "";
-        String organizer = item.getOrganizerName() != null ? item.getOrganizerName() : "";
+    private String generateNationalExternalId(NationalFestivalItem item) {
+        String title = validateTitle(item.getFstvlNm());
+        String place = item.getOpar() != null ? item.getOpar() : "";
+        String startDate = item.getFstvlStartDate() != null ? item.getFstvlStartDate() : "";
+        String organizer = item.getMnnstNm() != null ? item.getMnnstNm() : "";
 
         String base = title + place + startDate + organizer;
         return DigestUtils.md5DigestAsHex(base.getBytes(StandardCharsets.UTF_8));
     }
 
-    private String generateNationalContentHash(NationalFestivalResponse.FestivalItem item) {
-        String title = validateTitle(item.getFestivalName());
-        String description = item.getDescription() != null ? item.getDescription() : "";
-        String organizer = item.getOrganizerName() != null ? item.getOrganizerName() : "";
+    private String generateNationalContentHash(NationalFestivalItem item) {
+        String title = validateTitle(item.getFstvlNm());
+        String description = item.getFstvlCo() != null ? item.getFstvlCo() : "";
+        String organizer = item.getMnnstNm() != null ? item.getMnnstNm() : "";
 
         String base = title + description + organizer;
         return DigestUtils.md5DigestAsHex(base.getBytes(StandardCharsets.UTF_8));

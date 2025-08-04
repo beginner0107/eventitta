@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Slf4j
-@Service
+//@Service
 public class NationalFestivalImportService extends PageBasedFestivalImportService<NationalFestivalResponse.FestivalItem> {
 
     public NationalFestivalImportService(NationalFestivalClient nationalClient,

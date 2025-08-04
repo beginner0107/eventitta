@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 import java.time.YearMonth;
 
 @Slf4j
-@Component
+//@Component
 public class FestivalBackfillJob {
 
     private final NationalFestivalImportService nationalService;

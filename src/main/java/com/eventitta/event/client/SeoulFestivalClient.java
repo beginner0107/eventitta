@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 import static com.eventitta.event.exception.EventErrorCode.API_CALL_FAILED;
 
 @Slf4j
-@Component
+//@Component
 public class SeoulFestivalClient implements FestivalApiClient<SeoulFestivalResponse.SeoulEventItem> {
 
     private final SeoulFestivalApi seoulFestivalApi;

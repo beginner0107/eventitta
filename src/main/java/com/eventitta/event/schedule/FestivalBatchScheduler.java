@@ -13,7 +13,7 @@ import java.time.Year;
 import static java.time.LocalDate.now;
 
 @Slf4j
-@Component
+//@Component
 public class FestivalBatchScheduler {
 
     private final NationalFestivalImportService nationalService;

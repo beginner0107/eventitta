@@ -12,7 +12,7 @@ import java.time.YearMonth;
 import static com.eventitta.event.dto.response.SeoulFestivalResponse.SeoulEventItem;
 
 @Slf4j
-@Service
+//@Service
 public class SeoulFestivalImportService extends PageBasedFestivalImportService<SeoulEventItem> {
     public SeoulFestivalImportService(SeoulFestivalClient seoulClient,
                                       FestivalToEventMapper<SeoulEventItem> mapper,

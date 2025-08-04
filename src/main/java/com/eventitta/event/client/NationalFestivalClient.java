@@ -12,7 +12,7 @@ import static com.eventitta.event.exception.EventErrorCode.*;
 import static com.eventitta.event.exception.EventErrorCode.SERVICE_KEY_MISSING;
 
 @Slf4j
-@Component
+//@Component
 public class NationalFestivalClient implements FestivalApiClient<NationalFestivalResponse.FestivalItem> {
 
 

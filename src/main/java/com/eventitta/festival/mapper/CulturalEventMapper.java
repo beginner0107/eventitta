@@ -109,9 +109,12 @@ public class CulturalEventMapper {
 
     private String generateContentHash(SeoulFestivalRow row) {
         String title = validateTitle(row.getTITLE());
-        String player = row.getPLAYER() != null ? row.getPLAYER() : "";
-        String program = row.getPROGRAM() != null ? row.getPROGRAM() : "";
-        String base = title + player + program;
+        String venue = row.getPLACE() != null ? row.getPLACE() : "";
+        LocalDate start = parseLocalDate(row.getSTRTDATE());
+        LocalDate end = parseLocalDate(row.getEND_DATE());
+        String startDate = start != null ? start.toString() : "";
+        String endDate = end != null ? end.toString() : "";
+        String base = title + startDate + endDate + venue;
         return DigestUtils.md5DigestAsHex(base.getBytes(StandardCharsets.UTF_8));
     }
 
@@ -127,10 +130,12 @@ public class CulturalEventMapper {
 
     private String generateNationalContentHash(NationalFestivalItem item) {
         String title = validateTitle(item.getFstvlNm());
-        String description = item.getFstvlCo() != null ? item.getFstvlCo() : "";
-        String organizer = item.getMnnstNm() != null ? item.getMnnstNm() : "";
-
-        String base = title + description + organizer;
+        String venue = item.getOpar() != null ? item.getOpar() : "";
+        LocalDate start = parseNationalDate(item.getFstvlStartDate());
+        LocalDate end = parseNationalDate(item.getFstvlEndDate());
+        String startDate = start != null ? start.toString() : "";
+        String endDate = end != null ? end.toString() : "";
+        String base = title + startDate + endDate + venue;
         return DigestUtils.md5DigestAsHex(base.getBytes(StandardCharsets.UTF_8));
     }
 

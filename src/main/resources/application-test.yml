@@ -44,33 +44,19 @@ file:
   storage:
     location: ./test-uploads
 
+festival:
+  seoul:
+    base-url: http://openapi.seoul.go.kr:8088
+  national:
+    base-url: https://apis.data.go.kr
+
+api:
+  seoul:
+    key: ${SEOUL_API_KEY:test-seoul-api-key}
+  national:
+    key: ${NATIONAL_API_KEY:test-national-api-key}
+
 logging:
   level:
     root: DEBUG
     org.hibernate.SQL: DEBUG
-
-festival:
-  schedule:
-    enabled: false
-
-  national:
-    base-url: http://api.data.go.kr/openapi/tn_pubr_public_cltur_fstvl_api
-    service-key: test-service-key
-    schedule-cron: 0 0 0 1 1,4,7,10 *
-    import:
-      page-size: 100
-      source: NATIONAL
-
-  seoul:
-    base-url: http://openapi.seoul.go.kr:8088
-    service-key: test-service-key
-    file-type: json
-    service-name: culturalEventInfo
-    schedule-cron: 0 0 11 * * *
-    import:
-      page-size: 50
-      source: SEOUL
-async:
-  core-pool-size: 4
-  max-pool-size: 20
-  queue-capacity: 200

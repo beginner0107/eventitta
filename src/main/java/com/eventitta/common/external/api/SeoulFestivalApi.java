@@ -1,6 +1,6 @@
 package com.eventitta.common.external.api;
 
-import com.eventitta.festival.dto.SeoulFestivalResponse;
+import com.eventitta.festivals.dto.SeoulFestivalResponse;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.service.annotation.GetExchange;
 

@@ -5,6 +5,7 @@ import com.eventitta.festivals.config.SeoulFestivalConfig;
 import com.eventitta.festivals.domain.Festival;
 import com.eventitta.festivals.dto.SeoulFestivalResponse;
 import com.eventitta.festivals.dto.SeoulFestivalRow;
+import com.eventitta.festivals.exception.FestivalErrorCode;
 import com.eventitta.festivals.mapper.FestivalMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -53,31 +54,46 @@ public class SeoulFestivalDataLoader {
     }
 
     private SeoulFestivalResponse callSeoulApi(String serviceKey, PageRequest pageRequest) {
-        return seoulFestivalApi.getSeoulEvents(
-            serviceKey,
-            config.getServiceFormat(),
-            config.getServiceName(),
-            pageRequest.startIndex(),
-            pageRequest.endIndex(),
-            " ", " ", ""
-        );
+        try {
+            return seoulFestivalApi.getSeoulEvents(
+                serviceKey,
+                config.getServiceFormat(),
+                config.getServiceName(),
+                pageRequest.startIndex(),
+                pageRequest.endIndex(),
+                " ", " ", ""
+            );
+        } catch (Exception e) {
+            log.error("서울시 축제 API 호출 중 오류 발생 - 시작: {}, 끝: {}", pageRequest.startIndex(), pageRequest.endIndex(), e);
+            throw FestivalErrorCode.EXTERNAL_API_ERROR.defaultException(e);
+        }
     }
 
     private SeoulFestivalResponse callSeoulApiForDate(String serviceKey, PageRequest pageRequest, LocalDate targetDate) {
-        String dateParam = targetDate != null ? targetDate.toString() : "";
-        return seoulFestivalApi.getSeoulEvents(
-            serviceKey,
-            config.getServiceFormat(),
-            config.getServiceName(),
-            pageRequest.startIndex(),
-            pageRequest.endIndex(),
-            " ", " ", dateParam
-        );
+        try {
+            String dateParam = targetDate != null ? targetDate.toString() : "";
+            return seoulFestivalApi.getSeoulEvents(
+                serviceKey,
+                config.getServiceFormat(),
+                config.getServiceName(),
+                pageRequest.startIndex(),
+                pageRequest.endIndex(),
+                " ", " ", dateParam
+            );
+        } catch (Exception e) {
+            log.error("서울시 축제 API 날짜별 호출 중 오류 발생 - 날짜: {}, 시작: {}, 끝: {}", targetDate, pageRequest.startIndex(), pageRequest.endIndex(), e);
+            throw FestivalErrorCode.EXTERNAL_API_ERROR.defaultException(e);
+        }
     }
 
     private List<SeoulFestivalRow> extractRows(SeoulFestivalResponse response) {
-        List<SeoulFestivalRow> rows = response.culturalEventInfo().row();
-        return rows != null ? rows : List.of();
+        try {
+            List<SeoulFestivalRow> rows = response.culturalEventInfo().row();
+            return rows != null ? rows : List.of();
+        } catch (Exception e) {
+            log.error("서울시 축제 응답 데이터 추출 중 오류 발생", e);
+            throw FestivalErrorCode.INVALID_FESTIVAL_DATA.defaultException(e);
+        }
     }
 
     private record PageRequest(int startIndex, int endIndex) {

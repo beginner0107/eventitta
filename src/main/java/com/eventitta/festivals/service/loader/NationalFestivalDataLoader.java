@@ -5,6 +5,7 @@ import com.eventitta.festivals.config.NationalFestivalConfig;
 import com.eventitta.festivals.domain.Festival;
 import com.eventitta.festivals.dto.NationalFestivalItem;
 import com.eventitta.festivals.dto.NationalFestivalResponse;
+import com.eventitta.festivals.exception.FestivalErrorCode;
 import com.eventitta.festivals.mapper.FestivalMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,21 +33,31 @@ public class NationalFestivalDataLoader {
     }
 
     private NationalFestivalResponse callNationalApi(String serviceKey, int page) {
-        return nationalFestivalApi.getFestivals(
-            serviceKey,
-            page,
-            config.getPageSize(),
-            config.getServiceFormat()
-        );
+        try {
+            return nationalFestivalApi.getFestivals(
+                serviceKey,
+                page,
+                config.getPageSize(),
+                config.getServiceFormat()
+            );
+        } catch (Exception e) {
+            log.error("전국 축제 API 호출 중 오류 발생 - 페이지: {}", page, e);
+            throw FestivalErrorCode.EXTERNAL_API_ERROR.defaultException(e);
+        }
     }
 
     private List<NationalFestivalItem> extractItems(NationalFestivalResponse response) {
-        if (response.response() != null &&
-            response.response().body() != null &&
-            response.response().body().items() != null) {
-            return response.response().body().items();
+        try {
+            if (response.response() != null &&
+                response.response().body() != null &&
+                response.response().body().items() != null) {
+                return response.response().body().items();
+            }
+            return List.of();
+        } catch (Exception e) {
+            log.error("전국 축제 응답 데이터 추출 중 오류 발생", e);
+            throw FestivalErrorCode.INVALID_FESTIVAL_DATA.defaultException(e);
         }
-        return List.of();
     }
 
     private class NationalEventIterator implements Iterator<Festival> {

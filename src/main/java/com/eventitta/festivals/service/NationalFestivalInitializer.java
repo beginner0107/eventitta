@@ -1,5 +1,6 @@
 package com.eventitta.festivals.service;
 
+import com.eventitta.festivals.exception.FestivalErrorCode;
 import com.eventitta.festivals.service.loader.NationalFestivalDataLoader;
 import com.eventitta.festivals.service.processor.FestivalProcessor;
 import lombok.RequiredArgsConstructor;
@@ -22,9 +23,14 @@ public class NationalFestivalInitializer {
     private String nationalServiceKey;
 
     public void loadInitialData() {
-        LocalDate cutoff = calculateCutoffDate();
-        var metrics = processEvents(cutoff);
-        metricsLogger.logNationalResults(metrics);
+        try {
+            LocalDate cutoff = calculateCutoffDate();
+            var metrics = processEvents(cutoff);
+            metricsLogger.logNationalResults(metrics);
+        } catch (Exception e) {
+            log.error("전국 축제 데이터 로딩 중 오류 발생", e);
+            throw FestivalErrorCode.DATA_SYNC_ERROR.defaultException(e);
+        }
     }
 
     private LocalDate calculateCutoffDate() {
@@ -32,13 +38,18 @@ public class NationalFestivalInitializer {
     }
 
     private FestivalProcessor.ProcessingMetrics processEvents(LocalDate cutoff) {
-        var metrics = new FestivalProcessor.ProcessingMetrics();
-        var eventIterator = dataLoader.loadEvents(nationalServiceKey);
+        try {
+            var metrics = new FestivalProcessor.ProcessingMetrics();
+            var eventIterator = dataLoader.loadEvents(nationalServiceKey);
 
-        eventIterator.forEachRemaining(event ->
-            metrics.record(eventProcessor.processEvent(event, cutoff))
-        );
+            eventIterator.forEachRemaining(event ->
+                metrics.record(eventProcessor.processEvent(event, cutoff))
+            );
 
-        return metrics;
+            return metrics;
+        } catch (Exception e) {
+            log.error("전국 축제 이벤트 처리 중 오류 발생", e);
+            throw FestivalErrorCode.EXTERNAL_API_ERROR.defaultException(e);
+        }
     }
 }

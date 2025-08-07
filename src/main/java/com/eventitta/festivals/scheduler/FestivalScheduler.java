@@ -43,6 +43,7 @@ public class FestivalScheduler {
             log.info("[Scheduler] 전국 축제 데이터 분기별 동기화 완료");
         } catch (Exception e) {
             log.error("[Scheduler] 전국 축제 데이터 분기별 동기화 중 오류 발생", e);
+            // 스케줄러에서는 예외를 다시 던지지 않고 로깅만 수행
         }
     }
 
@@ -59,6 +60,7 @@ public class FestivalScheduler {
             log.info("[Scheduler] 서울시 축제 데이터 일별 동기화 완료");
         } catch (Exception e) {
             log.error("[Scheduler] 서울시 축제 데이터 일별 동기화 중 오류 발생", e);
+            // 스케줄러에서는 예외를 다시 던지지 않고 로깅만 수행
         }
     }
 }

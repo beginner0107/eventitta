@@ -3,6 +3,7 @@ package com.eventitta.festivals.service;
 import com.eventitta.common.response.PageResponse;
 import com.eventitta.festivals.dto.FestivalResponseDto;
 import com.eventitta.festivals.dto.NearbyFestivalRequest;
+import com.eventitta.festivals.exception.FestivalErrorCode;
 import com.eventitta.festivals.repository.FestivalRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +42,9 @@ public class FestivalService {
     }
 
     public PageResponse<FestivalResponseDto> getNearbyFestival(NearbyFestivalRequest req) {
+        // 유효성 검증
+        validateNearbyFestivalRequest(req);
+
         var page = festivalRepository.findFestivalsWithinDistanceAndDateBetween(
             req.latitude(), req.longitude(), req.distanceKm(),
             req.getStartDateTime(), req.getEndDateTime(),
@@ -61,5 +65,15 @@ public class FestivalService {
             .build());
 
         return PageResponse.of(dtoPage);
+    }
+
+    private void validateNearbyFestivalRequest(NearbyFestivalRequest req) {
+        if (req.distanceKm() <= 0 || req.distanceKm() > 100) {
+            throw FestivalErrorCode.INVALID_LOCATION_RANGE.defaultException();
+        }
+
+        if (req.getStartDateTime().isAfter(req.getEndDateTime())) {
+            throw FestivalErrorCode.INVALID_DATE_RANGE.defaultException();
+        }
     }
 }

@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
 import java.util.Iterator;
 import java.util.List;
 
@@ -23,7 +22,7 @@ public class NationalFestivalDataLoader {
     private final FestivalMapper mapper;
     private final NationalFestivalConfig config;
 
-    public Iterator<Festival> loadEvents(String serviceKey, LocalDate cutoff) {
+    public Iterator<Festival> loadEvents(String serviceKey) {
         return new NationalEventIterator(serviceKey);
     }
 
@@ -42,10 +41,10 @@ public class NationalFestivalDataLoader {
     }
 
     private List<NationalFestivalItem> extractItems(NationalFestivalResponse response) {
-        if (response.getResponse() != null &&
-            response.getResponse().getBody() != null &&
-            response.getResponse().getBody().getItems() != null) {
-            return response.getResponse().getBody().getItems();
+        if (response.response() != null &&
+            response.response().body() != null &&
+            response.response().body().items() != null) {
+            return response.response().body().items();
         }
         return List.of();
     }

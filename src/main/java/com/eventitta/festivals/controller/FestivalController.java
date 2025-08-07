@@ -2,7 +2,7 @@ package com.eventitta.festivals.controller;
 
 import com.eventitta.common.response.PageResponse;
 import com.eventitta.festivals.dto.FestivalResponseDto;
-import com.eventitta.festivals.dto.NearbyFestivalsRequest;
+import com.eventitta.festivals.dto.NearbyFestivalRequest;
 import com.eventitta.festivals.service.FestivalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -27,7 +27,7 @@ public class FestivalController {
         , description = "위도, 경도, 거리, 기간, 페이징 파라미터로 반경 내 이벤트를 조회합니다.")
     @GetMapping("/nearby")
     public ResponseEntity<PageResponse<FestivalResponseDto>> getNearbyEvents(
-        @ParameterObject @Valid @ModelAttribute NearbyFestivalsRequest request
+        @ParameterObject @Valid @ModelAttribute NearbyFestivalRequest request
     ) {
         PageResponse<FestivalResponseDto> page = festivalService.getNearbyFestival(request);
         return ResponseEntity.ok(page);

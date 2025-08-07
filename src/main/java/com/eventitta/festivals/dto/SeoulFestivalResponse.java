@@ -2,20 +2,19 @@ package com.eventitta.festivals.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
 
 import java.util.List;
 
-@Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class SeoulFestivalResponse {
+public record SeoulFestivalResponse(
     @JsonProperty("culturalEventInfo")
-    private CulturalEventInfo culturalEventInfo;
+    CulturalEventInfo culturalEventInfo
+) {
 
-    @Getter
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class CulturalEventInfo {
+    public record CulturalEventInfo(
         @JsonProperty("row")
-        private List<SeoulFestivalRow> row;
+        List<SeoulFestivalRow> row
+    ) {
     }
 }

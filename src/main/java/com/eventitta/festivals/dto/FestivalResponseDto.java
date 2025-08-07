@@ -1,27 +1,41 @@
 package com.eventitta.festivals.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.Builder;
+import lombok.Getter;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
-public interface FestivalResponseDto {
-    Long getId();
-
-    String getTitle();
-
-    String getPlace();
+@Getter
+@Builder
+public class FestivalResponseDto {
+    private Long id;
+    private String title;
+    private String place;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd", timezone = "Asia/Seoul")
-    LocalDate getStartTime();
+    private LocalDateTime startTime;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd", timezone = "Asia/Seoul")
-    LocalDate getEndTime();
+    private LocalDateTime endTime;
 
-    String getCategory();
+    private String category;
+    private Boolean isFree;
+    private String homepageUrl;
+    private Double distance;
 
-    Boolean getIsFree();
-
-    String getHomepageUrl();
-
-    Double getDistance();
+    // JPA 네이티브 쿼리 결과 매핑을 위한 생성자
+    public FestivalResponseDto(Long id, String title, String place, LocalDateTime startTime,
+                               LocalDateTime endTime, String category, Boolean isFree,
+                               String homepageUrl, Double distance) {
+        this.id = id;
+        this.title = title;
+        this.place = place;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.category = category;
+        this.isFree = isFree;
+        this.homepageUrl = homepageUrl;
+        this.distance = distance;
+    }
 }

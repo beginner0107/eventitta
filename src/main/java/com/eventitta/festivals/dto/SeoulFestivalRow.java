@@ -2,53 +2,52 @@ package com.eventitta.festivals.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
 
-@Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class SeoulFestivalRow {
+public record SeoulFestivalRow(
     @JsonProperty("CODENAME")
-    private String CODENAME;
+    String codeName,
     @JsonProperty("GUNAME")
-    private String GUNAME;
+    String guName,
     @JsonProperty("TITLE")
-    private String TITLE;
+    String title,
     @JsonProperty("DATE")
-    private String DATE;
+    String date,
     @JsonProperty("PLACE")
-    private String PLACE;
+    String place,
     @JsonProperty("ORG_NAME")
-    private String ORG_NAME;
+    String orgName,
     @JsonProperty("USE_TRGT")
-    private String USE_TRGT;
+    String useTarget,
     @JsonProperty("USE_FEE")
-    private String USE_FEE;
+    String useFee,
     @JsonProperty("PLAYER")
-    private String PLAYER;
+    String player,
     @JsonProperty("PROGRAM")
-    private String PROGRAM;
+    String program,
     @JsonProperty("ETC_DESC")
-    private String ETC_DESC;
+    String etcDesc,
     @JsonProperty("ORG_LINK")
-    private String ORG_LINK;
+    String orgLink,
     @JsonProperty("MAIN_IMG")
-    private String MAIN_IMG;
+    String mainImg,
     @JsonProperty("RGSTDATE")
-    private String RGSTDATE;
+    String registerDate,
     @JsonProperty("TICKET")
-    private String TICKET;
+    String ticket,
     @JsonProperty("STRTDATE")
-    private String STRTDATE;
+    String startDate,
     @JsonProperty("END_DATE")
-    private String END_DATE;
+    String endDate,
     @JsonProperty("THEMECODE")
-    private String THEMECODE;
+    String themeCode,
     @JsonProperty("LOT")
-    private String LOT;
+    String longitude,
     @JsonProperty("LAT")
-    private String LAT;
+    String latitude,
     @JsonProperty("IS_FREE")
-    private String IS_FREE;
+    String isFree,
     @JsonProperty("HMPG_ADDR")
-    private String HMPG_ADDR;
+    String homepageAddr
+) {
 }

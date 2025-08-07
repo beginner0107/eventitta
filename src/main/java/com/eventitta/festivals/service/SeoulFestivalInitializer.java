@@ -43,7 +43,7 @@ public class SeoulFestivalInitializer {
 
     private FestivalProcessor.ProcessingMetrics processEvents(LocalDate cutoff) {
         var metrics = new FestivalProcessor.ProcessingMetrics();
-        var eventIterator = dataLoader.loadEvents(seoulServiceKey, cutoff);
+        var eventIterator = dataLoader.loadEvents(seoulServiceKey);
 
         eventIterator.forEachRemaining(event ->
             metrics.record(eventProcessor.processEvent(event, cutoff))
@@ -54,7 +54,7 @@ public class SeoulFestivalInitializer {
 
     private FestivalProcessor.ProcessingMetrics processEventsForDate(LocalDate targetDate, LocalDate cutoff) {
         var metrics = new FestivalProcessor.ProcessingMetrics();
-        var eventIterator = dataLoader.loadEventsForDate(seoulServiceKey, targetDate, cutoff);
+        var eventIterator = dataLoader.loadEventsForDate(seoulServiceKey, targetDate);
 
         eventIterator.forEachRemaining(event ->
             metrics.record(eventProcessor.processEvent(event, cutoff))

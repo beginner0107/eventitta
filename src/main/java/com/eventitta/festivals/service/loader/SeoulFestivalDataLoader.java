@@ -23,14 +23,14 @@ public class SeoulFestivalDataLoader {
     private final FestivalMapper mapper;
     private final SeoulFestivalConfig config;
 
-    public Iterator<Festival> loadEvents(String serviceKey, LocalDate cutoff) {
+    public Iterator<Festival> loadEvents(String serviceKey) {
         return new SeoulEventIterator(serviceKey);
     }
 
     /**
      * 특정 날짜의 서울시 축제 데이터만 로드 (일별 동기화용)
      */
-    public Iterator<Festival> loadEventsForDate(String serviceKey, LocalDate targetDate, LocalDate cutoff) {
+    public Iterator<Festival> loadEventsForDate(String serviceKey, LocalDate targetDate) {
         return new SeoulEventIterator(serviceKey, targetDate);
     }
 
@@ -76,7 +76,7 @@ public class SeoulFestivalDataLoader {
     }
 
     private List<SeoulFestivalRow> extractRows(SeoulFestivalResponse response) {
-        List<SeoulFestivalRow> rows = response.getCulturalEventInfo().getRow();
+        List<SeoulFestivalRow> rows = response.culturalEventInfo().row();
         return rows != null ? rows : List.of();
     }
 

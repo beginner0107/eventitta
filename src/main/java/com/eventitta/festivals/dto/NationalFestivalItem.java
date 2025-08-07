@@ -2,63 +2,61 @@ package com.eventitta.festivals.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
 
-@Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class NationalFestivalItem {
-
+public record NationalFestivalItem(
     @JsonProperty("fstvlNm")
-    private String fstvlNm;
+    String fstvlNm,
 
     @JsonProperty("opar")
-    private String opar;
+    String opar,
 
     @JsonProperty("fstvlStartDate")
-    private String fstvlStartDate;
+    String fstvlStartDate,
 
     @JsonProperty("fstvlEndDate")
-    private String fstvlEndDate;
+    String fstvlEndDate,
 
     @JsonProperty("fstvlCo")
-    private String fstvlCo;
+    String fstvlCo,
 
     @JsonProperty("mnnstNm")
-    private String mnnstNm;
+    String mnnstNm,
 
     @JsonProperty("auspcInsttNm")
-    private String auspcInsttNm;
+    String auspcInsttNm,
 
     @JsonProperty("suprtInsttNm")
-    private String suprtInsttNm;
+    String suprtInsttNm,
 
     @JsonProperty("phoneNumber")
-    private String phoneNumber;
+    String phoneNumber,
 
     @JsonProperty("homepageUrl")
-    private String homepageUrl;
+    String homepageUrl,
 
     @JsonProperty("relateInfo")
-    private String relateInfo;
+    String relateInfo,
 
     @JsonProperty("rdnmadr")
-    private String rdnmadr;
+    String rdnmadr,
 
     @JsonProperty("lnmadr")
-    private String lnmadr;
+    String lnmadr,
 
     @JsonProperty("latitude")
-    private String latitude;
+    String latitude,
 
     @JsonProperty("longitude")
-    private String longitude;
+    String longitude,
 
     @JsonProperty("referenceDate")
-    private String referenceDate;
+    String referenceDate,
 
     @JsonProperty("insttCode")
-    private String insttCode;
+    String insttCode,
 
     @JsonProperty("insttNm")
-    private String insttNm;
+    String insttNm
+) {
 }

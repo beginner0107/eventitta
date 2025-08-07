@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
@@ -34,12 +33,9 @@ public class FestivalProcessor {
     }
 
     private ProcessingResult updateExistingEvent(Festival existing, Festival event) {
-        if (!Objects.equals(existing.getContentHash(), event.getContentHash())) {
-            existing.updateFrom(event);
-            eventRepository.save(existing);
-            return ProcessingResult.UPDATED;
-        }
-        return ProcessingResult.SKIPPED;
+        existing.updateFestivalInfo(event);
+        eventRepository.save(existing);
+        return ProcessingResult.UPDATED;
     }
 
     private ProcessingResult insertNewEvent(Festival event) {

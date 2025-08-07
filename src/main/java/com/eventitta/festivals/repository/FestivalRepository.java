@@ -2,7 +2,7 @@ package com.eventitta.festivals.repository;
 
 import com.eventitta.festivals.domain.Festival;
 import com.eventitta.festivals.domain.DataSource;
-import com.eventitta.festivals.dto.FestivalResponseDto;
+import com.eventitta.festivals.dto.FestivalProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -28,15 +28,15 @@ public interface FestivalRepository extends JpaRepository<Festival, Long> {
                     f.homepage_url  AS homepageUrl,
                     (
                       6371 * acos(
-                        cos(radians(:lat)) * cos(radians(f.latitude)) *
-                        cos(radians(f.longitude) - radians(:lng)) +
-                        sin(radians(:lat)) * sin(radians(f.latitude))
+                        cos(radians(:latitude)) * cos(radians(f.latitude)) *
+                        cos(radians(f.longitude) - radians(:longitude)) +
+                        sin(radians(:latitude)) * sin(radians(f.latitude))
                       )
                     ) AS distance
                 FROM festivals f
                 WHERE
-                  f.start_date >= :startDateTime
-                  AND (:endDateTime IS NULL OR f.start_date <= :endDateTime)
+                  f.start_date >= DATE(:startDateTime)
+                  AND (:endDateTime IS NULL OR f.start_date <= DATE(:endDateTime))
                 HAVING distance <= :distanceKm
                 ORDER BY distance ASC
             """,
@@ -44,21 +44,21 @@ public interface FestivalRepository extends JpaRepository<Festival, Long> {
                 SELECT COUNT(*)
                 FROM festivals f
                 WHERE
-                  f.start_date >= :startDateTime
-                  AND (:endDateTime IS NULL OR f.start_date <= :endDateTime)
+                  f.start_date >= DATE(:startDateTime)
+                  AND (:endDateTime IS NULL OR f.start_date <= DATE(:endDateTime))
                   AND (
                     6371 * acos(
-                      cos(radians(:lat)) * cos(radians(f.latitude)) *
-                      cos(radians(f.longitude) - radians(:lng)) +
-                      sin(radians(:lat)) * sin(radians(f.latitude))
+                      cos(radians(:latitude)) * cos(radians(f.latitude)) *
+                      cos(radians(f.longitude) - radians(:longitude)) +
+                      sin(radians(:latitude)) * sin(radians(f.latitude))
                     )
                   ) <= :distanceKm
             """,
         nativeQuery = true
     )
-    Page<FestivalResponseDto> findFestivalsWithinDistanceAndDateBetween(
-        @Param("lat") double lat,
-        @Param("lng") double lng,
+    Page<FestivalProjection> findFestivalsWithinDistanceAndDateBetween(
+        @Param("latitude") double latitude,
+        @Param("longitude") double longitude,
         @Param("distanceKm") double distanceKm,
         @Param("startDateTime") LocalDateTime startDateTime,
         @Param("endDateTime") LocalDateTime endDateTime,

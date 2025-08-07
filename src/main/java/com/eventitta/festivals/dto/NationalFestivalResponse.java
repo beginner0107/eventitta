@@ -2,62 +2,51 @@ package com.eventitta.festivals.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
 
 import java.util.List;
 
-@Setter
-@Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
-@ToString
-public class NationalFestivalResponse {
-
+public record NationalFestivalResponse(
     @JsonProperty("response")
-    private ResponseWrapper response;
+    ResponseWrapper response
+) {
 
-    @Setter
-    @Getter
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class ResponseWrapper {
-
+    public record ResponseWrapper(
         @JsonProperty("header")
-        private Header header;
+        Header header,
 
         @JsonProperty("body")
-        private Body body;
+        Body body
+    ) {
 
-        @Setter
-        @Getter
         @JsonIgnoreProperties(ignoreUnknown = true)
-        public static class Header {
+        public record Header(
             @JsonProperty("resultCode")
-            private String resultCode;
+            String resultCode,
 
             @JsonProperty("resultMsg")
-            private String resultMsg;
+            String resultMsg,
 
             @JsonProperty("type")
-            private String type;
+            String type
+        ) {
         }
     }
 
-    @Setter
-    @Getter
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class Body {
-
+    public record Body(
         @JsonProperty("items")
-        private List<NationalFestivalItem> items;
+        List<NationalFestivalItem> items,
 
         @JsonProperty("totalCount")
-        private int totalCount;
+        int totalCount,
 
         @JsonProperty("numOfRows")
-        private int numOfRows;
+        int numOfRows,
 
         @JsonProperty("pageNo")
-        private int pageNo;
+        int pageNo
+    ) {
     }
 }

@@ -33,7 +33,7 @@ public class NationalFestivalInitializer {
 
     private FestivalProcessor.ProcessingMetrics processEvents(LocalDate cutoff) {
         var metrics = new FestivalProcessor.ProcessingMetrics();
-        var eventIterator = dataLoader.loadEvents(nationalServiceKey, cutoff);
+        var eventIterator = dataLoader.loadEvents(nationalServiceKey);
 
         eventIterator.forEachRemaining(event ->
             metrics.record(eventProcessor.processEvent(event, cutoff))

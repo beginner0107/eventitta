@@ -1,148 +1,132 @@
 package com.eventitta.festivals.mapper;
 
 import com.eventitta.festivals.domain.Festival;
-import com.eventitta.festivals.domain.DataSource;
 import com.eventitta.festivals.dto.NationalFestivalItem;
 import com.eventitta.festivals.dto.SeoulFestivalRow;
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
+import org.mapstruct.Named;
 import org.springframework.util.DigestUtils;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 
-@Component
-public class FestivalMapper {
+@Mapper(componentModel = "spring")
+public interface FestivalMapper {
 
-    public Festival from(SeoulFestivalRow row) {
-        Festival event = new Festival();
-
-        event.setTitle(validateTitle(row.getTITLE()));
-        event.setVenue(row.getPLACE());
-        event.setStartDate(parseLocalDate(row.getSTRTDATE()));
-        event.setEndDate(parseLocalDate(row.getEND_DATE()));
-        event.setCategory(row.getCODENAME());
-        event.setDistrict(row.getGUNAME());
-        event.setTargetAudience(row.getUSE_TRGT());
-        event.setFeeInfo(row.getUSE_FEE());
-        event.setIsFree("무료".equals(row.getIS_FREE()));
-        event.setPerformers(row.getPLAYER());
-        event.setProgramInfo(row.getPROGRAM());
-        event.setMainImageUrl(row.getMAIN_IMG());
-        event.setThemeCode(row.getTHEMECODE());
-        event.setTicketType(row.getTICKET());
-        event.setOrganizer(row.getORG_NAME());
-        event.setHomepageUrl(row.getHMPG_ADDR());
-        event.setDetailUrl(row.getORG_LINK());
-        event.setLatitude(toDecimal(row.getLAT()));
-        event.setLongitude(toDecimal(row.getLOT()));
-        event.setContent(row.getETC_DESC());
-        event.setDataSource(DataSource.SEOUL_FESTIVAL);
-        event.setExternalId(generateExternalId(row));
-        event.setContentHash(generateContentHash(row));
-
-        return event;
+    default Festival from(SeoulFestivalRow row) {
+        return Festival.createSeoulFestival(
+            validateTitle(row.title()),
+            row.place(),
+            parseSeoulDate(row.startDate()),
+            parseSeoulDate(row.endDate()),
+            row.codeName(),
+            row.guName(),
+            row.useTarget(),
+            row.useFee(),
+            mapIsFree(row.isFree()),
+            row.player(),
+            row.program(),
+            row.mainImg(),
+            row.themeCode(),
+            row.ticket(),
+            row.orgName(),
+            row.homepageAddr(),
+            row.orgLink(),
+            toDecimal(row.latitude()),
+            toDecimal(row.longitude()),
+            row.etcDesc(),
+            generateSeoulExternalId(row)
+        );
     }
 
-    public Festival from(NationalFestivalItem item) {
-        Festival event = new Festival();
-
-        event.setTitle(validateTitle(item.getFstvlNm()));
-        event.setVenue(item.getOpar());
-        event.setStartDate(parseNationalDate(item.getFstvlStartDate()));
-        event.setEndDate(parseNationalDate(item.getFstvlEndDate()));
-        event.setContent(item.getFstvlCo());
-        event.setOrganizer(item.getMnnstNm());
-        event.setHomepageUrl(item.getHomepageUrl());
-        event.setLatitude(toDecimal(item.getLatitude()));
-        event.setLongitude(toDecimal(item.getLongitude()));
-        event.setDataSource(DataSource.NATIONAL_FESTIVAL);
-        event.setExternalId(generateNationalExternalId(item));
-        event.setContentHash(generateNationalContentHash(item));
-
-        return event;
+    default Festival from(NationalFestivalItem item) {
+        return Festival.createNationalFestival(
+            validateTitle(item.fstvlNm()),
+            item.opar(),
+            parseNationalDate(item.fstvlStartDate()),
+            parseNationalDate(item.fstvlEndDate()),
+            item.fstvlCo(),
+            item.mnnstNm(),
+            item.homepageUrl(),
+            toDecimal(item.latitude()),
+            toDecimal(item.longitude()),
+            generateNationalExternalId(item)
+        );
     }
 
-    private LocalDate parseLocalDate(String dateTime) {
+    @Named("validateTitle")
+    default String validateTitle(String title) {
+        if (title == null || title.trim().isEmpty()) {
+            return "제목 없음";
+        }
+        return title.trim();
+    }
+
+    @Named("parseSeoulDate")
+    default LocalDate parseSeoulDate(String dateTime) {
         if (dateTime == null || dateTime.trim().isEmpty() || dateTime.length() < 10) {
             return null;
         }
         try {
-            return LocalDate.parse(dateTime.substring(0, 10)); // "yyyy-MM-dd"
+            return LocalDate.parse(dateTime.substring(0, 10));
         } catch (Exception e) {
             return null;
         }
     }
 
-    private LocalDate parseNationalDate(String dateStr) {
+    @Named("parseNationalDate")
+    default LocalDate parseNationalDate(String dateStr) {
         if (dateStr == null || dateStr.trim().isEmpty()) {
             return null;
         }
         try {
-            // 국가 축제 API는 "yyyy-MM-dd" 형식으로 제공
             return LocalDate.parse(dateStr.trim());
         } catch (Exception e) {
             return null;
         }
     }
 
-    private BigDecimal toDecimal(String val) {
+    @Named("toDecimal")
+    default BigDecimal toDecimal(String val) {
+        if (val == null || val.trim().isEmpty()) {
+            return null;
+        }
         try {
-            return new BigDecimal(val);
+            return new BigDecimal(val.trim());
         } catch (Exception e) {
             return null;
         }
     }
 
-    private String generateExternalId(SeoulFestivalRow row) {
-        String title = validateTitle(row.getTITLE());
-        String place = row.getPLACE() != null ? row.getPLACE() : "";
-        String startDate = row.getSTRTDATE() != null ? row.getSTRTDATE() : "";
-        String category = row.getCODENAME() != null ? row.getCODENAME() : "";
-        String organizer = row.getORG_NAME() != null ? row.getORG_NAME() : "";
-        String themeCode = row.getTHEMECODE() != null ? row.getTHEMECODE() : "";
+    @Named("mapIsFree")
+    default Boolean mapIsFree(String isFree) {
+        return "무료".equals(isFree);
+    }
 
-        // 더 많은 필드를 포함하여 고유성 확보
+    // 서울시 축제용 고유 식별자 생성 (기존 로직 유지)
+    @Named("generateSeoulExternalId")
+    default String generateSeoulExternalId(SeoulFestivalRow row) {
+        String title = validateTitle(row.title());
+        String place = row.place() != null ? row.place() : "";
+        String startDate = row.startDate() != null ? row.startDate() : "";
+        String category = row.codeName() != null ? row.codeName() : "";
+        String organizer = row.orgName() != null ? row.orgName() : "";
+        String themeCode = row.themeCode() != null ? row.themeCode() : "";
+
         String base = title + place + startDate + category + organizer + themeCode;
         return DigestUtils.md5DigestAsHex(base.getBytes(StandardCharsets.UTF_8));
     }
 
-    private String generateContentHash(SeoulFestivalRow row) {
-        String title = validateTitle(row.getTITLE());
-        String venue = row.getPLACE() != null ? row.getPLACE() : "";
-        LocalDate start = parseLocalDate(row.getSTRTDATE());
-        LocalDate end = parseLocalDate(row.getEND_DATE());
-        String startDate = start != null ? start.toString() : "";
-        String endDate = end != null ? end.toString() : "";
-        String base = title + startDate + endDate + venue;
-        return DigestUtils.md5DigestAsHex(base.getBytes(StandardCharsets.UTF_8));
-    }
-
-    private String generateNationalExternalId(NationalFestivalItem item) {
-        String title = validateTitle(item.getFstvlNm());
-        String place = item.getOpar() != null ? item.getOpar() : "";
-        String startDate = item.getFstvlStartDate() != null ? item.getFstvlStartDate() : "";
-        String organizer = item.getMnnstNm() != null ? item.getMnnstNm() : "";
+    // 전국축제용 고유 식별자 생성 (기존 로직 유지)
+    @Named("generateNationalExternalId")
+    default String generateNationalExternalId(NationalFestivalItem item) {
+        String title = validateTitle(item.fstvlNm());
+        String place = item.opar() != null ? item.opar() : "";
+        String startDate = item.fstvlStartDate() != null ? item.fstvlStartDate() : "";
+        String organizer = item.mnnstNm() != null ? item.mnnstNm() : "";
 
         String base = title + place + startDate + organizer;
         return DigestUtils.md5DigestAsHex(base.getBytes(StandardCharsets.UTF_8));
-    }
-
-    private String generateNationalContentHash(NationalFestivalItem item) {
-        String title = validateTitle(item.getFstvlNm());
-        String venue = item.getOpar() != null ? item.getOpar() : "";
-        LocalDate start = parseNationalDate(item.getFstvlStartDate());
-        LocalDate end = parseNationalDate(item.getFstvlEndDate());
-        String startDate = start != null ? start.toString() : "";
-        String endDate = end != null ? end.toString() : "";
-        String base = title + startDate + endDate + venue;
-        return DigestUtils.md5DigestAsHex(base.getBytes(StandardCharsets.UTF_8));
-    }
-
-    private String validateTitle(String title) {
-        if (title == null || title.trim().isEmpty()) {
-            return "제목 없음"; // 기본값 설정
-        }
-        return title.trim();
     }
 }

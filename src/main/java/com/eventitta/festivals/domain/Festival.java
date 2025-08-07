@@ -1,15 +1,14 @@
 package com.eventitta.festivals.domain;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import com.eventitta.common.config.BaseEntity;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "festivals",
@@ -22,9 +21,8 @@ import java.time.LocalDateTime;
         @Index(name = "idx_data_source", columnList = "data_source")
     })
 @Getter
-@Setter
-@NoArgsConstructor
-public class Festival {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class Festival extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -114,42 +112,122 @@ public class Festival {
     @Column(name = "data_source", nullable = false)
     private DataSource dataSource;
 
-    // 중복 방지용 필드들
+    // 중복 방지용 필드
     @Column(name = "external_id", nullable = false, length = 100)
     private String externalId;
 
-    @Column(name = "content_hash", length = 32)
-    private String contentHash;
+    @Builder(access = AccessLevel.PRIVATE)
+    private Festival(String title, String venue, LocalDate startDate, LocalDate endDate,
+                     String category, String district, String targetAudience, String feeInfo,
+                     Boolean isFree, String performers, String programInfo, String mainImageUrl,
+                     String themeCode, String ticketType, String organizer, String host,
+                     String supporter, String phoneNumber, String homepageUrl, String detailUrl,
+                     String roadAddress, String jibunAddress, BigDecimal latitude, BigDecimal longitude,
+                     String content, String relatedInfo, DataSource dataSource, String externalId) {
+        this.title = title;
+        this.venue = venue;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.category = category;
+        this.district = district;
+        this.targetAudience = targetAudience;
+        this.feeInfo = feeInfo;
+        this.isFree = isFree;
+        this.performers = performers;
+        this.programInfo = programInfo;
+        this.mainImageUrl = mainImageUrl;
+        this.themeCode = themeCode;
+        this.ticketType = ticketType;
+        this.organizer = organizer;
+        this.host = host;
+        this.supporter = supporter;
+        this.phoneNumber = phoneNumber;
+        this.homepageUrl = homepageUrl;
+        this.detailUrl = detailUrl;
+        this.roadAddress = roadAddress;
+        this.jibunAddress = jibunAddress;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.content = content;
+        this.relatedInfo = relatedInfo;
+        this.dataSource = dataSource;
+        this.externalId = externalId;
+    }
 
-    @CreationTimestamp
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    // 서울시 축제 생성을 위한 정적 팩토리 메서드
+    public static Festival createSeoulFestival(String title, String venue, LocalDate startDate, LocalDate endDate,
+                                               String category, String district, String targetAudience, String feeInfo,
+                                               Boolean isFree, String performers, String programInfo, String mainImageUrl,
+                                               String themeCode, String ticketType, String organizer, String homepageUrl,
+                                               String detailUrl, BigDecimal latitude, BigDecimal longitude,
+                                               String content, String externalId) {
+        return Festival.builder()
+            .title(title)
+            .venue(venue)
+            .startDate(startDate)
+            .endDate(endDate)
+            .category(category)
+            .district(district)
+            .targetAudience(targetAudience)
+            .feeInfo(feeInfo)
+            .isFree(isFree)
+            .performers(performers)
+            .programInfo(programInfo)
+            .mainImageUrl(mainImageUrl)
+            .themeCode(themeCode)
+            .ticketType(ticketType)
+            .organizer(organizer)
+            .homepageUrl(homepageUrl)
+            .detailUrl(detailUrl)
+            .latitude(latitude)
+            .longitude(longitude)
+            .content(content)
+            .dataSource(DataSource.SEOUL_FESTIVAL)
+            .externalId(externalId)
+            .build();
+    }
 
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    // 전국축제 생성을 위한 정적 팩토리 메서드
+    public static Festival createNationalFestival(String title, String venue, LocalDate startDate, LocalDate endDate,
+                                                  String content, String organizer, String homepageUrl,
+                                                  BigDecimal latitude, BigDecimal longitude, String externalId) {
+        return Festival.builder()
+            .title(title)
+            .venue(venue)
+            .startDate(startDate)
+            .endDate(endDate)
+            .content(content)
+            .organizer(organizer)
+            .homepageUrl(homepageUrl)
+            .latitude(latitude)
+            .longitude(longitude)
+            .dataSource(DataSource.NATIONAL_FESTIVAL)
+            .externalId(externalId)
+            .build();
+    }
 
-    public void updateFrom(Festival src) {
-        this.title = src.getTitle();
-        this.venue = src.getVenue();
-        this.startDate = src.getStartDate();
-        this.endDate = src.getEndDate();
-        this.category = src.getCategory();
-        this.district = src.getDistrict();
-        this.targetAudience = src.getTargetAudience();
-        this.feeInfo = src.getFeeInfo();
-        this.isFree = src.getIsFree();
-        this.performers = src.getPerformers();
-        this.programInfo = src.getProgramInfo();
-        this.mainImageUrl = src.getMainImageUrl();
-        this.themeCode = src.getThemeCode();
-        this.ticketType = src.getTicketType();
-        this.organizer = src.getOrganizer();
-        this.homepageUrl = src.getHomepageUrl();
-        this.detailUrl = src.getDetailUrl();
-        this.latitude = src.getLatitude();
-        this.longitude = src.getLongitude();
-        this.content = src.getContent();
-        this.contentHash = src.getContentHash();
+    // 축제 정보 업데이트 - updatedAt이 자동으로 갱신됨
+    public void updateFestivalInfo(Festival updatedFestival) {
+        this.title = updatedFestival.getTitle();
+        this.venue = updatedFestival.getVenue();
+        this.startDate = updatedFestival.getStartDate();
+        this.endDate = updatedFestival.getEndDate();
+        this.category = updatedFestival.getCategory();
+        this.district = updatedFestival.getDistrict();
+        this.targetAudience = updatedFestival.getTargetAudience();
+        this.feeInfo = updatedFestival.getFeeInfo();
+        this.isFree = updatedFestival.getIsFree();
+        this.performers = updatedFestival.getPerformers();
+        this.programInfo = updatedFestival.getProgramInfo();
+        this.mainImageUrl = updatedFestival.getMainImageUrl();
+        this.themeCode = updatedFestival.getThemeCode();
+        this.ticketType = updatedFestival.getTicketType();
+        this.organizer = updatedFestival.getOrganizer();
+        this.homepageUrl = updatedFestival.getHomepageUrl();
+        this.detailUrl = updatedFestival.getDetailUrl();
+        this.latitude = updatedFestival.getLatitude();
+        this.longitude = updatedFestival.getLongitude();
+        this.content = updatedFestival.getContent();
+        // updatedAt은 @UpdateTimestamp로 자동 갱신됨
     }
 }

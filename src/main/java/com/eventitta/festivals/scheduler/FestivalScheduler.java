@@ -3,6 +3,7 @@ package com.eventitta.festivals.scheduler;
 import com.eventitta.festivals.service.FestivalService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -19,7 +20,6 @@ public class FestivalScheduler {
 //    @PostConstruct
     public void loadInitialNationalFestivalData() {
         festivalService.loadInitialNationalFestivalData();
-        ;
     }
 
     /**
@@ -36,6 +36,7 @@ public class FestivalScheduler {
      * 전국문화표준데이터는 분기별로 갱신되므로 분기마다 실행
      */
     @Scheduled(cron = "0 0 2 1 1,4,7,10 *", zone = "Asia/Seoul")
+    @SchedulerLock(name = "syncNationalFestivalData", lockAtMostFor = "PT2H", lockAtLeastFor = "PT1M")
     public void syncNationalFestivalData() {
         log.info("[Scheduler] 전국 축제 데이터 분기별 동기화 시작");
         try {
@@ -53,6 +54,7 @@ public class FestivalScheduler {
      * 서울시 문화행사 정보는 매일 1회 업데이트되므로 오늘 날짜만 동기화
      */
     @Scheduled(cron = "0 0 3 * * *", zone = "Asia/Seoul")
+    @SchedulerLock(name = "syncSeoulFestivalData", lockAtMostFor = "PT1H", lockAtLeastFor = "PT5M")
     public void syncSeoulFestivalData() {
         log.info("[Scheduler] 서울시 축제 데이터 일별 동기화 시작");
         try {

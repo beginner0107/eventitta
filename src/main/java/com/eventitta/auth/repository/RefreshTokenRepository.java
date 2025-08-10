@@ -8,10 +8,13 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
     Optional<RefreshToken> findByUserId(Long userId);
+    
+    List<RefreshToken> findAllByUserId(Long userId);
 
     long deleteByExpiresAtBefore(LocalDateTime now);
 

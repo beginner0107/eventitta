@@ -62,7 +62,6 @@ class TokenServiceUnitTest {
         given(tokenProvider.createRefreshToken()).willReturn(rawRt);
         given(tokenProvider.getRefreshTokenExpiry()).willReturn(expiryInstant);
         given(rtEncoder.encode(rawRt)).willReturn(encodedHash);
-        given(rtRepo.findByUserId(userId)).willReturn(Optional.empty());
 
         User user = User.builder().id(userId).build();
         given(userRepository.getReferenceById(userId)).willReturn(user);
@@ -83,13 +82,14 @@ class TokenServiceUnitTest {
     }
 
     @Test
-    @DisplayName("기존 리프레시 토큰이 있으면 토큰을 비교 후 일치하면 액세스·리프레시 토큰을 반환한다")
-    void givenExistingToken_whenIssueTokens_thenUpdatesRefreshTokenAndReturnsTokens() {
+    @DisplayName("새 리프레시 토큰을 생성하여 저장하고 액세스·리프레시 토큰을 반환한다")
+    void givenExistingToken_whenIssueTokens_thenCreatesNewRefreshTokenAndReturnsTokens() {
         // given
         Long userId = 77L;
         String rawRt = "rawRt2";
         String encodedHash = "hashedRt2";
         Instant expiryInstant = Instant.now().plusSeconds(7200);
+        LocalDateTime expectedExpiry = LocalDateTime.ofInstant(expiryInstant, ZoneId.systemDefault());
         String accessToken = "access456";
 
         given(tokenProvider.createAccessToken(userId)).willReturn(accessToken);
@@ -97,8 +97,8 @@ class TokenServiceUnitTest {
         given(tokenProvider.getRefreshTokenExpiry()).willReturn(expiryInstant);
         given(rtEncoder.encode(rawRt)).willReturn(encodedHash);
 
-        RefreshToken existing = mock(RefreshToken.class);
-        given(rtRepo.findByUserId(userId)).willReturn(Optional.of(existing));
+        User user = User.builder().id(userId).build();
+        given(userRepository.getReferenceById(userId)).willReturn(user);
 
         // when
         TokenResponse response = tokenService.issueTokens(userId);
@@ -108,7 +108,10 @@ class TokenServiceUnitTest {
         assertThat(response.refreshToken()).isEqualTo(rawRt);
 
         // then
-        then(existing).should().updateToken(encodedHash, expiryInstant);
-        then(rtRepo).should(never()).save(any());
+        then(rtRepo).should().save(refreshTokenCaptor.capture());
+        RefreshToken saved = refreshTokenCaptor.getValue();
+        assertThat(saved.getUser().getId()).isEqualTo(userId);
+        assertThat(saved.getTokenHash()).isEqualTo(encodedHash);
+        assertThat(saved.getExpiresAt()).isEqualTo(expectedExpiry);
     }
 }

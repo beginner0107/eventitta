@@ -26,15 +26,17 @@ public class RefreshTokenService {
         if (rawRt == null) throw REFRESH_TOKEN_MISSING.defaultException();
 
         Long userId = tokenProvider.getUserIdFromExpiredToken(expiredAt);
-        RefreshToken entity = rtRepo.findByUserId(userId)
+        
+        RefreshToken entity = rtRepo.findAllByUserId(userId)
+            .stream()
+            .filter(token -> rtEncoder.matches(rawRt, token.getTokenHash()))
+            .findFirst()
             .orElseThrow(REFRESH_TOKEN_INVALID::defaultException);
-
-        if (!rtEncoder.matches(rawRt, entity.getTokenHash()))
-            throw REFRESH_TOKEN_INVALID.defaultException();
 
         if (entity.getExpiresAt().isBefore(LocalDateTime.now()))
             throw REFRESH_TOKEN_EXPIRED.defaultException();
 
+        rtRepo.delete(entity);
         return tokenService.issueTokens(userId);
     }
 

@@ -1,8 +1,6 @@
 package com.eventitta.user.domain;
 
 import com.eventitta.common.config.BaseEntity;
-import com.eventitta.gamification.domain.UserActivity;
-import com.eventitta.gamification.domain.UserBadge;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -15,7 +13,6 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 
 import static lombok.AccessLevel.PROTECTED;
@@ -77,12 +74,6 @@ public class User extends BaseEntity {
 
     @Column(name = "provider_id", length = 100)
     private String providerId;
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<UserActivity> activities = new ArrayList<>();
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<UserBadge> userBadges = new ArrayList<>();
 
     @Column(nullable = false)
     @Builder.Default

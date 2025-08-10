@@ -15,6 +15,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.Pbkdf2PasswordEncoder;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -54,7 +56,7 @@ class RefreshTokenServiceUnitTest {
     void noStoredRefreshToken_throwsInvalidException() {
         // given
         given(tokenProvider.getUserIdFromExpiredToken("expiredAt")).willReturn(10L);
-        given(rtRepo.findByUserId(10L)).willReturn(Optional.empty());
+        given(rtRepo.findAllByUserId(10L)).willReturn(Collections.emptyList());
 
         // when & then
         assertThatThrownBy(() -> refreshTokenService.refresh("expiredAt", "rawRt"))
@@ -69,7 +71,7 @@ class RefreshTokenServiceUnitTest {
         // given
         given(tokenProvider.getUserIdFromExpiredToken("expiredAt")).willReturn(20L);
         RefreshToken entity = mock(RefreshToken.class);
-        given(rtRepo.findByUserId(20L)).willReturn(Optional.of(entity));
+        given(rtRepo.findAllByUserId(20L)).willReturn(List.of(entity));
         given(rtEncoder.matches("rawRt", entity.getTokenHash())).willReturn(false);
 
         // when & then
@@ -85,7 +87,7 @@ class RefreshTokenServiceUnitTest {
         // given
         given(tokenProvider.getUserIdFromExpiredToken("expiredAt")).willReturn(30L);
         RefreshToken entity = mock(RefreshToken.class);
-        given(rtRepo.findByUserId(30L)).willReturn(Optional.of(entity));
+        given(rtRepo.findAllByUserId(30L)).willReturn(List.of(entity));
         given(rtEncoder.matches("rawRt", entity.getTokenHash())).willReturn(true);
         given(entity.getExpiresAt()).willReturn(LocalDateTime.now().minusSeconds(1));
 
@@ -102,7 +104,7 @@ class RefreshTokenServiceUnitTest {
         // given
         given(tokenProvider.getUserIdFromExpiredToken("expiredAt")).willReturn(40L);
         RefreshToken entity = mock(RefreshToken.class);
-        given(rtRepo.findByUserId(40L)).willReturn(Optional.of(entity));
+        given(rtRepo.findAllByUserId(40L)).willReturn(List.of(entity));
         given(rtEncoder.matches("rawRt", entity.getTokenHash())).willReturn(true);
         given(entity.getExpiresAt()).willReturn(LocalDateTime.now().plusSeconds(60));
 
@@ -114,6 +116,7 @@ class RefreshTokenServiceUnitTest {
 
         // then
         assertThat(actual).isSameAs(expected);
+        then(rtRepo).should().delete(entity);
         then(tokenService).should().issueTokens(40L);
     }
 

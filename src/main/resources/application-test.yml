@@ -5,6 +5,7 @@ spring:
 
   datasource:
     url: jdbc:h2:mem:eventitta-test;DB_CLOSE_DELAY=-1;MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_ON_EXIT=FALSE
+    #    url: jdbc:h2:mem:eventitta-test;MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=0;DB_CLOSE_ON_EXIT=TRUE
     driver-class-name: org.h2.Driver
     username: sa
     password:
@@ -14,6 +15,10 @@ spring:
     hibernate:
       ddl-auto: create-drop
     show-sql: true
+
+  sql:
+    init:
+      data-locations: # data.sql 실행 비활성화
 
   h2:
     console:

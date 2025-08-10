@@ -55,33 +55,24 @@ file:
   storage:
     location: ./uploads
 
+festival:
+  seoul:
+    base-url: http://openapi.seoul.go.kr:8088
+  national:
+    base-url: http://api.data.go.kr/openapi/tn_pubr_public_cltur_fstvl_api
+
+api:
+  seoul:
+    key: ${SEOUL_API_KEY:your-seoul-api-key-here}
+  national:
+    key: ${NATIONAL_API_KEY:your-national-api-key-here}
+
 logging:
   level:
     root: INFO
     org.hibernate.SQL: WARN
     p6spy: DEBUG
 
-festival:
-  schedule:
-    enabled: true
-
-  national:
-    base-url: http://api.data.go.kr/openapi/tn_pubr_public_cltur_fstvl_api
-    service-key: ${FESTIVAL_API_SERVICE_KEY}
-    schedule-cron: 0 0 0 1 1,4,7,10 *
-    import:
-      page-size: 100
-      source: NATIONAL
-
-  seoul:
-    base-url: http://openapi.seoul.go.kr:8088
-    service-key: ${SEOUL_API_SERVICE_KEY}
-    file-type: json
-    service-name: culturalEventInfo
-    schedule-cron: 0 0 11 * * *
-    import:
-      page-size: 50
-      source: SEOUL
 async:
   core-pool-size: 4
   max-pool-size: 20

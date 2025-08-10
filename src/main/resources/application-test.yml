@@ -5,6 +5,7 @@ spring:
 
   datasource:
     url: jdbc:h2:mem:eventitta-test;DB_CLOSE_DELAY=-1;MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_ON_EXIT=FALSE
+    #    url: jdbc:h2:mem:eventitta-test;MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=0;DB_CLOSE_ON_EXIT=TRUE
     driver-class-name: org.h2.Driver
     username: sa
     password:
@@ -14,6 +15,10 @@ spring:
     hibernate:
       ddl-auto: create-drop
     show-sql: true
+
+  sql:
+    init:
+      data-locations: # data.sql 실행 비활성화
 
   h2:
     console:
@@ -44,33 +49,19 @@ file:
   storage:
     location: ./test-uploads
 
+festival:
+  seoul:
+    base-url: http://openapi.seoul.go.kr:8088
+  national:
+    base-url: https://apis.data.go.kr
+
+api:
+  seoul:
+    key: ${SEOUL_API_KEY:test-seoul-api-key}
+  national:
+    key: ${NATIONAL_API_KEY:test-national-api-key}
+
 logging:
   level:
     root: DEBUG
     org.hibernate.SQL: DEBUG
-
-festival:
-  schedule:
-    enabled: false
-
-  national:
-    base-url: http://api.data.go.kr/openapi/tn_pubr_public_cltur_fstvl_api
-    service-key: test-service-key
-    schedule-cron: 0 0 0 1 1,4,7,10 *
-    import:
-      page-size: 100
-      source: NATIONAL
-
-  seoul:
-    base-url: http://openapi.seoul.go.kr:8088
-    service-key: test-service-key
-    file-type: json
-    service-name: culturalEventInfo
-    schedule-cron: 0 0 11 * * *
-    import:
-      page-size: 50
-      source: SEOUL
-async:
-  core-pool-size: 4
-  max-pool-size: 20
-  queue-capacity: 200

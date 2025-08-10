@@ -22,8 +22,12 @@ public class MeetingStatusScheduler {
     @SchedulerLock(name = "markFinishedMeetings")
     @Transactional
     public void markFinishedMeetings() {
-        LocalDateTime now = LocalDateTime.now();
-        int updated = meetingRepository.updateStatusToFinished(MeetingStatus.FINISHED, now);
-        log.info("종료된 모임 자동 업데이트: {}건", updated);
+        try {
+            LocalDateTime now = LocalDateTime.now();
+            int updated = meetingRepository.updateStatusToFinished(MeetingStatus.FINISHED, now);
+            log.info("종료된 모임 자동 업데이트: {}건", updated);
+        } catch (Exception e) {
+            log.error("종료된 모임 자동 업데이트 중 오류 발생", e);
+        }
     }
 }

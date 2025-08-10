@@ -33,13 +33,7 @@ public class TokenService {
         String hash = rtEncoder.encode(rawRt);
         Instant expiresAt = tokenProvider.getRefreshTokenExpiry();
 
-        rtRepo.findByUserId(userId)
-            .ifPresentOrElse(
-                existing -> existing.updateToken(hash, expiresAt),
-                () -> {
-                    User u = userRepository.getReferenceById(userId);
-                    rtRepo.save(new RefreshToken(u, hash, expiresAt));
-                }
-            );
+        User u = userRepository.getReferenceById(userId);
+        rtRepo.save(new RefreshToken(u, hash, expiresAt));
     }
 }

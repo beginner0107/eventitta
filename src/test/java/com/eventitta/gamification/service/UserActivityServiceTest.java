@@ -54,12 +54,12 @@ class UserActivityServiceTest {
             .thenReturn(new SimpleTransactionStatus());
     }
 
-    private User createUser(Long id) {
+    private User createTestUser() {
         return User.builder()
-            .id(id)
-            .email("u" + id + "@test.com")
+            .id(1L)
+            .email("test@test.com")
             .password("pw")
-            .nickname("nick" + id)
+            .nickname("testuser")
             .role(Role.USER)
             .provider(Provider.LOCAL)
             .build();
@@ -81,7 +81,7 @@ class UserActivityServiceTest {
         Long userId = 1L;
         String code = "CREATE_POST";
         Long targetId = 10L;
-        User user = createUser(userId);
+        User user = createTestUser();
         ActivityType type = createActivityType(1L, code, 10);
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
@@ -105,7 +105,7 @@ class UserActivityServiceTest {
         Long userId = 1L;
         String code = "CREATE_POST";
         Long targetId = 10L;
-        User user = createUser(userId);
+        User user = createTestUser();
         ActivityType type = createActivityType(1L, code, 5);
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
@@ -132,7 +132,7 @@ class UserActivityServiceTest {
         Long userId = 1L;
         String code = "CREATE_POST";
         Long targetId = 10L;
-        User user = createUser(userId);
+        User user = createTestUser();
         ActivityType type = createActivityType(1L, code, 5);
         UserActivity activity = new UserActivity(user, type, targetId);
         UserPoints points = UserPoints.of(user);

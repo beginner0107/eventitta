@@ -25,7 +25,6 @@ public class BadgeService {
     private final UserBadgeRepository userBadgeRepository;
     private final List<BadgeRuleEvaluator> evaluators;
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public List<String> checkAndAwardBadges(User user, UserPoints userPoints) {
         List<BadgeRule> rules = badgeRuleRepository.findAll();
         List<String> awarded = new ArrayList<>();

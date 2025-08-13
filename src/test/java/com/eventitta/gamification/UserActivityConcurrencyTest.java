@@ -149,9 +149,10 @@ class UserActivityConcurrencyTest {
         }
 
         startLatch.countDown();
-        endLatch.await(10, TimeUnit.SECONDS);
+        boolean finished = endLatch.await(10, TimeUnit.SECONDS);
         executor.shutdown();
 
+        assertThat(finished).isTrue();
         Thread.sleep(100);
 
         // then

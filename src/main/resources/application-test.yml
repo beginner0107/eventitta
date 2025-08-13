@@ -4,17 +4,21 @@ spring:
       on-profile: test
 
   datasource:
-    url: jdbc:h2:mem:eventitta-test;DB_CLOSE_DELAY=-1;MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_ON_EXIT=FALSE
-    #    url: jdbc:h2:mem:eventitta-test;MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=0;DB_CLOSE_ON_EXIT=TRUE
+    url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     driver-class-name: org.h2.Driver
     username: sa
     password:
 
   jpa:
-    database-platform: org.hibernate.dialect.MySQLDialect
+    database-platform: org.hibernate.dialect.H2Dialect  # H2Dialect 사용
     hibernate:
       ddl-auto: create-drop
-    show-sql: true
+    show-sql: false  # 테스트 시 SQL 로그 줄이기
+    properties:
+      hibernate:
+        format_sql: true
+        # H2에서는 외래키 처리를 다르게 설정
+        dialect: org.hibernate.dialect.H2Dialect
 
   sql:
     init:
@@ -63,5 +67,5 @@ api:
 
 logging:
   level:
-    root: DEBUG
-    org.hibernate.SQL: DEBUG
+    root: INFO
+    org.hibernate.SQL: INFO

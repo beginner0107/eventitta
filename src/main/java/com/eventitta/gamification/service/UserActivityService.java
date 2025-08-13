@@ -23,6 +23,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.util.List;
 
 import static com.eventitta.gamification.exception.UserActivityErrorCode.DUPLICATED_USER_ACTIVITY;
+import static com.eventitta.gamification.exception.UserPointsErrorCode.NOT_FOUND_USER_POINTS;
 import static com.eventitta.user.exception.UserErrorCode.NOT_FOUND_USER_ID;
 
 @Slf4j
@@ -76,7 +77,7 @@ public class UserActivityService {
         userPointsRepository.upsertAndAddPoints(userId, delta);
 
         UserPoints currentPoints = userPointsRepository.findByUserId(userId)
-            .orElseThrow(() -> new RuntimeException("포인트가 없습니다."));
+            .orElseThrow(NOT_FOUND_USER_POINTS::defaultException);
         badgeService.checkAndAwardBadges(user, currentPoints);
     }
 
@@ -91,7 +92,7 @@ public class UserActivityService {
         userActivityRepository.findByUserIdAndActivityType_IdAndTargetId(userId, activityType.getId(), targetId)
             .ifPresent(activity -> {
                 UserPoints userPoints = userPointsRepository.findByUserId(userId)
-                    .orElseThrow(() -> new IllegalStateException("UserPoints not found for userId: " + userId));
+                    .orElseThrow(NOT_FOUND_USER_POINTS::defaultException);
 
                 userPoints.subtractPoints(activityType.getDefaultPoint());
                 userActivityRepository.delete(activity);

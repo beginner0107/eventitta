@@ -21,4 +21,6 @@ public interface UserActivityRepository extends JpaRepository<UserActivity, Long
         "WHERE ua.user.id = :userId " +
         "GROUP BY ua.activityType")
     List<ActivitySummary> countActivitiesByUser(@Param("userId") Long userId);
+
+    long countByUserId(Long userId);
 }

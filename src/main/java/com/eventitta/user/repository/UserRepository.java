@@ -1,9 +1,7 @@
 package com.eventitta.user.repository;
 
 import com.eventitta.user.domain.User;
-import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -21,8 +19,4 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("select u from User u where u.id = :id and u.deleted = false")
     Optional<User> findActiveById(@Param("id") Long id);
-
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT u FROM User u WHERE u.id = :id")
-    Optional<User> findWithPessimisticLockById(@Param("id") Long id);
 }

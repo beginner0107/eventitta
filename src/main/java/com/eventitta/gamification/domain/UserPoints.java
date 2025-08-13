@@ -28,14 +28,12 @@ public class UserPoints {
     @Column(nullable = false)
     private int points = 0;
 
-    // 외부에서 실수로 잘못 채우지 못하게 private 생성자 + 팩토리 메서드
-    private UserPoints(User user, int point) {
-        this.user = user;  // userId는 @MapsId가 자동 동기화
-        this.points = point;
+    private UserPoints(User user) {
+        this.user = user;
     }
 
-    public static UserPoints of(User userRef, int point) {
-        return new UserPoints(userRef, point);
+    public static UserPoints of(User userRef) {
+        return new UserPoints(userRef);
     }
 
     public void addPoints(int amount) {

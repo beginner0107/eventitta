@@ -65,9 +65,9 @@ class UserActivityServiceTest {
             .build();
     }
 
-    private ActivityType createActivityType(Long id, String code, int point) {
+    private ActivityType createActivityType(String code, int point) {
         return ActivityType.builder()
-            .id(id)
+            .id(1L)
             .code(code)
             .name("name")
             .defaultPoint(point)
@@ -82,7 +82,7 @@ class UserActivityServiceTest {
         String code = "CREATE_POST";
         Long targetId = 10L;
         User user = createTestUser();
-        ActivityType type = createActivityType(1L, code, 10);
+        ActivityType type = createActivityType(code, 10);
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(activityTypeRepository.findByCode(code)).thenReturn(Optional.of(type));
@@ -106,7 +106,7 @@ class UserActivityServiceTest {
         String code = "CREATE_POST";
         Long targetId = 10L;
         User user = createTestUser();
-        ActivityType type = createActivityType(1L, code, 5);
+        ActivityType type = createActivityType(code, 5);
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(activityTypeRepository.findByCode(code)).thenReturn(Optional.of(type));
@@ -133,7 +133,7 @@ class UserActivityServiceTest {
         String code = "CREATE_POST";
         Long targetId = 10L;
         User user = createTestUser();
-        ActivityType type = createActivityType(1L, code, 5);
+        ActivityType type = createActivityType(code, 5);
         UserActivity activity = new UserActivity(user, type, targetId);
         UserPoints points = UserPoints.of(user);
         points.addPoints(20);

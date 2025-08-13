@@ -17,6 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.SimpleTransactionStatus;
@@ -85,15 +86,15 @@ class UserActivityServiceTest {
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(activityTypeRepository.findByCode(code)).thenReturn(Optional.of(type));
-        when(userActivityRepository.existsByUserIdAndActivityType_IdAndTargetId(userId, type.getId(), targetId))
-            .thenReturn(true);
+        when(userActivityRepository.saveAndFlush(any(UserActivity.class)))
+            .thenThrow(new DataIntegrityViolationException("duplicate"));
 
         // when
         userActivityService.recordActivity(userId, code, targetId);
 
         // then
-        verify(userActivityRepository, never()).save(any());
-        verify(userPointsRepository, never()).save(any());
+        verify(userActivityRepository).saveAndFlush(any(UserActivity.class));
+        verify(userPointsRepository, never()).upsertAndAddPoints(anyLong(), anyInt());
         verify(badgeService, never()).checkAndAwardBadges(any(), any());
     }
 
@@ -109,18 +110,18 @@ class UserActivityServiceTest {
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(activityTypeRepository.findByCode(code)).thenReturn(Optional.of(type));
-        when(userActivityRepository.existsByUserIdAndActivityType_IdAndTargetId(userId, type.getId(), targetId))
-            .thenReturn(false);
-        when(userPointsRepository.findById(userId)).thenReturn(Optional.empty(), Optional.empty());
-        when(userRepository.findWithPessimisticLockById(userId)).thenReturn(Optional.of(user));
-        when(userPointsRepository.save(any(UserPoints.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(userActivityRepository.saveAndFlush(any(UserActivity.class)))
+            .thenAnswer(invocation -> invocation.getArgument(0));
+        when(userPointsRepository.upsertAndAddPoints(userId, type.getDefaultPoint())).thenReturn(1);
+        when(userPointsRepository.findByUserId(userId))
+            .thenReturn(Optional.of(UserPoints.of(user)));
 
         // when
         userActivityService.recordActivity(userId, code, targetId);
 
         // then
-        verify(userPointsRepository, times(2)).save(any(UserPoints.class));
-        verify(userActivityRepository).save(any(UserActivity.class));
+        verify(userActivityRepository).saveAndFlush(any(UserActivity.class));
+        verify(userPointsRepository).upsertAndAddPoints(userId, type.getDefaultPoint());
         verify(badgeService).checkAndAwardBadges(eq(user), any(UserPoints.class));
     }
 
@@ -134,14 +135,14 @@ class UserActivityServiceTest {
         User user = createUser(userId);
         ActivityType type = createActivityType(1L, code, 5);
         UserActivity activity = new UserActivity(user, type, targetId);
-        UserPoints points = new UserPoints(user);
+        UserPoints points = UserPoints.of(user);
         points.addPoints(20);
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(activityTypeRepository.findByCode(code)).thenReturn(Optional.of(type));
         when(userActivityRepository.findByUserIdAndActivityType_IdAndTargetId(userId, type.getId(), targetId))
             .thenReturn(Optional.of(activity));
-        when(userPointsRepository.findById(userId)).thenReturn(Optional.of(points));
+        when(userPointsRepository.findByUserId(userId)).thenReturn(Optional.of(points));
 
         // when
         userActivityService.revokeActivity(userId, code, targetId);

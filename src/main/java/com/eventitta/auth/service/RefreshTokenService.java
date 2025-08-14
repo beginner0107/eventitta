@@ -26,7 +26,7 @@ public class RefreshTokenService {
         if (rawRt == null) throw REFRESH_TOKEN_MISSING.defaultException();
 
         Long userId = tokenProvider.getUserIdFromExpiredToken(expiredAt);
-        
+
         RefreshToken entity = rtRepo.findAllByUserId(userId)
             .stream()
             .filter(token -> rtEncoder.matches(rawRt, token.getTokenHash()))

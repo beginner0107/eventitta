@@ -51,7 +51,7 @@ class BadgeServiceTest {
             .nickname("testUser")
             .build();
 
-        UserPoints userPoints = new UserPoints(user);
+        UserPoints userPoints = UserPoints.of(user);
 
         ActivityType activityType = ActivityType.builder()
             .id(1L)
@@ -93,7 +93,7 @@ class BadgeServiceTest {
     void givenAlreadyAwardedBadge_whenCheckAndAward_thenNoDuplicateIssue() {
         // given
         User user = User.builder().id(1L).email("test@test.com").nickname("testUser").build();
-        UserPoints userPoints = new UserPoints(user);
+        UserPoints userPoints = UserPoints.of(user);
 
         ActivityType activityType = ActivityType.builder()
             .id(1L)
@@ -135,7 +135,7 @@ class BadgeServiceTest {
     void givenDisabledRule_whenCheckAndAward_thenRuleIgnored() {
         // given
         User user = User.builder().id(1L).email("test@test.com").nickname("testUser").build();
-        UserPoints userPoints = new UserPoints(user);
+        UserPoints userPoints = UserPoints.of(user);
 
         ActivityType activityType = ActivityType.builder()
             .id(1L)
@@ -173,7 +173,7 @@ class BadgeServiceTest {
     void givenThresholdNotMet_whenCheckAndAward_thenNoBadgeIssued() {
         // given
         User user = User.builder().id(1L).email("test@test.com").nickname("testUser").build();
-        UserPoints userPoints = new UserPoints(user);
+        UserPoints userPoints = UserPoints.of(user);
 
         ActivityType activityType = ActivityType.builder()
             .id(1L)
@@ -214,7 +214,7 @@ class BadgeServiceTest {
     void givenMultipleRules_whenCheckAndAward_thenOnlyQualifiedBadgesIssued() {
         // given
         User user = User.builder().id(1L).email("test@test.com").nickname("testUser").build();
-        UserPoints userPoints = new UserPoints(user);
+        UserPoints userPoints = UserPoints.of(user);
 
         ActivityType postActivityType = ActivityType.builder()
             .id(1L).code("CREATE_POST").name("게시글 작성").defaultPoint(10).build();

@@ -2,9 +2,7 @@ package com.eventitta.gamification.domain;
 
 import com.eventitta.user.domain.User;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -18,6 +16,8 @@ import java.time.LocalDateTime;
     name = "user_activities",
     uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "activity_type_id", "target_id"})
 )
+@AllArgsConstructor
+@Builder
 public class UserActivity {
 
     @Id

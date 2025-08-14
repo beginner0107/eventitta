@@ -83,7 +83,7 @@ public class UserActivityService {
 
     @Transactional
     public void revokeActivity(Long userId, String activityCode, Long targetId) {
-        User user = userRepository.findById(userId)
+        userRepository.findById(userId)
             .orElseThrow(NOT_FOUND_USER_ID::defaultException);
 
         ActivityType activityType = activityTypeRepository.findByCode(activityCode)

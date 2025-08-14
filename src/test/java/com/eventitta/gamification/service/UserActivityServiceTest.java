@@ -17,14 +17,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import com.eventitta.gamification.exception.UserActivityException;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.support.SimpleTransactionStatus;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -41,18 +40,11 @@ class UserActivityServiceTest {
     @Mock
     private BadgeService badgeService;
     @Mock
-    private PlatformTransactionManager transactionManager;
-    @Mock
     private UserPointsRepository userPointsRepository;
 
     @InjectMocks
     private UserActivityService userActivityService;
 
-    @BeforeEach
-    void setUp() {
-        lenient().when(transactionManager.getTransaction(any(TransactionDefinition.class)))
-            .thenReturn(new SimpleTransactionStatus());
-    }
 
     private User createTestUser() {
         return User.builder()
@@ -75,8 +67,8 @@ class UserActivityServiceTest {
     }
 
     @Test
-    @DisplayName("동일한 활동이 이미 존재하면 새로 저장하지 않는다")
-    void givenExistingActivity_whenRecordActivity_thenSkip() {
+    @DisplayName("동일한 활동이 이미 존재하면 UserActivityException이 발생한다")
+    void givenExistingActivity_whenRecordActivity_thenThrowException() {
         // given
         Long userId = 1L;
         String code = "CREATE_POST";
@@ -89,10 +81,10 @@ class UserActivityServiceTest {
         when(userActivityRepository.saveAndFlush(any(UserActivity.class)))
             .thenThrow(new DataIntegrityViolationException("duplicate"));
 
-        // when
-        userActivityService.recordActivity(userId, code, targetId);
+        // when & then
+        assertThatThrownBy(() -> userActivityService.recordActivity(userId, code, targetId))
+            .isInstanceOf(UserActivityException.class);
 
-        // then
         verify(userActivityRepository).saveAndFlush(any(UserActivity.class));
         verify(userPointsRepository, never()).upsertAndAddPoints(anyLong(), anyInt());
         verify(badgeService, never()).checkAndAwardBadges(any(), any());

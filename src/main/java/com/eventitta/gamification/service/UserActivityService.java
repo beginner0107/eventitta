@@ -14,17 +14,19 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Recover;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.List;
 
+import static com.eventitta.gamification.exception.UserActivityErrorCode.CONCURRENT_MODIFICATION_RETRY_EXHAUSTED;
 import static com.eventitta.gamification.exception.UserActivityErrorCode.DUPLICATED_USER_ACTIVITY;
-import static com.eventitta.gamification.exception.UserPointsErrorCode.NOT_FOUND_USER_POINTS;
+import static com.eventitta.gamification.exception.UserActivityErrorCode.INVALID_ACTIVITY_TYPE;
 import static com.eventitta.user.exception.UserErrorCode.NOT_FOUND_USER_ID;
+import static com.eventitta.gamification.exception.UserPointsErrorCode.NOT_FOUND_USER_POINTS;
 
 @Slf4j
 @Service
@@ -37,34 +39,24 @@ public class UserActivityService {
     private final BadgeService badgeService;
     private final UserPointsRepository userPointsRepository;
 
-    private final PlatformTransactionManager transactionManager;
 
-    private static final int MAX_RETRIES = 3;
-
+    @Retryable(
+        retryFor = {ObjectOptimisticLockingFailureException.class},
+        noRetryFor = {UserActivityException.class},
+        maxAttempts = 3,
+        backoff = @Backoff(
+            delay = 50,
+            multiplier = 2.0,
+            random = true
+        )
+    )
+    @Transactional
     public void recordActivity(Long userId, String activityCode, Long targetId) {
-        int attempt = 0;
-
-        TransactionTemplate template = new TransactionTemplate(transactionManager);
-        template.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
-
-        while (true) {
-            try {
-                template.executeWithoutResult(status -> performRecordActivity(userId, activityCode, targetId));
-                return;
-            } catch (UserActivityException ok) {
-                return;
-            } catch (ObjectOptimisticLockingFailureException e) {
-                if (++attempt >= MAX_RETRIES) throw e;
-            }
-        }
-    }
-
-    public void performRecordActivity(Long userId, String activityCode, Long targetId) {
         User user = userRepository.findById(userId)
             .orElseThrow(NOT_FOUND_USER_ID::defaultException);
 
         ActivityType type = activityTypeRepository.findByCode(activityCode)
-            .orElseThrow(() -> new IllegalArgumentException("Invalid activityCode: " + activityCode));
+            .orElseThrow(INVALID_ACTIVITY_TYPE::defaultException);
 
         try {
             userActivityRepository.saveAndFlush(new UserActivity(user, type, targetId));
@@ -81,13 +73,21 @@ public class UserActivityService {
         badgeService.checkAndAwardBadges(user, currentPoints);
     }
 
+    @Recover
+    public void recoverRecordActivity(ObjectOptimisticLockingFailureException ex, Long userId, String activityCode, Long targetId) {
+        log.error("모든 재시도 후 활동 기록에 실패했습니다. 사용자ID={}, 활동코드={}, 대상ID={}",
+            userId, activityCode, targetId, ex);
+
+        throw CONCURRENT_MODIFICATION_RETRY_EXHAUSTED.defaultException(ex);
+    }
+
     @Transactional
     public void revokeActivity(Long userId, String activityCode, Long targetId) {
         User user = userRepository.findById(userId)
             .orElseThrow(NOT_FOUND_USER_ID::defaultException);
 
         ActivityType activityType = activityTypeRepository.findByCode(activityCode)
-            .orElseThrow(() -> new IllegalArgumentException("Invalid activityCode: " + activityCode));
+            .orElseThrow(INVALID_ACTIVITY_TYPE::defaultException);
 
         userActivityRepository.findByUserIdAndActivityType_IdAndTargetId(userId, activityType.getId(), targetId)
             .ifPresent(activity -> {

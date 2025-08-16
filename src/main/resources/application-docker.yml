@@ -19,8 +19,6 @@ spring:
       schema-locations: classpath:schema.sql
       data-locations: classpath:data.sql
 
-server:
-  port: 8080
   devtools:
     restart:
       enabled: true
@@ -66,3 +64,5 @@ jwt:
   access-token-validity-ms: 3600000        # 1시간
   refresh-token-validity-ms: 86400000      # 24시간
 
+server:
+  port: 8080

@@ -1,28 +1,30 @@
+# yaml
 spring:
   config:
     activate:
       on-profile: test
 
   datasource:
-    url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;NON_KEYWORDS=VALUE,KEY,USER
     driver-class-name: org.h2.Driver
     username: sa
     password:
 
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect  # H2Dialect 사용
-    hibernate:
-      ddl-auto: create-drop
-    show-sql: false  # 테스트 시 SQL 로그 줄이기
     properties:
       hibernate:
-        format_sql: true
-        # H2에서는 외래키 처리를 다르게 설정
         dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+        globally_quoted_identifiers: false
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    defer-datasource-initialization: true
 
+  # H2에서는 스키마 초기화 비활성화 (JPA가 테이블 자동 생성)
   sql:
     init:
-      data-locations: # data.sql 실행 비활성화
+      mode: never
 
   h2:
     console:

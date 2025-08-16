@@ -3,10 +3,7 @@ package com.eventitta.gamification;
 import com.eventitta.gamification.constant.ActivityCodes;
 import com.eventitta.gamification.domain.ActivityType;
 import com.eventitta.gamification.domain.UserPoints;
-import com.eventitta.gamification.repository.ActivityTypeRepository;
-import com.eventitta.gamification.repository.UserActivityRepository;
-import com.eventitta.gamification.repository.UserBadgeRepository;
-import com.eventitta.gamification.repository.UserPointsRepository;
+import com.eventitta.gamification.repository.*;
 import com.eventitta.gamification.service.UserActivityService;
 import com.eventitta.user.domain.Provider;
 import com.eventitta.user.domain.Role;
@@ -55,15 +52,18 @@ class UserActivityConcurrencyTest {
     @Autowired
     private UserBadgeRepository userBadgeRepository;
 
+    @Autowired
+    private BadgeRuleRepository badgeRuleRepository;
+
     private Long testUserId;
     private ActivityType activityType;
 
     @BeforeEach
     void setUp() {
-        // 데이터 초기화
         userBadgeRepository.deleteAll();
         userActivityRepository.deleteAll();
         userPointsRepository.deleteAll();
+        badgeRuleRepository.deleteAll();
         activityTypeRepository.deleteAll();
         userRepository.deleteAll();
 

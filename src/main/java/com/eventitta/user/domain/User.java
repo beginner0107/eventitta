@@ -52,7 +52,7 @@ public class User extends BaseEntity {
     private String selfIntro;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(columnDefinition = "json")
+    @Column(name = "interests")
     private List<String> interests;
 
     @Size(max = 255)

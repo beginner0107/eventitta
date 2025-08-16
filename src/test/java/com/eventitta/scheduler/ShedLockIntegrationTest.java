@@ -15,7 +15,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.jdbc.Sql;
 
 import java.sql.Timestamp;
 import java.time.Duration;
@@ -33,7 +35,9 @@ import static org.mockito.Mockito.*;
  * - 데이터베이스에 실행 기록이 올바르게 저장되는지 확인
  * - 다른 종류의 작업은 서로 방해하지 않는지 확인
  */
+@ActiveProfiles("test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@Sql(scripts = "classpath:schema-h2.sql")
 @DisplayName("동시 실행 방지 기능 테스트 - 같은 작업이 여러 번 동시에 실행되지 않는지 확인")
 class ShedLockIntegrationTest extends IntegrationTestSupport {
 

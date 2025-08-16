@@ -362,3 +362,4 @@ HELP.md
 # IntelliJ
 *.iml
 .idea/
+/db/

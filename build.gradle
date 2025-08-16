@@ -1,114 +1,84 @@
 plugins {
-    id 'java'
-    id 'org.springframework.boot' version '3.4.5'
-    id 'io.spring.dependency-management' version '1.1.7'
-    id 'org.ec4j.editorconfig' version '0.1.0'
+  id 'java'
+  id 'org.springframework.boot' version '3.4.5'
+  id 'io.spring.dependency-management' version '1.1.7'
+  id 'org.ec4j.editorconfig' version '0.1.0'
 }
 
 group = 'com'
 version = '0.0.1-SNAPSHOT'
 
 java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
-    }
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(17)
+  }
 }
 
 def querydslVersion = '5.0.0'
-def querydslDir = 'src/main/generated'
 
 configurations {
-    compileOnly {
-        extendsFrom annotationProcessor
-    }
+  compileOnly {
+    extendsFrom annotationProcessor
+  }
 }
 
 repositories {
-    mavenCentral()
+  mavenCentral()
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    compileOnly 'org.projectlombok:lombok'
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'
-    runtimeOnly 'com.mysql:mysql-connector-j'
-    annotationProcessor 'org.projectlombok:lombok'
+  implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+  implementation 'org.springframework.boot:spring-boot-starter-web'
+  compileOnly 'org.projectlombok:lombok'
+  developmentOnly 'org.springframework.boot:spring-boot-devtools'
+  runtimeOnly 'com.mysql:mysql-connector-j'
 
-    // Swagger
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
+  // Annotation Processors
+  annotationProcessor 'org.projectlombok:lombok'
+  annotationProcessor "com.querydsl:querydsl-apt:${querydslVersion}:jakarta"
+  annotationProcessor 'jakarta.persistence:jakarta.persistence-api:3.1.0'
+  annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
 
-    // Spring Security
-    implementation 'org.springframework.boot:spring-boot-starter-security'
+  // Libraries
+  implementation "com.querydsl:querydsl-jpa:${querydslVersion}:jakarta"
+  implementation 'org.mapstruct:mapstruct:1.5.5.Final'
+  implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
+  implementation 'org.springframework.boot:spring-boot-starter-security'
+  implementation 'org.springframework.boot:spring-boot-starter-validation'
+  implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+  runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+  runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+  implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+  implementation 'net.javacrumbs.shedlock:shedlock-spring:6.6.0'
+  implementation 'net.javacrumbs.shedlock:shedlock-provider-jdbc-template:6.6.0'
+  implementation 'org.springframework.retry:spring-retry'
+  implementation 'org.springframework:spring-aspects'
+  runtimeOnly 'p6spy:p6spy:3.9.1'
 
-    // validation
-    implementation 'org.springframework.boot:spring-boot-starter-validation'
-
-    // JWT 처리용 라이브러리 (jjwt)
-    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
-    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
-    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
-
-    // QueryDSL
-    implementation "com.querydsl:querydsl-jpa:${querydslVersion}:jakarta"
-    annotationProcessor "com.querydsl:querydsl-apt:${querydslVersion}:jakarta"
-    annotationProcessor 'jakarta.persistence:jakarta.persistence-api:3.1.0'
-
-    // Jackson 날짜 매핑용
-    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
-
-    implementation 'org.mapstruct:mapstruct:1.5.5.Final'
-    annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
-
-    // ShedLock
-    implementation 'net.javacrumbs.shedlock:shedlock-spring:6.6.0'
-    implementation 'net.javacrumbs.shedlock:shedlock-provider-jdbc-template:6.6.0'
-
-    // Spring Retry
-    implementation 'org.springframework.retry:spring-retry'
-    implementation 'org.springframework:spring-aspects'
-
-    runtimeOnly 'p6spy:p6spy:3.9.1'
-
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-
-    // H2 임베디드 DB (테스트용)
-    testImplementation 'com.h2database:h2'
-
-    // Spring Security Test
-    testImplementation 'org.springframework.security:spring-security-test'
+  testImplementation 'org.springframework.boot:spring-boot-starter-test'
+  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+  testImplementation 'com.h2database:h2'
+  testImplementation 'org.springframework.security:spring-security-test'
 }
 
 tasks.withType(JavaCompile).configureEach {
-    // Q 클래스 생성 위치 지정
-    options.annotationProcessorGeneratedSourcesDirectory = file(querydslDir)
-    options.compilerArgs += ['-parameters']
-}
-
-// generated 폴더를 컴파일 소스에 포함
-sourceSets {
-    main {
-        java {
-            srcDirs += querydslDir
-        }
-    }
-}
-
-// clean 시 생성 디렉터리 삭제
-clean.doLast {
-    delete querydslDir
-}
-
-tasks.named('test') {
-    useJUnitPlatform()
+  options.generatedSourceOutputDirectory = file("$buildDir/generated/sources/annotationProcessor/java/main")
+  options.compilerArgs += ['-parameters']
+  options.incremental = false
 }
 
 editorconfig {
-    includes = ['src/**', 'build.gradle']
-    excludes = ['**/generated/**', '**/*.bin']
+  includes = ['src/**', 'build.gradle']
+  excludes = [
+    '**/generated/**',
+    "${buildDir}/**"
+  ]
 }
 
-check {
-    dependsOn editorconfigCheck
+tasks.named('check') {
+  dependsOn 'editorconfigCheck'
+}
+
+tasks.named('test') {
+  useJUnitPlatform()
 }

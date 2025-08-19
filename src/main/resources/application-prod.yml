@@ -26,3 +26,7 @@ async:
   core-pool-size: 4
   max-pool-size: 20
   queue-capacity: 200
+
+notification:
+  slack:
+    enabled: true

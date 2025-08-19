@@ -16,7 +16,7 @@ spring:
   sql:
     init:
       mode: never
-  
+
   devtools:
     restart:
       enabled: true
@@ -52,6 +52,7 @@ logging:
     root: INFO
     org.hibernate.SQL: WARN
     p6spy: DEBUG
+    com.eventitta.common.config.com.eventitta.common.config.security.CustomAuthenticationEntryPoint: DEBUG
 async:
   core-pool-size: 4
   max-pool-size: 20
@@ -61,6 +62,10 @@ jwt:
   secret: ${SECRET_KEY}
   access-token-validity-ms: 3600000        # 1시간
   refresh-token-validity-ms: 86400000      # 24시간
+
+notification:
+  slack:
+    enabled: true
 
 server:
   port: 8080

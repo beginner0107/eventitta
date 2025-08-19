@@ -8,8 +8,8 @@ import org.springframework.http.ResponseCookie;
 
 import java.time.Duration;
 
-import static com.eventitta.auth.jwt.constants.JwtConstants.ACCESS_TOKEN;
-import static com.eventitta.auth.jwt.constants.JwtConstants.REFRESH_TOKEN;
+import static com.eventitta.auth.constants.AuthConstants.ACCESS_TOKEN;
+import static com.eventitta.auth.constants.AuthConstants.REFRESH_TOKEN;
 
 public final class CookieUtil {
 

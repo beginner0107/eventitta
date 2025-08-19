@@ -9,8 +9,8 @@ import io.swagger.v3.oas.models.responses.ApiResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import static com.eventitta.auth.jwt.constants.JwtConstants.ACCESS_TOKEN;
-import static com.eventitta.auth.jwt.constants.JwtConstants.REFRESH_TOKEN;
+import static com.eventitta.auth.constants.AuthConstants.ACCESS_TOKEN;
+import static com.eventitta.auth.constants.AuthConstants.REFRESH_TOKEN;
 
 @Configuration
 public class OpenApiConfig {

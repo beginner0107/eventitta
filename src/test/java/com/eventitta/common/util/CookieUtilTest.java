@@ -13,8 +13,8 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import java.time.Duration;
 import java.util.List;
 
-import static com.eventitta.auth.jwt.constants.JwtConstants.ACCESS_TOKEN;
-import static com.eventitta.auth.jwt.constants.JwtConstants.REFRESH_TOKEN;
+import static com.eventitta.auth.constants.AuthConstants.ACCESS_TOKEN;
+import static com.eventitta.auth.constants.AuthConstants.REFRESH_TOKEN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 

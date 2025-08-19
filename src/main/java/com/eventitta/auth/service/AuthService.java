@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import static com.eventitta.auth.constants.AuthConstants.ACCESS_TOKEN;
+import static com.eventitta.auth.constants.AuthConstants.REFRESH_TOKEN;
 import static com.eventitta.auth.exception.AuthErrorCode.INVALID_CREDENTIALS;
 
 @Slf4j
@@ -55,7 +57,7 @@ public class AuthService {
                 log.debug("로그아웃: 토큰 검증 오류 무시", e);
             }
         }
-        CookieUtil.deleteCookie(response, "access_token");
-        CookieUtil.deleteCookie(response, "refresh_token");
+        CookieUtil.deleteCookie(response, ACCESS_TOKEN);
+        CookieUtil.deleteCookie(response, REFRESH_TOKEN);
     }
 }

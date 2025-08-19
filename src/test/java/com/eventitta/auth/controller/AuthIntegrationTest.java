@@ -20,9 +20,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
+import static com.eventitta.auth.constants.AuthConstants.ACCESS_TOKEN;
+import static com.eventitta.auth.constants.AuthConstants.REFRESH_TOKEN;
 import static com.eventitta.auth.exception.AuthErrorCode.*;
-import static com.eventitta.auth.jwt.constants.JwtConstants.ACCESS_TOKEN;
-import static com.eventitta.auth.jwt.constants.JwtConstants.REFRESH_TOKEN;
 import static com.eventitta.common.constants.ValidationMessage.*;
 import static com.eventitta.common.exception.CommonErrorCode.INVALID_INPUT;
 import static org.assertj.core.api.Assertions.assertThat;

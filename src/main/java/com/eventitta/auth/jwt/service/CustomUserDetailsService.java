@@ -1,4 +1,4 @@
-package com.eventitta.auth.service;
+package com.eventitta.auth.jwt.service;
 
 import com.eventitta.auth.domain.UserPrincipal;
 import com.eventitta.user.domain.User;

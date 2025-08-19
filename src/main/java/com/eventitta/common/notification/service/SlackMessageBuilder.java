@@ -20,7 +20,7 @@ public class SlackMessageBuilder {
 
     private static final int MAX_STACK_TRACE_LINES = 3;
     private static final String ALERT_TITLE_FORMAT = "%s - %s [%s]";
-    private static final String LINE_SEPARATOR = "\\n";
+    private static final String LINE_SEPARATOR = System.lineSeparator();
 
     public SlackMessage buildMessage(AlertLevel level, String errorCode, String message,
                                      String requestUri, String userInfo, Throwable exception,

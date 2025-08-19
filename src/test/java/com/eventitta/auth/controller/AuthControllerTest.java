@@ -15,6 +15,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import static com.eventitta.auth.exception.AuthErrorCode.*;
+import static com.eventitta.auth.jwt.constants.JwtConstants.ACCESS_TOKEN;
+import static com.eventitta.auth.jwt.constants.JwtConstants.REFRESH_TOKEN;
 import static com.eventitta.common.constants.ValidationMessage.*;
 import static com.eventitta.common.exception.CommonErrorCode.INVALID_INPUT;
 import static org.mockito.ArgumentMatchers.*;
@@ -230,8 +232,8 @@ class AuthControllerTest extends ControllerTestSupport {
     void givenValidCookies_whenRefresh_thenReturnsOk() throws Exception {
         // when & then
         mockMvc.perform(post("/api/v1/auth/refresh")
-                .cookie(new Cookie("access_token", "validAt"),
-                    new Cookie("refresh_token", "validRt")))
+                .cookie(new Cookie(ACCESS_TOKEN, "validAt"),
+                    new Cookie(REFRESH_TOKEN, "validRt")))
             .andExpect(status().isOk());
 
         // then
@@ -249,7 +251,7 @@ class AuthControllerTest extends ControllerTestSupport {
             .when(authService).refresh(any(), any(), any());
 
         mockMvc.perform(post("/api/v1/auth/refresh")
-                .cookie(new Cookie("access_token", "validAt")))
+                .cookie(new Cookie(ACCESS_TOKEN, "validAt")))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value(REFRESH_TOKEN_MISSING.toString()))
             .andExpect(jsonPath("$.message").value(AuthErrorCode.REFRESH_TOKEN_MISSING.defaultMessage()));
@@ -264,8 +266,8 @@ class AuthControllerTest extends ControllerTestSupport {
 
         // when
         var mvcResult = mockMvc.perform(post("/api/v1/auth/refresh")
-            .cookie(new Cookie("access_token", "validAt"),
-                new Cookie("refresh_token", "invalidRt")));
+            .cookie(new Cookie(ACCESS_TOKEN, "validAt"),
+                new Cookie(REFRESH_TOKEN, "invalidRt")));
 
         // then
         mvcResult
@@ -283,7 +285,7 @@ class AuthControllerTest extends ControllerTestSupport {
 
         // act & assert
         mockMvc.perform(post("/api/v1/auth/logout")
-                .cookie(new Cookie("access_token", "validAccessToken")))
+                .cookie(new Cookie(ACCESS_TOKEN, "validAccessToken")))
             .andExpect(status().isNoContent());
 
         // verify: 서비스가 정확히 호출됐는지 확인
@@ -309,7 +311,7 @@ class AuthControllerTest extends ControllerTestSupport {
         doNothing().when(authService).logout(eq("badToken"), any(HttpServletResponse.class));
 
         mockMvc.perform(post("/api/v1/auth/logout")
-                .cookie(new Cookie("access_token", "badToken")))
+                .cookie(new Cookie(ACCESS_TOKEN, "badToken")))
             .andExpect(status().isNoContent());
 
         verify(authService).logout(eq("badToken"), any(HttpServletResponse.class));

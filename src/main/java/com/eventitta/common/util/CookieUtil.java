@@ -8,26 +8,32 @@ import org.springframework.http.ResponseCookie;
 
 import java.time.Duration;
 
+import static com.eventitta.auth.jwt.constants.JwtConstants.ACCESS_TOKEN;
+import static com.eventitta.auth.jwt.constants.JwtConstants.REFRESH_TOKEN;
+
 public final class CookieUtil {
+
+    private final static String SAME_SITE_STRICT = "Strict";
+
     private CookieUtil() {
     }
 
     public static ResponseCookie createAccessTokenCookie(
         String accessToken, long validityMs) {
-        return ResponseCookie.from("access_token", accessToken)
+        return ResponseCookie.from(ACCESS_TOKEN, accessToken)
             .httpOnly(true)
             .path("/")
-            .sameSite("Strict")
+            .sameSite(SAME_SITE_STRICT)
             .maxAge(Duration.ofMillis(validityMs))
             .build();
     }
 
     public static ResponseCookie createRefreshTokenCookie(
         String refreshToken, long validityMs) {
-        return ResponseCookie.from("refresh_token", refreshToken)
+        return ResponseCookie.from(REFRESH_TOKEN, refreshToken)
             .httpOnly(true)
             .path("/")
-            .sameSite("Strict")
+            .sameSite(SAME_SITE_STRICT)
             .maxAge(Duration.ofMillis(validityMs))
             .build();
     }

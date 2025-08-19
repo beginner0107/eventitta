@@ -21,6 +21,8 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
 import static com.eventitta.auth.exception.AuthErrorCode.*;
+import static com.eventitta.auth.jwt.constants.JwtConstants.ACCESS_TOKEN;
+import static com.eventitta.auth.jwt.constants.JwtConstants.REFRESH_TOKEN;
 import static com.eventitta.common.constants.ValidationMessage.*;
 import static com.eventitta.common.exception.CommonErrorCode.INVALID_INPUT;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -118,8 +120,8 @@ public class AuthIntegrationTest extends IntegrationTestSupport {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
             .andExpect(status().isOk())
-            .andExpect(cookie().exists("access_token"))
-            .andExpect(cookie().exists("refresh_token"));
+            .andExpect(cookie().exists(ACCESS_TOKEN))
+            .andExpect(cookie().exists(REFRESH_TOKEN));
     }
 
     @Test
@@ -186,20 +188,20 @@ public class AuthIntegrationTest extends IntegrationTestSupport {
                 .content(objectMapper.writeValueAsString(
                     new SignInRequest("refresh@it.com", "P@ssw0rd!"))))
             .andExpect(status().isOk())
-            .andExpect(cookie().exists("access_token"))
-            .andExpect(cookie().exists("refresh_token"))
+            .andExpect(cookie().exists(ACCESS_TOKEN))
+            .andExpect(cookie().exists(REFRESH_TOKEN))
             .andReturn();
 
-        Cookie oldAt = loginResult.getResponse().getCookie("access_token");
-        Cookie oldRt = loginResult.getResponse().getCookie("refresh_token");
+        Cookie oldAt = loginResult.getResponse().getCookie(ACCESS_TOKEN);
+        Cookie oldRt = loginResult.getResponse().getCookie(REFRESH_TOKEN);
 
         // when & then
         mockMvc.perform(post("/api/v1/auth/refresh")
                 .cookie(oldAt, oldRt))
             .andExpect(status().isOk())
-            .andExpect(cookie().exists("access_token"))
-            .andExpect(cookie().exists("refresh_token"))
-            .andExpect(cookie().value("refresh_token", not(oldRt.getValue())));
+            .andExpect(cookie().exists(ACCESS_TOKEN))
+            .andExpect(cookie().exists(REFRESH_TOKEN))
+            .andExpect(cookie().value(REFRESH_TOKEN, not(oldRt.getValue())));
     }
 
     @Test
@@ -207,7 +209,7 @@ public class AuthIntegrationTest extends IntegrationTestSupport {
     void givenMissingRefreshCookie_whenRefresh_thenReturnsBadRequest() throws Exception {
         // when & then
         mockMvc.perform(post("/api/v1/auth/refresh")
-                .cookie(new Cookie("access_token", "dummyAt")))
+                .cookie(new Cookie(ACCESS_TOKEN, "dummyAt")))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value(REFRESH_TOKEN_MISSING.toString()))
             .andExpect(jsonPath("$.message").value(REFRESH_TOKEN_MISSING.defaultMessage()));
@@ -232,11 +234,11 @@ public class AuthIntegrationTest extends IntegrationTestSupport {
             .andExpect(status().isOk())
             .andReturn();
 
-        Cookie at = loginResult.getResponse().getCookie("access_token");
+        Cookie at = loginResult.getResponse().getCookie(ACCESS_TOKEN);
 
         // when & then
         mockMvc.perform(post("/api/v1/auth/refresh")
-                .cookie(at, new Cookie("refresh_token", "invalidRt")))
+                .cookie(at, new Cookie(REFRESH_TOKEN, "invalidRt")))
             .andExpect(status().isUnauthorized())
             .andExpect(jsonPath("$.error").value(REFRESH_TOKEN_INVALID.toString()))
             .andExpect(jsonPath("$.message").value(REFRESH_TOKEN_INVALID.defaultMessage()));
@@ -258,19 +260,19 @@ public class AuthIntegrationTest extends IntegrationTestSupport {
                 .content(objectMapper.writeValueAsString(
                     new SignInRequest("logout@it.com", "P@ssw0rd!"))))
             .andExpect(status().isOk())
-            .andExpect(cookie().exists("access_token"))
-            .andExpect(cookie().exists("refresh_token"))
+            .andExpect(cookie().exists(ACCESS_TOKEN))
+            .andExpect(cookie().exists(REFRESH_TOKEN))
             .andReturn();
 
-        String at = loginResult.getResponse().getCookie("access_token").getValue();
+        String at = loginResult.getResponse().getCookie(ACCESS_TOKEN).getValue();
 
         assertThat(refreshTokenRepository.findAll()).hasSize(1);
 
         mockMvc.perform(post("/api/v1/auth/logout")
-                .cookie(new Cookie("access_token", at)))
+                .cookie(new Cookie(ACCESS_TOKEN, at)))
             .andExpect(status().isNoContent())
-            .andExpect(cookie().maxAge("access_token", 0))
-            .andExpect(cookie().maxAge("refresh_token", 0));
+            .andExpect(cookie().maxAge(ACCESS_TOKEN, 0))
+            .andExpect(cookie().maxAge(REFRESH_TOKEN, 0));
 
         assertThat(refreshTokenRepository.findAll()).isEmpty();
     }
@@ -285,8 +287,8 @@ public class AuthIntegrationTest extends IntegrationTestSupport {
 
         MockHttpServletResponse resp = result.getResponse();
 
-        Cookie expiredAccess = resp.getCookie("access_token");
-        Cookie expiredRefresh = resp.getCookie("refresh_token");
+        Cookie expiredAccess = resp.getCookie(ACCESS_TOKEN);
+        Cookie expiredRefresh = resp.getCookie(REFRESH_TOKEN);
 
         // then
         assertThat(expiredAccess).isNotNull();

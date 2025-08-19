@@ -9,6 +9,9 @@ import io.swagger.v3.oas.models.responses.ApiResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import static com.eventitta.auth.jwt.constants.JwtConstants.ACCESS_TOKEN;
+import static com.eventitta.auth.jwt.constants.JwtConstants.REFRESH_TOKEN;
+
 @Configuration
 public class OpenApiConfig {
 
@@ -22,14 +25,14 @@ public class OpenApiConfig {
             )
             .components(new Components()
                 .addResponses("TokensSetCookies", new ApiResponse()
-                    .description("로그인/토큰 재발급 성공 시 `access_token`, `refresh_token` 쿠키 설정")
+                    .description("로그인/토큰 재발급 성공 시 `" + ACCESS_TOKEN + "`, `" + REFRESH_TOKEN + "` 쿠키 설정")
                     .addHeaderObject("Set-Cookie", new Header()
-                        .description("access_token=...; HttpOnly; Path=/; SameSite=Strict")
-                        .schema(new StringSchema()._default("access_token=eyJ...; HttpOnly; Path=/; SameSite=Strict"))
+                        .description(ACCESS_TOKEN + "=...; HttpOnly; Path=/; SameSite=Strict")
+                        .schema(new StringSchema()._default(ACCESS_TOKEN + "=eyJ...; HttpOnly; Path=/; SameSite=Strict"))
                     )
                     .addHeaderObject("Set-Cookie", new Header()
-                        .description("refresh_token=...; HttpOnly; Path=/; SameSite=Strict")
-                        .schema(new StringSchema()._default("refresh_token=abc...; HttpOnly; Path=/; SameSite=Strict"))
+                        .description(REFRESH_TOKEN + "=...; HttpOnly; Path=/; SameSite=Strict")
+                        .schema(new StringSchema()._default(REFRESH_TOKEN + "=abc...; HttpOnly; Path=/; SameSite=Strict"))
                     )
                 )
             );

@@ -13,6 +13,8 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import java.time.Duration;
 import java.util.List;
 
+import static com.eventitta.auth.jwt.constants.JwtConstants.ACCESS_TOKEN;
+import static com.eventitta.auth.jwt.constants.JwtConstants.REFRESH_TOKEN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 
@@ -31,7 +33,7 @@ class CookieUtilTest {
         ResponseCookie cookie = CookieUtil.createAccessTokenCookie(tokenValue, validityMs);
 
         // then
-        assertThat(cookie.getName()).isEqualTo("access_token");
+        assertThat(cookie.getName()).isEqualTo(ACCESS_TOKEN);
         assertThat(cookie.getValue()).isEqualTo(tokenValue);
         assertThat(cookie.isHttpOnly()).isTrue();
         assertThat(cookie.getPath()).isEqualTo("/");
@@ -56,7 +58,7 @@ class CookieUtilTest {
         // then
         List<String> setCookieHeaders = response.getHeaders(HttpHeaders.SET_COOKIE);
         assertThat(setCookieHeaders).hasSize(2);
-        assertThat(setCookieHeaders.get(0)).startsWith("access_token=at-xyz;");
-        assertThat(setCookieHeaders.get(1)).startsWith("refresh_token=rt-abc;");
+        assertThat(setCookieHeaders.get(0)).startsWith(ACCESS_TOKEN + "=at-xyz;");
+        assertThat(setCookieHeaders.get(1)).startsWith(REFRESH_TOKEN + "=rt-abc;");
     }
 }

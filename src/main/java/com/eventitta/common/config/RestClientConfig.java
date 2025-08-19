@@ -1,7 +1,7 @@
 package com.eventitta.common.config;
 
-import com.eventitta.common.external.api.NationalFestivalApi;
-import com.eventitta.common.external.api.SeoulFestivalApi;
+import com.eventitta.festivals.api.NationalFestivalApi;
+import com.eventitta.festivals.api.SeoulFestivalApi;
 import com.eventitta.common.interceptor.RestClientLoggingInterceptor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -46,5 +46,12 @@ public class RestClientConfig {
         RestClientAdapter adapter = RestClientAdapter.create(restClient);
         HttpServiceProxyFactory factory = HttpServiceProxyFactory.builderFor(adapter).build();
         return factory.createClient(SeoulFestivalApi.class);
+    }
+
+    @Bean
+    public RestClient slackRestClient() {
+        return RestClient.builder()
+            .requestInterceptor(new RestClientLoggingInterceptor())
+            .build();
     }
 }

@@ -1,6 +1,6 @@
 package com.eventitta.festivals.service.loader;
 
-import com.eventitta.common.external.api.SeoulFestivalApi;
+import com.eventitta.festivals.api.SeoulFestivalApi;
 import com.eventitta.festivals.config.SeoulFestivalConfig;
 import com.eventitta.festivals.domain.Festival;
 import com.eventitta.festivals.dto.SeoulFestivalResponse;

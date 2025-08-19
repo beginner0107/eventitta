@@ -1,7 +1,10 @@
 package com.eventitta.meeting.controller;
 
 import com.eventitta.WithMockCustomUser;
-import com.eventitta.common.config.SecurityConfig;
+import com.eventitta.auth.jwt.config.SecurityConfig;
+import com.eventitta.auth.jwt.service.UserInfoService;
+import com.eventitta.common.notification.resolver.AlertLevelResolver;
+import com.eventitta.common.notification.service.SlackNotificationService;
 import com.eventitta.meeting.domain.MeetingStatus;
 import com.eventitta.meeting.domain.ParticipantStatus;
 import com.eventitta.meeting.dto.request.MeetingCreateRequest;
@@ -9,8 +12,9 @@ import com.eventitta.meeting.dto.request.MeetingUpdateRequest;
 import com.eventitta.meeting.dto.response.ParticipantResponse;
 import com.eventitta.meeting.service.MeetingService;
 import com.eventitta.auth.jwt.JwtTokenProvider;
-import com.eventitta.auth.service.CustomUserDetailsService;
-import com.eventitta.common.config.CustomAuthenticationEntryPoint;
+import com.eventitta.auth.jwt.service.CustomUserDetailsService;
+import com.eventitta.auth.jwt.JwtAuthenticationEntryPoint;
+import com.eventitta.user.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,7 +27,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -50,7 +53,15 @@ class MeetingControllerTest {
     @MockitoBean
     CustomUserDetailsService customUserDetailsService;
     @MockitoBean
-    CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+    JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    @MockitoBean
+    protected SlackNotificationService slackNotificationService;
+    @MockitoBean
+    protected AlertLevelResolver alertLevelResolver;
+    @MockitoBean
+    protected UserRepository userRepository;
+    @MockitoBean
+    protected UserInfoService userInfoService;
 
     @Test
     @WithMockCustomUser

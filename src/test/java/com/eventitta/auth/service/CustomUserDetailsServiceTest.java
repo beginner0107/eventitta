@@ -2,6 +2,7 @@ package com.eventitta.auth.service;
 
 import com.eventitta.auth.domain.UserPrincipal;
 import com.eventitta.auth.exception.AuthException;
+import com.eventitta.auth.jwt.service.CustomUserDetailsService;
 import com.eventitta.user.domain.Provider;
 import com.eventitta.user.domain.Role;
 import com.eventitta.user.domain.User;

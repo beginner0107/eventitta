@@ -2,19 +2,24 @@ package com.eventitta;
 
 import com.eventitta.auth.controller.AuthController;
 import com.eventitta.auth.jwt.JwtTokenProvider;
+import com.eventitta.auth.jwt.service.CustomUserDetailsService;
+import com.eventitta.auth.jwt.service.UserInfoService;
 import com.eventitta.auth.service.*;
 import com.eventitta.comment.controller.CommentController;
 import com.eventitta.comment.service.CommentService;
-import com.eventitta.common.config.CustomAuthenticationEntryPoint;
-import com.eventitta.common.config.SecurityConfig;
-import com.eventitta.common.storage.FileStorageService;
+import com.eventitta.auth.jwt.JwtAuthenticationEntryPoint;
+import com.eventitta.auth.jwt.config.SecurityConfig;
+import com.eventitta.common.notification.resolver.AlertLevelResolver;
+import com.eventitta.common.notification.service.SlackNotificationService;
 import com.eventitta.dashboard.controller.DashboardController;
 import com.eventitta.dashboard.service.DashboardService;
 import com.eventitta.file.controller.FileUploadController;
+import com.eventitta.file.service.FileStorageService;
 import com.eventitta.gamification.service.UserActivityService;
 import com.eventitta.post.controller.PostController;
 import com.eventitta.post.service.PostService;
 import com.eventitta.user.controller.UserController;
+import com.eventitta.user.repository.UserRepository;
 import com.eventitta.user.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,7 +57,7 @@ public abstract class ControllerTestSupport {
     @MockitoBean
     protected RefreshTokenService refreshService;
     @MockitoBean
-    protected CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+    protected JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     @MockitoBean
     protected PostService postService;
     @MockitoBean
@@ -65,4 +70,13 @@ public abstract class ControllerTestSupport {
     protected UserActivityService userActivityService;
     @MockitoBean
     protected DashboardService dashboardService;
+    @MockitoBean
+    protected SlackNotificationService slackNotificationService;
+    @MockitoBean
+    protected AlertLevelResolver alertLevelResolver;
+    @MockitoBean
+    protected UserRepository userRepository;
+    @MockitoBean
+    protected UserInfoService userInfoService;
+
 }

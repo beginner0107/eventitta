@@ -1,6 +1,6 @@
 package com.eventitta.file.controller;
 
-import com.eventitta.common.storage.FileStorageService;
+import com.eventitta.file.service.FileStorageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

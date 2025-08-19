@@ -16,7 +16,7 @@ spring:
   sql:
     init:
       mode: never
-  
+
   devtools:
     restart:
       enabled: true
@@ -61,6 +61,10 @@ jwt:
   secret: ${SECRET_KEY}
   access-token-validity-ms: 3600000        # 1시간
   refresh-token-validity-ms: 86400000      # 24시간
+
+notification:
+  slack:
+    enabled: true
 
 server:
   port: 8080

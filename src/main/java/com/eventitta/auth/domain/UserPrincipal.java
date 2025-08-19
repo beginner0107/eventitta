@@ -23,6 +23,13 @@ public class UserPrincipal implements UserDetails {
         this.authorities = List.of(new SimpleGrantedAuthority(user.getRole().name()));
     }
 
+    public UserPrincipal(Long id, String email, String role) {
+        this.id = id;
+        this.email = email;
+        this.password = null;
+        this.authorities = List.of(new SimpleGrantedAuthority(role));
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return authorities;

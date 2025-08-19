@@ -1,6 +1,7 @@
 package com.eventitta.auth.jwt;
 
 import com.eventitta.auth.exception.AuthErrorCode;
+import com.eventitta.auth.jwt.config.JwtProperties;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.Getter;
@@ -13,6 +14,8 @@ import java.time.Instant;
 import java.util.Base64;
 import java.util.Date;
 
+import static com.eventitta.auth.constants.AuthConstants.CLAIM_EMAIL;
+import static com.eventitta.auth.constants.AuthConstants.CLAIM_ROLE;
 import static com.eventitta.auth.exception.AuthErrorCode.ACCESS_TOKEN_EXPIRED;
 import static com.eventitta.auth.exception.AuthErrorCode.ACCESS_TOKEN_INVALID;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -40,10 +43,12 @@ public class JwtTokenProvider {
             .build();
     }
 
-    public String createAccessToken(Long userId) {
+    public String createAccessToken(Long userId, String email, String role) {
         Instant now = clock.instant();
         return Jwts.builder()
             .setSubject(userId.toString())
+            .claim(CLAIM_EMAIL, email)
+            .claim(CLAIM_ROLE, role)
             .setIssuedAt(Date.from(now))
             .setExpiration(Date.from(now.plusMillis(accessTokenValidityMs)))
             .signWith(signingKey, SignatureAlgorithm.HS256)
@@ -93,6 +98,24 @@ public class JwtTokenProvider {
             throw ACCESS_TOKEN_EXPIRED.defaultException(e);
         } catch (JwtException | IllegalArgumentException e) {
             throw ACCESS_TOKEN_INVALID.defaultException(e);
+        }
+    }
+
+    public String getEmail(String token) {
+        try {
+            Claims claims = parser().parseClaimsJws(token).getBody();
+            return claims.get(CLAIM_EMAIL, String.class);
+        } catch (MalformedJwtException | UnsupportedJwtException | IllegalArgumentException e) {
+            throw AuthErrorCode.ACCESS_TOKEN_INVALID.defaultException(e);
+        }
+    }
+
+    public String getRole(String token) {
+        try {
+            Claims claims = parser().parseClaimsJws(token).getBody();
+            return claims.get(CLAIM_ROLE, String.class);
+        } catch (MalformedJwtException | UnsupportedJwtException | IllegalArgumentException e) {
+            throw AuthErrorCode.ACCESS_TOKEN_INVALID.defaultException(e);
         }
     }
 }

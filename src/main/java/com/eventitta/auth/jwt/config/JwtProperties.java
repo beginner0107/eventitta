@@ -1,4 +1,4 @@
-package com.eventitta.auth.jwt;
+package com.eventitta.auth.jwt.config;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -1,10 +1,12 @@
-package com.eventitta.auth.filter;
+package com.eventitta.auth.jwt.filter;
 
+import com.eventitta.auth.domain.UserPrincipal;
 import com.eventitta.auth.exception.AuthException;
 import com.eventitta.auth.jwt.JwtTokenProvider;
+import com.eventitta.auth.jwt.util.JwtTokenUtil;
+import jakarta.annotation.Nonnull;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -12,9 +14,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -26,27 +25,27 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(
-        HttpServletRequest req, HttpServletResponse res, FilterChain chain
+        HttpServletRequest request, @Nonnull HttpServletResponse response, @Nonnull FilterChain chain
     ) throws ServletException, IOException {
-        Cookie[] cookies = req.getCookies();
-        String at = Arrays.stream(Optional.ofNullable(cookies).orElse(new Cookie[0]))
-            .filter(c -> c.getName().equals("access_token"))
-            .map(Cookie::getValue)
-            .findFirst().orElse(null);
+        String accessToken = JwtTokenUtil.extractTokenFromRequest(request);
 
-        if (at != null) {
+        if (accessToken != null) {
             try {
-                tokenProvider.validateAccessToken(at);
-                Long userId = tokenProvider.getUserId(at);
+                tokenProvider.validateAccessToken(accessToken);
+                Long userId = tokenProvider.getUserId(accessToken);
+                String email = tokenProvider.getEmail(accessToken);
+                String role = tokenProvider.getRole(accessToken);
+
+                UserPrincipal userPrincipal = new UserPrincipal(userId, email, role);
                 UsernamePasswordAuthenticationToken auth =
-                    new UsernamePasswordAuthenticationToken(userId, null, List.of());
+                    new UsernamePasswordAuthenticationToken(userPrincipal, null, userPrincipal.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(auth);
             } catch (AuthException ex) {
                 SecurityContextHolder.clearContext();
                 throw ex;
             }
         }
-        chain.doFilter(req, res);
+        chain.doFilter(request, response);
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.eventitta.auth.jwt;
 
 import com.eventitta.auth.exception.AuthException;
+import com.eventitta.auth.jwt.config.JwtProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -42,21 +43,23 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    @DisplayName("엑세스 토큰이 유효하면 토큰에서 사용자 ID를 추출한다.")
+    @DisplayName("엑세스 토큰이 유효하면 토큰에서 사용자 정보를 추출한다.")
     void givenUserId_whenCreateAccessToken_thenIsParsable() {
         // given
-        String token = provider.createAccessToken(123L);
+        String token = provider.createAccessToken(123L, "test@example.com", "USER");
 
         // when & then
         assertThat(provider.validateToken(token)).isTrue();
         assertThat(provider.getUserId(token)).isEqualTo(123L);
+        assertThat(provider.getEmail(token)).isEqualTo("test@example.com");
+        assertThat(provider.getRole(token)).isEqualTo("USER");
     }
 
     @Test
     @DisplayName("만료된 토큰을 검증하면 false를 반환해야 한다.")
     void givenExpiredToken_whenValidateToken_thenReturnsFalse() throws InterruptedException {
         // given
-        String token = provider.createAccessToken(99L);
+        String token = provider.createAccessToken(99L, "test@example.com", "USER");
 
         Clock laterClock = Clock.offset(baseClock, Duration.ofMillis(accessValidity + 1));
         JwtTokenProvider expiredProvider = new JwtTokenProvider(props, laterClock);
@@ -67,9 +70,9 @@ class JwtTokenProviderTest {
 
     @Test
     @DisplayName("만료된 토큰에서 사용자 ID를 추출하면 올바른 ID를 반환해야 한다.")
-    void givenExpiredTime_whenGetUserIdFromExpiredToken_thenReturnsId() {
+    void givenExpiredToken_whenGetUserIdFromExpiredToken_thenReturnsId() {
         // given
-        String token = provider.createAccessToken(77L);
+        String token = provider.createAccessToken(77L, "test@example.com", "USER");
 
         Clock laterClock = Clock.offset(baseClock, Duration.ofMillis(accessValidity + 1));
         JwtTokenProvider expiredProvider = new JwtTokenProvider(props, laterClock);
@@ -92,7 +95,7 @@ class JwtTokenProviderTest {
     @DisplayName("만료된 토큰으로 호출 시 토큰 만료 예외가 발생해야 한다")
     void givenExpiredToken_whenValidateAccessToken_thenThrowsExpired() {
         // given
-        String token = provider.createAccessToken(55L);
+        String token = provider.createAccessToken(55L, "test@example.com", "USER");
         Clock laterClock = Clock.offset(baseClock, Duration.ofMillis(accessValidity + 1));
         JwtTokenProvider expiredProvider = new JwtTokenProvider(props, laterClock);
 
@@ -127,5 +130,25 @@ class JwtTokenProviderTest {
 
         // then
         assertThat(actual).isEqualTo(expected);
+    }
+
+    @Test
+    @DisplayName("유효한 토큰에서 이메일을 추출한다.")
+    void givenValidToken_whenGetEmail_thenReturnsEmail() {
+        // given
+        String token = provider.createAccessToken(123L, "user@example.com", "ADMIN");
+
+        // when & then
+        assertThat(provider.getEmail(token)).isEqualTo("user@example.com");
+    }
+
+    @Test
+    @DisplayName("유효한 토큰에서 역할을 추출한다.")
+    void givenValidToken_whenGetRole_thenReturnsRole() {
+        // given
+        String token = provider.createAccessToken(123L, "user@example.com", "ADMIN");
+
+        // when & then
+        assertThat(provider.getRole(token)).isEqualTo("ADMIN");
     }
 }

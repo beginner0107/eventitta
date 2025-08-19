@@ -1,4 +1,4 @@
-package com.eventitta.common.storage;
+package com.eventitta.file.service;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;

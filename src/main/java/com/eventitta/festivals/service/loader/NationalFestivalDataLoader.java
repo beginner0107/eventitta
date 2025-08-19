@@ -1,6 +1,6 @@
 package com.eventitta.festivals.service.loader;
 
-import com.eventitta.common.external.api.NationalFestivalApi;
+import com.eventitta.festivals.api.NationalFestivalApi;
 import com.eventitta.festivals.config.NationalFestivalConfig;
 import com.eventitta.festivals.domain.Festival;
 import com.eventitta.festivals.dto.NationalFestivalItem;

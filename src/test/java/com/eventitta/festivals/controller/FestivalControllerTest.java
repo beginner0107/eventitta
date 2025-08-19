@@ -1,9 +1,13 @@
 package com.eventitta.festivals.controller;
 
+import com.eventitta.auth.jwt.service.UserInfoService;
+import com.eventitta.common.notification.resolver.AlertLevelResolver;
+import com.eventitta.common.notification.service.SlackNotificationService;
 import com.eventitta.common.response.PageResponse;
 import com.eventitta.festivals.dto.FestivalResponseDto;
 import com.eventitta.festivals.dto.NearbyFestivalRequest;
 import com.eventitta.festivals.service.FestivalService;
+import com.eventitta.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +37,18 @@ class FestivalControllerTest {
 
     @MockitoBean
     private FestivalService festivalService;
+
+    @MockitoBean
+    protected SlackNotificationService slackNotificationService;
+
+    @MockitoBean
+    protected AlertLevelResolver alertLevelResolver;
+
+    @MockitoBean
+    protected UserRepository userRepository;
+
+    @MockitoBean
+    protected UserInfoService userInfoService;
 
     @Test
     @WithMockUser

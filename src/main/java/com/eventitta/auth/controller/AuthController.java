@@ -16,6 +16,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import static com.eventitta.auth.constants.AuthConstants.ACCESS_TOKEN;
+import static com.eventitta.auth.constants.AuthConstants.REFRESH_TOKEN;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/auth")
@@ -46,8 +49,8 @@ public class AuthController {
     })
     @PostMapping("/refresh")
     public ResponseEntity<Void> refresh(
-        @CookieValue(name = "access_token", required = false) String accessToken,
-        @CookieValue(name = "refresh_token", required = false) String refreshToken,
+        @CookieValue(name = ACCESS_TOKEN, required = false) String accessToken,
+        @CookieValue(name = REFRESH_TOKEN, required = false) String refreshToken,
         HttpServletResponse response
     ) {
         authService.refresh(accessToken, refreshToken, response);
@@ -60,10 +63,10 @@ public class AuthController {
     })
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(
-        @Parameter(in = ParameterIn.COOKIE, name = "access_token", description = "액세스 토큰")
-        @CookieValue(name = "access_token", required = false) String accessToken,
-        @Parameter(in = ParameterIn.COOKIE, name = "refresh_token", description = "리프레시 토큰")
-        @CookieValue(name = "refresh_token", required = false) String refreshToken,
+        @Parameter(in = ParameterIn.COOKIE, name = ACCESS_TOKEN, description = "액세스 토큰")
+        @CookieValue(name = ACCESS_TOKEN, required = false) String accessToken,
+        @Parameter(in = ParameterIn.COOKIE, name = REFRESH_TOKEN, description = "리프레시 토큰")
+        @CookieValue(name = REFRESH_TOKEN, required = false) String refreshToken,
         HttpServletResponse response
     ) {
         authService.logout(accessToken, response);

@@ -68,7 +68,7 @@ public class PostService {
         Post savedPost = postRepository.save(post);
 
         activityEventPublisher.publish(CREATE_POST, userId, savedPost.getId());
-        
+
         return new CreatePostResponse(savedPost.getId());
     }
 

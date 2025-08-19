@@ -1,8 +1,9 @@
-package com.eventitta.common.config;
+package com.eventitta.auth.jwt.config;
 
-import com.eventitta.auth.filter.JwtAuthenticationFilter;
 import com.eventitta.auth.jwt.JwtTokenProvider;
-import com.eventitta.auth.service.CustomUserDetailsService;
+import com.eventitta.auth.jwt.filter.JwtAuthenticationFilter;
+import com.eventitta.auth.jwt.service.CustomUserDetailsService;
+import com.eventitta.auth.jwt.JwtAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,7 +34,7 @@ public class SecurityConfig {
 
     private final JwtTokenProvider tokenProvider;
     private final CustomUserDetailsService customUserDetailsService;
-    private final CustomAuthenticationEntryPoint authenticationEntryPoint;
+    private final JwtAuthenticationEntryPoint authenticationEntryPoint;
 
     @Bean
     @Primary

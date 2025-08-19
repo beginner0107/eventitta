@@ -18,22 +18,25 @@ import java.time.Instant;
 @Transactional
 public class TokenService {
     private final JwtTokenProvider tokenProvider;
-    private final RefreshTokenRepository rtRepo;
-    private final Pbkdf2PasswordEncoder rtEncoder;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final Pbkdf2PasswordEncoder pbkdf2PasswordEncoder;
     private final UserRepository userRepository;
 
     public TokenResponse issueTokens(Long userId) {
-        String at = tokenProvider.createAccessToken(userId);
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        String at = tokenProvider.createAccessToken(userId, user.getEmail(), user.getRole().name());
         String rt = tokenProvider.createRefreshToken();
         persistRefreshToken(userId, rt);
         return new TokenResponse(at, rt);
     }
 
     private void persistRefreshToken(Long userId, String rawRt) {
-        String hash = rtEncoder.encode(rawRt);
+        String hash = pbkdf2PasswordEncoder.encode(rawRt);
         Instant expiresAt = tokenProvider.getRefreshTokenExpiry();
 
         User u = userRepository.getReferenceById(userId);
-        rtRepo.save(new RefreshToken(u, hash, expiresAt));
+        refreshTokenRepository.save(new RefreshToken(u, hash, expiresAt));
     }
 }

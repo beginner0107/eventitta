@@ -1,6 +1,7 @@
 package com.eventitta.common.storage;
 
 import com.eventitta.file.exception.FileStorageException;
+import com.eventitta.file.service.LocalFileStorageService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

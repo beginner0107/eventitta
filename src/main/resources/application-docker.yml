@@ -52,7 +52,6 @@ logging:
     root: INFO
     org.hibernate.SQL: WARN
     p6spy: DEBUG
-    com.eventitta.common.config.com.eventitta.common.config.security.CustomAuthenticationEntryPoint: DEBUG
 async:
   core-pool-size: 4
   max-pool-size: 20

@@ -70,7 +70,8 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.GET
                         , "/api/v1/posts"
                         , "/api/v1/posts/**"
-                        , "/api/v1/regions").permitAll()
+                        , "/api/v1/regions"
+                        , "/api/v1/regions/**").permitAll()
                     .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())

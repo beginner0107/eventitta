@@ -20,6 +20,8 @@ public record PostDetailDto(
     String authorNickname,
     @Schema(description = "작성자 프로필 이미지 URL", example = "https://cdn.example.com/profile.jpg")
     String authorProfileUrl,
+    @Schema(description = "작성자 ID", example = "1")
+    Long authorId,
     @Schema(description = "지역 코드", example = "1100110100")
     String regionCode,
     @Schema(description = "추천 수", example = "10")
@@ -45,6 +47,7 @@ public record PostDetailDto(
             p.getContent(),
             p.getUser().getNickname(),
             p.getUser().getProfilePictureUrl(),
+            p.getUser().getId(),
             p.getRegion().getCode(),
             p.getLikeCount(),
             commentCount,

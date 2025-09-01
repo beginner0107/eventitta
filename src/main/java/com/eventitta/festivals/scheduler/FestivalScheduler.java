@@ -1,6 +1,7 @@
 package com.eventitta.festivals.scheduler;
 
 import com.eventitta.festivals.service.FestivalService;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
@@ -50,10 +51,10 @@ public class FestivalScheduler {
 
     /**
      * 서울시 축제 데이터 정기 동기화
-     * 매일 오전 3시 실행
+     * 매일 오전 11시 실행 (데이터는 오전 9시에 업데이트됨)
      * 서울시 문화행사 정보는 매일 1회 업데이트되므로 오늘 날짜만 동기화
      */
-    @Scheduled(cron = "0 0 3 * * *", zone = "Asia/Seoul")
+    @Scheduled(cron = "0 0 11 * * *", zone = "Asia/Seoul")
     @SchedulerLock(name = "syncSeoulFestivalData", lockAtMostFor = "PT1H", lockAtLeastFor = "PT5M")
     public void syncSeoulFestivalData() {
         log.info("[Scheduler] 서울시 축제 데이터 일별 동기화 시작");

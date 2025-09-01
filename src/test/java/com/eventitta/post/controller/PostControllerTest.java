@@ -301,6 +301,7 @@ class PostControllerTest extends ControllerTestSupport {
             "content",
             "nickname",
             "authProfileUrl",
+            42L,
             "1100110101",
             1,
             10,
@@ -320,6 +321,7 @@ class PostControllerTest extends ControllerTestSupport {
             .andExpect(jsonPath("$.content").value(dummy.content()))
             .andExpect(jsonPath("$.authorNickname").value(dummy.authorNickname()))
             .andExpect(jsonPath("$.authorProfileUrl").value(dummy.authorProfileUrl()))
+            .andExpect(jsonPath("$.authorId").value(dummy.authorId()))
             .andExpect(jsonPath("$.likeCount").value(dummy.likeCount()))
             .andExpect(jsonPath("$.regionCode").value(dummy.regionCode()));
     }

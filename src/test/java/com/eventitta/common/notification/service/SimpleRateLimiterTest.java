@@ -162,7 +162,7 @@ class SimpleRateLimiterTest {
 
         // when: 일정 시간이 지난 후 새로운 처리율 제한 객체 생성
         Clock newClock = Clock.fixed(
-            Instant.parse("2023-01-01T00:06:00Z"),
+            Instant.parse("2025-01-01T00:06:00Z"),
             ZoneId.systemDefault()
         );
         rateLimiter = new SimpleRateLimiter(newClock);

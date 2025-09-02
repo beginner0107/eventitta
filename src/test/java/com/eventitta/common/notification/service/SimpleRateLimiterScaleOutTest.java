@@ -3,15 +3,13 @@ package com.eventitta.common.notification.service;
 import com.eventitta.common.notification.domain.AlertLevel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -155,13 +153,5 @@ class SimpleRateLimiterScaleOutTest {
             }
         }
         return allowed;
-    }
-
-    private static int sendAcrossServers(List<SimpleRateLimiter> servers, String errorCode, AlertLevel level, int attemptsPerServer) {
-        int sum = 0;
-        for (SimpleRateLimiter s : servers) {
-            sum += sendAttempts(s, errorCode, level, attemptsPerServer);
-        }
-        return sum;
     }
 }

@@ -22,7 +22,7 @@ public class SlackNotificationService {
 
     public SlackNotificationService(
         SlackProperties slackProperties,
-        RateLimiter rateLimiter,
+        @Qualifier("cacheBasedRateLimiter") RateLimiter rateLimiter,
         @Qualifier("slackRestClient") RestClient slackRestClient,
         Environment environment,
         SlackMessageBuilder messageBuilder

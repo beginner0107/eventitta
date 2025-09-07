@@ -1,20 +1,24 @@
 package com.eventitta;
 
 import com.eventitta.auth.controller.AuthController;
+import com.eventitta.auth.jwt.JwtAuthenticationEntryPoint;
 import com.eventitta.auth.jwt.JwtTokenProvider;
+import com.eventitta.auth.jwt.config.SecurityConfig;
 import com.eventitta.auth.jwt.service.CustomUserDetailsService;
 import com.eventitta.auth.jwt.service.UserInfoService;
-import com.eventitta.auth.service.*;
+import com.eventitta.auth.service.AuthService;
+import com.eventitta.auth.service.LoginService;
+import com.eventitta.auth.service.RefreshTokenService;
+import com.eventitta.auth.service.TokenService;
 import com.eventitta.comment.controller.CommentController;
 import com.eventitta.comment.service.CommentService;
-import com.eventitta.auth.jwt.JwtAuthenticationEntryPoint;
-import com.eventitta.auth.jwt.config.SecurityConfig;
 import com.eventitta.common.notification.resolver.AlertLevelResolver;
 import com.eventitta.common.notification.service.SlackNotificationService;
 import com.eventitta.dashboard.controller.DashboardController;
 import com.eventitta.dashboard.service.DashboardService;
 import com.eventitta.file.controller.FileUploadController;
 import com.eventitta.file.service.FileStorageService;
+import com.eventitta.file.service.FileValidationService;
 import com.eventitta.gamification.service.UserActivityService;
 import com.eventitta.post.controller.PostController;
 import com.eventitta.post.service.PostService;
@@ -83,4 +87,6 @@ public abstract class ControllerTestSupport {
     protected UserInfoService userInfoService;
     @MockitoBean
     protected RegionService regionService;
+    @MockitoBean
+    protected FileValidationService fileValidationService;
 }

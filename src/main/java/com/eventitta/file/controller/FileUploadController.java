@@ -1,6 +1,8 @@
 package com.eventitta.file.controller;
 
+import com.eventitta.file.dto.internal.FileDownloadResponse;
 import com.eventitta.file.service.FileStorageService;
+import com.eventitta.file.service.FileValidationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -20,36 +22,25 @@ import java.util.List;
 @RequiredArgsConstructor
 @Tag(name = "파일 업로드 API")
 public class FileUploadController {
+
     private final FileStorageService storageService;
+    private final FileValidationService validationService;
 
     @Operation(summary = "파일 업로드")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<List<String>> upload(
-        @RequestPart("files") List<MultipartFile> files
-    ) {
-        List<String> urls = files.stream()
-            .map(storageService::store)
-            .toList();
+    public ResponseEntity<List<String>> upload(@RequestPart("files") List<MultipartFile> files) {
+        validationService.validateFiles(files);
+        List<String> urls = storageService.storeFiles(files);
         return ResponseEntity.ok(urls);
     }
 
     @Operation(summary = "업로드된 파일 조회")
     @GetMapping("/{filename:.+}")
     public ResponseEntity<Resource> serveFile(@PathVariable("filename") String filename) {
-        Resource resource = storageService.loadAsResource(filename);
-        String contentType = determineContentType(resource);
+        FileDownloadResponse response = storageService.loadFileForDownload(filename);
         return ResponseEntity.ok()
-            .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
-            .contentType(MediaType.parseMediaType(contentType))
-            .body(resource);
-    }
-
-    private String determineContentType(Resource resource) {
-        try {
-            String ct = Files.probeContentType(resource.getFile().toPath());
-            return ct != null ? ct : MediaType.APPLICATION_OCTET_STREAM_VALUE;
-        } catch (IOException e) {
-            return MediaType.APPLICATION_OCTET_STREAM_VALUE;
-        }
+            .header(HttpHeaders.CONTENT_DISPOSITION, response.getContentDispositionHeader())
+            .contentType(response.mediaType())
+            .body(response.resource());
     }
 }

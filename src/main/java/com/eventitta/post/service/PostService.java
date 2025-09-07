@@ -103,12 +103,12 @@ public class PostService {
             throw ACCESS_DENIED.defaultException();
         }
 
-        post.clearImages();
-        post.softDelete();
-
         List<String> imageUrls = post.getImages().stream()
             .map(PostImage::getImageUrl)
             .toList();
+
+        post.clearImages();
+        post.softDelete();
 
         activityEventPublisher.publishRevoke(CREATE_POST, userId, postId);
         postDeleteEventPublisher.publish(new PostDeletedEvent(imageUrls));

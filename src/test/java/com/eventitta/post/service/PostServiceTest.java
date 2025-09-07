@@ -13,6 +13,8 @@ import com.eventitta.post.dto.request.UpdatePostRequest;
 import com.eventitta.post.dto.response.CreatePostResponse;
 import com.eventitta.post.dto.response.PostDetailDto;
 import com.eventitta.post.dto.response.PostSummaryDto;
+import com.eventitta.post.event.PostDeleteEventPublisher;
+import com.eventitta.post.event.PostDeletedEvent;
 import com.eventitta.post.exception.PostErrorCode;
 import com.eventitta.post.exception.PostException;
 import com.eventitta.post.repository.PostLikeRepository;
@@ -63,7 +65,9 @@ class PostServiceTest {
     @Mock
     CommentRepository commentRepository;
     @Mock
-    ActivityEventPublisher activityEventPublisher; // UserActivityService 대신 ActivityEventPublisher
+    ActivityEventPublisher activityEventPublisher;
+    @Mock
+    PostDeleteEventPublisher postDeleteEventPublisher;
 
     @InjectMocks
     PostService postService;
@@ -253,8 +257,8 @@ class PostServiceTest {
         long postId = 1L;
         long ownerId = 42L;
         User owner = User.builder().id(ownerId).build();
-        Post post = Post.create(owner, "t", "c", createRegion(VALID_REGION));
-        assertThat(post.isDeleted()).isFalse();
+        Post post = spy(Post.create(owner, "t", "c", createRegion(VALID_REGION)));
+        post.addImage(new PostImage("img1.jpg", 0));
 
         given(postRepository.findWithUserByIdAndDeletedFalse(postId))
             .willReturn(Optional.of(post));
@@ -264,6 +268,7 @@ class PostServiceTest {
 
         // then
         assertThat(post.isDeleted()).isTrue();
+        verify(postDeleteEventPublisher).publish(any(PostDeletedEvent.class));
     }
 
     @Test

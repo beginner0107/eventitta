@@ -1,6 +1,7 @@
 package com.eventitta.file.controller;
 
 import com.eventitta.ControllerTestSupport;
+import com.eventitta.file.dto.internal.FileDownloadResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ByteArrayResource;
@@ -8,7 +9,10 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 
-import static org.mockito.ArgumentMatchers.any;
+import java.util.List;
+
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
@@ -23,7 +27,9 @@ class FileUploadControllerTest extends ControllerTestSupport {
         MockMultipartFile file = new MockMultipartFile(
             "files", "test.txt", MediaType.TEXT_PLAIN_VALUE, "hello".getBytes()
         );
-        when(storageService.store(any())).thenReturn("/uploads/test.txt");
+
+        doNothing().when(fileValidationService).validateFiles(anyList());
+        when(storageService.storeFiles(anyList())).thenReturn(List.of("/uploads/test.txt"));
 
         // when & then
         mockMvc.perform(multipart("/api/v1/uploads").file(file))
@@ -41,12 +47,20 @@ class FileUploadControllerTest extends ControllerTestSupport {
                 return "test.txt";
             }
         };
-        when(storageService.loadAsResource("test.txt")).thenReturn(resource);
+
+        FileDownloadResponse response = new FileDownloadResponse(
+            resource,
+            MediaType.TEXT_PLAIN,
+            "test.txt"
+        );
+
+        when(storageService.loadFileForDownload("test.txt")).thenReturn(response);
 
         // when & then
         mockMvc.perform(get("/api/v1/uploads/test.txt"))
             .andExpect(status().isOk())
             .andExpect(header().string("Content-Disposition", "inline; filename=\"test.txt\""))
+            .andExpect(content().contentType(MediaType.TEXT_PLAIN))
             .andExpect(content().bytes("file-content".getBytes()));
     }
 }

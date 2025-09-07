@@ -14,6 +14,8 @@ import com.eventitta.post.dto.request.UpdatePostRequest;
 import com.eventitta.post.dto.response.CreatePostResponse;
 import com.eventitta.post.dto.response.PostDetailDto;
 import com.eventitta.post.dto.response.PostSummaryDto;
+import com.eventitta.post.event.PostDeleteEventPublisher;
+import com.eventitta.post.event.PostDeletedEvent;
 import com.eventitta.post.exception.PostException;
 import com.eventitta.post.repository.PostLikeRepository;
 import com.eventitta.post.repository.PostRepository;
@@ -52,6 +54,7 @@ public class PostService {
     private final PostLikeRepository postLikeRepository;
     private final CommentRepository commentRepository;
     private final ActivityEventPublisher activityEventPublisher;
+    private final PostDeleteEventPublisher postDeleteEventPublisher;
 
     public CreatePostResponse create(Long userId, CreatePostRequest dto) {
         User user = userRepository.findById(userId)
@@ -99,10 +102,16 @@ public class PostService {
         if (!post.getUser().getId().equals(userId)) {
             throw ACCESS_DENIED.defaultException();
         }
+
         post.clearImages();
         post.softDelete();
 
+        List<String> imageUrls = post.getImages().stream()
+            .map(PostImage::getImageUrl)
+            .toList();
+
         activityEventPublisher.publishRevoke(CREATE_POST, userId, postId);
+        postDeleteEventPublisher.publish(new PostDeletedEvent(imageUrls));
     }
 
     @Transactional(readOnly = true)
@@ -119,7 +128,6 @@ public class PostService {
         );
     }
 
-    // Autocommit
     @Transactional(readOnly = true)
     public PostDetailDto getPost(Long postId) {
         Post post = postRepository.findDetailByIdAndDeletedFalse(postId)

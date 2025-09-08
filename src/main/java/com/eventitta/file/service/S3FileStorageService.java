@@ -121,10 +121,13 @@ public class S3FileStorageService implements FileStorageService {
 
     @Override
     public Resource loadAsResource(String key) {
-        URL url = s3Client.utilities().getUrl(b -> b.bucket(bucketName).key(key));
-        Resource resource = new UrlResource(url);
-        if (resource.exists() && resource.isReadable()) return resource;
-        throw FILE_NOT_FOUND.defaultException();
+        try {
+            URL url = s3Client.utilities().getUrl(b -> b.bucket(bucketName).key(key));
+            return new UrlResource(url);
+        } catch (Exception e) {
+            log.error("S3 URL 생성 실패: key={}", key, e);
+            throw FILE_NOT_FOUND.defaultException();
+        }
     }
 
     @Override

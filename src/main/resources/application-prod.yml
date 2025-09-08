@@ -17,6 +17,23 @@ spring:
     init:
       mode: never
 
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+cloud:
+  aws:
+    region:
+      static: ${AWS_REGION:ap-northeast-2}
+    s3:
+      bucket: ${S3_BUCKET_NAME}
+    credentials:
+      access-key: ${AWS_ACCESS_KEY_ID}
+      secret-key: ${AWS_SECRET_ACCESS_KEY}
+    stack:
+      auto: false
+
 logging:
   level:
     root: INFO

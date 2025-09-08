@@ -9,7 +9,8 @@ import java.nio.charset.StandardCharsets;
 public record FileDownloadResponse(
     Resource resource,
     MediaType mediaType,
-    String filename
+    String filename,
+    Long contentLength
 ) {
     public String getContentDispositionHeader() {
         try {

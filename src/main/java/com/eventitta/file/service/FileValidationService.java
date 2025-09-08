@@ -48,7 +48,7 @@ public class FileValidationService {
         }
 
         String filename = file.getOriginalFilename();
-        if (filename != null && (filename.contains("..") || filename.contains("/"))) {
+        if (filename != null && (filename.contains("..") || filename.contains("/") || filename.contains("\\"))) {
             throw FileStorageErrorCode.INVALID_FILENAME.defaultException();
         }
     }

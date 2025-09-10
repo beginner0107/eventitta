@@ -37,7 +37,7 @@ class LocalFileStorageServiceTest {
     }
 
     @Test
-    @DisplayName("단일 파일을 업로드하면 날짜 경로 하위에 안전한 이름으로 저장된다.”")
+    @DisplayName("단일 파일을 업로드하면 날짜 경로 하위에 안전한 이름으로 저장된다.")
     void store_SingleFile_Success() throws IOException {
         // given
         MockMultipartFile file = new MockMultipartFile(

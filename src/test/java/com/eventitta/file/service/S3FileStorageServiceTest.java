@@ -53,7 +53,7 @@ class S3FileStorageServiceTest {
     }
 
     @Test
-    @DisplayName("단일 파일을 업로드하면 S3에 저장되고 키를 반환한다.”")
+    @DisplayName("단일 파일을 업로드하면 S3에 저장되고 키를 반환한다.")
     void store_SingleFile_Success() throws IOException {
         // given
         MockMultipartFile file = new MockMultipartFile(

@@ -1,7 +1,9 @@
 package com.eventitta.file.service;
 
 import com.eventitta.file.exception.FileStorageErrorCode;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.unit.DataSize;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -14,7 +16,8 @@ public class FileValidationService {
         "image/jpeg", "image/png", "image/gif", "application/pdf"
     );
 
-    private static final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    @Value("${spring.servlet.multipart.max-file-size:5MB}")
+    private DataSize maxFileSize;
 
     public void validateFiles(List<MultipartFile> files) {
         if (files == null || files.isEmpty()) {
@@ -35,7 +38,7 @@ public class FileValidationService {
             throw FileStorageErrorCode.EMPTY_FILE.defaultException();
         }
 
-        if (file.getSize() > MAX_FILE_SIZE) {
+        if (file.getSize() > maxFileSize.toBytes()) {
             throw FileStorageErrorCode.FILE_TOO_LARGE.defaultException();
         }
 
@@ -45,7 +48,7 @@ public class FileValidationService {
         }
 
         String filename = file.getOriginalFilename();
-        if (filename != null && (filename.contains("..") || filename.contains("/"))) {
+        if (filename != null && (filename.contains("..") || filename.contains("/") || filename.contains("\\"))) {
             throw FileStorageErrorCode.INVALID_FILENAME.defaultException();
         }
     }

@@ -4,6 +4,7 @@ import com.eventitta.ControllerTestSupport;
 import com.eventitta.file.dto.internal.FileDownloadResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
@@ -41,6 +42,7 @@ class FileUploadControllerTest extends ControllerTestSupport {
     @Test
     void givenFilename_whenGet_thenReturnsFileResource() throws Exception {
         // given
+        String fileKey = "2024/01/15/test.txt";
         Resource resource = new ByteArrayResource("file-content".getBytes()) {
             @Override
             public String getFilename() {
@@ -51,15 +53,16 @@ class FileUploadControllerTest extends ControllerTestSupport {
         FileDownloadResponse response = new FileDownloadResponse(
             resource,
             MediaType.TEXT_PLAIN,
-            "test.txt"
+            "test.txt",
+            10L
         );
 
-        when(storageService.loadFileForDownload("test.txt")).thenReturn(response);
+        when(storageService.loadFileForDownload(ArgumentMatchers.anyString())).thenReturn(response);
 
         // when & then
-        mockMvc.perform(get("/api/v1/uploads/test.txt"))
+        mockMvc.perform(get("/api/v1/uploads/" + fileKey))
             .andExpect(status().isOk())
-            .andExpect(header().string("Content-Disposition", "inline; filename=\"test.txt\""))
+            .andExpect(header().string("Content-Disposition", "inline; filename*=UTF-8''test.txt"))
             .andExpect(content().contentType(MediaType.TEXT_PLAIN))
             .andExpect(content().bytes("file-content".getBytes()));
     }

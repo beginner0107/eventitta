@@ -56,6 +56,11 @@ dependencies {
     implementation 'org.springframework:spring-aspects'
     runtimeOnly 'p6spy:p6spy:3.9.1'
     implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
+
+    // AWS S3 의존성 추가 (Spring Boot 3.x 호환)
+    implementation 'software.amazon.awssdk:s3:2.20.26'
+    implementation 'software.amazon.awssdk:auth:2.20.26'
+
     // JMH 의존성 (JMH plugin이 자동으로 처리하므로 제거)
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'

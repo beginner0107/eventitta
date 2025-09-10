@@ -30,17 +30,17 @@ public class FileUploadController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<List<String>> upload(@RequestPart("files") List<MultipartFile> files) {
         validationService.validateFiles(files);
-        List<String> urls = storageService.storeFiles(files);
-        return ResponseEntity.ok(urls);
+        List<String> keys = storageService.storeFiles(files);
+        return ResponseEntity.ok(keys);
     }
 
     @Operation(summary = "업로드된 파일 조회")
-    @GetMapping("/{filename:.+}")
-    public ResponseEntity<Resource> serveFile(@PathVariable("filename") String filename) {
-        FileDownloadResponse response = storageService.loadFileForDownload(filename);
-        return ResponseEntity.ok()
+    @GetMapping("/{*key}")
+    public ResponseEntity<Resource> serveFile(@PathVariable("key") String key) {
+        FileDownloadResponse response = storageService.loadFileForDownload(key);
+        var builder = ResponseEntity.ok()
             .header(HttpHeaders.CONTENT_DISPOSITION, response.getContentDispositionHeader())
-            .contentType(response.mediaType())
-            .body(response.resource());
+            .contentType(response.mediaType());
+        return builder.body(response.resource());
     }
 }

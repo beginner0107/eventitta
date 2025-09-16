@@ -35,10 +35,10 @@ public class CacheBasedRateLimiter implements RateLimiter {
     @Override
     public boolean shouldSendAlert(String errorCode, AlertLevel level) {
         String key = createKey(errorCode, level);
-        
+
         AtomicInteger count = alertCounts.get(key, k -> new AtomicInteger(0));
         int currentCount = count.incrementAndGet();
-        
+
         return currentCount <= getMaxAlertsPerPeriod(level);
     }
 

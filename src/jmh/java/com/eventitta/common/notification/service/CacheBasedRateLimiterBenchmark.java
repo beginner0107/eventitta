@@ -4,9 +4,6 @@ import com.eventitta.common.notification.domain.AlertLevel;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 
-import java.time.Clock;
-import java.time.Instant;
-import java.time.ZoneOffset;
 import java.util.concurrent.TimeUnit;
 
 @BenchmarkMode(Mode.AverageTime)
@@ -21,7 +18,6 @@ public class CacheBasedRateLimiterBenchmark {
     int mapSize;
 
     private CacheBasedRateLimiter limiter;
-    private Clock fixedClock;
     private String[] existingKeys;
 
     @State(Scope.Thread)
@@ -31,8 +27,7 @@ public class CacheBasedRateLimiterBenchmark {
 
     @Setup(Level.Trial)
     public void setup() {
-        fixedClock = Clock.fixed(Instant.parse("2025-01-01T00:00:00Z"), ZoneOffset.UTC);
-        limiter = new CacheBasedRateLimiter(fixedClock);
+        limiter = new CacheBasedRateLimiter();
 
         for (int i = 0; i < mapSize; i++) {
             limiter.shouldSendAlert("EXISTING_KEY_" + i, AlertLevel.INFO);

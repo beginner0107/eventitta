@@ -58,12 +58,7 @@ public class SimpleRateLimiter implements RateLimiter {
     }
 
     private int getMaxAlertsPerPeriod(AlertLevel level) {
-        return switch (level) {
-            case CRITICAL -> AlertConstants.CRITICAL_ALERT_LIMIT;
-            case HIGH -> AlertConstants.HIGH_ALERT_LIMIT;
-            case MEDIUM -> AlertConstants.MEDIUM_ALERT_LIMIT;
-            case INFO -> AlertConstants.INFO_ALERT_LIMIT;
-        };
+        return level.getAlertLimit();
     }
 
     private static class AlertRecord {

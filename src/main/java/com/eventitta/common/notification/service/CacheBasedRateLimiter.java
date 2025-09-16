@@ -7,7 +7,6 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.stats.CacheStats;
 import org.springframework.stereotype.Component;
 
-import java.time.Clock;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -17,14 +16,8 @@ public class CacheBasedRateLimiter implements RateLimiter {
     private static final String KEY_SEPARATOR = ":";
 
     private final Cache<String, AtomicInteger> alertCounts;
-    private final Clock clock;
 
     public CacheBasedRateLimiter() {
-        this(Clock.systemDefaultZone());
-    }
-
-    public CacheBasedRateLimiter(Clock clock) {
-        this.clock = clock;
         this.alertCounts = Caffeine.newBuilder()
             .maximumSize(10000)
             .expireAfterWrite(AlertConstants.RATE_LIMIT_WINDOW_MINUTES, TimeUnit.MINUTES)
@@ -52,12 +45,7 @@ public class CacheBasedRateLimiter implements RateLimiter {
     }
 
     private int getMaxAlertsPerPeriod(AlertLevel level) {
-        return switch (level) {
-            case CRITICAL -> AlertConstants.CRITICAL_ALERT_LIMIT;
-            case HIGH -> AlertConstants.HIGH_ALERT_LIMIT;
-            case MEDIUM -> AlertConstants.MEDIUM_ALERT_LIMIT;
-            case INFO -> AlertConstants.INFO_ALERT_LIMIT;
-        };
+        return level.getAlertLimit();
     }
 
     public CacheStats getCacheStats() {

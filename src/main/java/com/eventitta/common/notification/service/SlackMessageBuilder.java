@@ -80,12 +80,7 @@ public class SlackMessageBuilder {
     }
 
     private String getColorForLevel(AlertLevel level) {
-        return switch (level) {
-            case CRITICAL -> AlertConstants.CRITICAL_COLOR;
-            case HIGH -> AlertConstants.HIGH_COLOR;
-            case MEDIUM -> AlertConstants.MEDIUM_COLOR;
-            case INFO -> AlertConstants.INFO_COLOR;
-        };
+        return level.getColor();
     }
 
     private String getShortStackTrace(Throwable exception) {

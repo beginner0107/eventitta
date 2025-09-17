@@ -1,6 +1,5 @@
 package com.eventitta.common.notification.service;
 
-import com.eventitta.common.notification.constants.AlertConstants;
 import com.eventitta.common.notification.domain.AlertLevel;
 import com.eventitta.common.notification.domain.SlackMessage;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,12 +32,7 @@ class SlackMessageBuilderTest {
                 level, errorCode, body, null, null, null, "env", "#chan", "bot"
             );
             String expectedText = ":warning: " + level + " Alert";
-            String expectedColor = switch (level) {
-                case CRITICAL -> AlertConstants.CRITICAL_COLOR;
-                case HIGH -> AlertConstants.HIGH_COLOR;
-                case MEDIUM -> AlertConstants.MEDIUM_COLOR;
-                default -> AlertConstants.INFO_COLOR;
-            };
+            String expectedColor = level.getColor();
             assertThat(msg.text()).isEqualTo(expectedText);
             assertThat(msg.attachments()).hasSize(1);
             assertThat(msg.attachments().get(0).color()).isEqualTo(expectedColor);

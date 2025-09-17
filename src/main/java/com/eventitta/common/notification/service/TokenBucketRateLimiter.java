@@ -21,18 +21,22 @@ public class TokenBucketRateLimiter implements RateLimiter {
         int capacity = getMaxAlertsPerPeriod(level);
 
         TokenBucket tokenBucket = alerts.computeIfAbsent(key, k -> new TokenBucket(currentMillis, capacity));
-        double refillRate = (double) capacity / TimeUnit.MINUTES.toMillis(5);
-        long newTokens = (long) ((currentMillis - tokenBucket.timestamp) * refillRate);
-        if (newTokens > 0) {
-            tokenBucket.tokenCount = Math.min(capacity, tokenBucket.tokenCount + newTokens);
-            tokenBucket.timestamp = currentMillis;
-        }
 
-        if (tokenBucket.tokenCount >= 1) {
-            tokenBucket.tokenCount--;
-            return true;
-        } else {
-            return false;
+        synchronized (tokenBucket) {
+            double refillRate = (double) capacity / TimeUnit.MINUTES.toMillis(5);
+            long newTokens = (long) ((currentMillis - tokenBucket.timestamp) * refillRate);
+
+            if (newTokens > 0) {
+                tokenBucket.tokenCount = Math.min(capacity, tokenBucket.tokenCount + newTokens);
+                tokenBucket.timestamp = currentMillis;
+            }
+
+            if (tokenBucket.tokenCount >= 1) {
+                tokenBucket.tokenCount--;
+                return true;
+            } else {
+                return false;
+            }
         }
     }
 

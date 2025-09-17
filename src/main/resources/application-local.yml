@@ -1,0 +1,69 @@
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    url: jdbc:p6spy:mysql://localhost:${DB_PORT:3306}/eventitta?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: eventittaUser
+    password: ${MYSQL_PASSWORD}
+    driver-class-name: com.p6spy.engine.spy.P6SpyDriver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    defer-datasource-initialization: true
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          batch_size: 100
+        order_inserts: true
+        order_updates: true
+  sql:
+    init:
+      mode: never
+      data-locations: classpath:data.sql
+  devtools:
+    restart:
+      enabled: true
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+    with-credentials: true
+    persist-authorization: true
+jwt:
+  secret: ${SECRET_KEY}
+  access-token-validity-ms: 3600000
+  refresh-token-validity-ms: 86400000
+file:
+  storage:
+    location: ./uploads
+festival:
+  seoul:
+    base-url: http://openapi.seoul.go.kr:8088
+  national:
+    base-url: http://api.data.go.kr/openapi/tn_pubr_public_cltur_fstvl_api
+api:
+  seoul:
+    key: ${SEOUL_API_KEY:your-seoul-api-key-here}
+  national:
+    key: ${NATIONAL_API_KEY:your-national-api-key-here}
+logging:
+  level:
+    root: INFO
+    org.hibernate.SQL: WARN
+    p6spy: DEBUG
+async:
+  core-pool-size: 4
+  max-pool-size: 20
+  queue-capacity: 200
+
+server:
+  port: 8085

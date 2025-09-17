@@ -1,0 +1,33 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: eventitta-db
+    restart: unless-stopped
+    ports:
+      - "${DB_PORT:-3306}:3306"   # 이건 기본값 있어서 경고 안 남
+    env_file:
+      - ../.env  # 수정된 경로
+    volumes:
+      - ../db/mysql/data:/var/lib/mysql
+      - ../db/mysql/init:/docker-entrypoint-initdb.d
+    networks:
+      - eventitta-network
+
+  app:
+    build:
+      context: ..  # 프로젝트 루트로 수정
+      dockerfile: Dockerfile
+    container_name: eventitta-app
+    depends_on:
+      - db
+    env_file:
+      - ../.env  # 수정된 경로
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    networks:
+      - eventitta-network
+
+networks:
+  eventitta-network:

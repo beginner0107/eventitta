@@ -1,0 +1,11 @@
+db/
+**/db/
+build/
+.gradle/
+out/
+target/
+node_modules/
+.git
+.gitignore
+**/*.log
+**/*.sock

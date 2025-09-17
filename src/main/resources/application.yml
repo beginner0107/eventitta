@@ -1,0 +1,22 @@
+spring:
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: false
+  sql:
+    init:
+      mode: never
+      schema-locations: classpath:schema.sql
+logging:
+  level:
+    root: INFO
+    org.hibernate.SQL: WARN
+
+notification:
+  slack:
+    enabled: false
+    webhook-url: ${SLACK_WEBHOOK_URL:}
+    channel: "#eventitta-alerts"
+    username: "eventitta-bot"
+    timeout-seconds: 5

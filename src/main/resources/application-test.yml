@@ -1,0 +1,73 @@
+# yaml
+spring:
+  config:
+    activate:
+      on-profile: test
+
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;NON_KEYWORDS=VALUE,KEY,USER
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+        globally_quoted_identifiers: false
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    defer-datasource-initialization: true
+
+  # H2에서는 스키마 초기화 비활성화 (JPA가 테이블 자동 생성)
+  sql:
+    init:
+      mode: never
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+    with-credentials: true
+    persist-authorization: true
+
+jwt:
+  secret: eb583f5872f5bde4833167f91002f263fdec66cc9b3be80eb3517692dd8c245b
+  access-token-validity-ms: 3600000
+  refresh-token-validity-ms: 86400000
+
+file:
+  storage:
+    location: ./test-uploads
+
+festival:
+  seoul:
+    base-url: http://openapi.seoul.go.kr:8088
+  national:
+    base-url: https://apis.data.go.kr
+
+api:
+  seoul:
+    key: ${SEOUL_API_KEY:test-seoul-api-key}
+  national:
+    key: ${NATIONAL_API_KEY:test-national-api-key}
+
+logging:
+  level:
+    root: INFO
+    org.hibernate.SQL: INFO

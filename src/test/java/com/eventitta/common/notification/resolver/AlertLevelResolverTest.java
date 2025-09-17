@@ -52,11 +52,11 @@ class AlertLevelResolverTest {
         assertThat(level).isEqualTo(AlertLevel.CRITICAL);
     }
 
-    @DisplayName("'연결 거부' 메시지가 포함된 오류는 'CRITICAL' 등급으로 분류한다")
+    @DisplayName("'Connection 관련' 오류는 'CRITICAL' 등급으로 분류한다")
     @Test
     void shouldResolveToCriticalForConnectionRefusedMessage() {
         // given
-        RuntimeException exception = new RuntimeException("연결 거부");
+        ConnectException exception = new ConnectException("Connection failed");
 
         // when
         AlertLevel level = alertLevelResolver.resolveLevel(exception);

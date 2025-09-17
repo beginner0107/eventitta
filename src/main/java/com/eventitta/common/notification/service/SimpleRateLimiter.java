@@ -12,8 +12,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Component
 public class SimpleRateLimiter implements RateLimiter {
 
-    private static final String KEY_SEPARATOR = ":";
-
     private final ConcurrentHashMap<String, AlertRecord> alerts = new ConcurrentHashMap<>();
     private final Clock clock;
 
@@ -47,18 +45,10 @@ public class SimpleRateLimiter implements RateLimiter {
         alerts.clear();
     }
 
-    private String createKey(String errorCode, AlertLevel level) {
-        return errorCode + KEY_SEPARATOR + level;
-    }
-
     private void cleanupExpiredRecords(long now) {
         long windowMillis = TimeUnit.MINUTES.toMillis(AlertConstants.RATE_LIMIT_WINDOW_MINUTES);
         alerts.entrySet().removeIf(entry ->
             now - entry.getValue().getTimestamp() > windowMillis);
-    }
-
-    private int getMaxAlertsPerPeriod(AlertLevel level) {
-        return level.getAlertLimit();
     }
 
     private static class AlertRecord {

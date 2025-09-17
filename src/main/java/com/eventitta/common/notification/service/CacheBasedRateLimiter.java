@@ -13,8 +13,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Component
 public class CacheBasedRateLimiter implements RateLimiter {
 
-    private static final String KEY_SEPARATOR = ":";
-
     private final Cache<String, AtomicInteger> alertCounts;
 
     public CacheBasedRateLimiter() {
@@ -38,14 +36,6 @@ public class CacheBasedRateLimiter implements RateLimiter {
     @Override
     public void reset() {
         alertCounts.invalidateAll();
-    }
-
-    private String createKey(String errorCode, AlertLevel level) {
-        return errorCode + KEY_SEPARATOR + level;
-    }
-
-    private int getMaxAlertsPerPeriod(AlertLevel level) {
-        return level.getAlertLimit();
     }
 
     public CacheStats getCacheStats() {

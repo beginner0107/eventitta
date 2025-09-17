@@ -57,8 +57,4 @@ public class FixedWindowRateLimiter implements RateLimiter {
         }
         return true;
     }
-
-    private int getMaxAlertsPerPeriod(AlertLevel level) {
-        return level.getAlertLimit();
-    }
 }

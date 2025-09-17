@@ -27,9 +27,13 @@ public class SlidingWindowLogRateLimiter implements RateLimiter {
         List<Long> timestamps = alerts.computeIfAbsent(key, k -> new ArrayList<>());
         long now = clock.millis();
         timestamps.removeIf(ts -> ts <= now - RATE_LIMIT_WINDOW_MILLIS);
-        timestamps.add(now);
         int maxAlerts = getMaxAlertsPerPeriod(level);
-        return timestamps.size() <= maxAlerts;
+        if (timestamps.size() < maxAlerts) {
+            timestamps.add(now);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     @Override

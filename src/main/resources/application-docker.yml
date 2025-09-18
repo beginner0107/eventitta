@@ -7,8 +7,8 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
-    defer-datasource-initialization: true
+      ddl-auto: none  # Flyway로 스키마 관리
+    defer-datasource-initialization: false
     properties:
       hibernate:
         format_sql: true
@@ -16,6 +16,15 @@ spring:
   sql:
     init:
       mode: never
+
+  # Flyway 설정 추가
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 0
+    validate-on-migrate: true
+    clean-disabled: false  # Docker 환경에서는 clean 허용
 
   devtools:
     restart:

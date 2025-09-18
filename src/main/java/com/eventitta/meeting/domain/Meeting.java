@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Objects;
 
 @Entity
+@Table(name = "meetings")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor

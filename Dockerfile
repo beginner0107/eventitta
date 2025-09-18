@@ -10,7 +10,7 @@ COPY gradlew .
 RUN chmod +x gradlew
 RUN ./gradlew clean bootJar --no-daemon --warning-mode=none
 
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:17-jre
 WORKDIR /app
 COPY --from=build /app/build/libs/*.jar app.jar
 

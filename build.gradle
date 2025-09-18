@@ -4,6 +4,7 @@ plugins {
     id 'io.spring.dependency-management' version '1.1.7'
     id 'org.ec4j.editorconfig' version '0.1.0'
     id 'me.champeau.jmh' version '0.7.2'
+    id 'org.flywaydb.flyway' version '10.7.1'
 }
 
 group = 'com'
@@ -57,6 +58,10 @@ dependencies {
     runtimeOnly 'p6spy:p6spy:3.9.1'
     implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
 
+    // Flyway 의존성
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-mysql'
+
     // AWS S3 의존성 추가 (Spring Boot 3.x 호환)
     implementation 'software.amazon.awssdk:s3:2.20.26'
     implementation 'software.amazon.awssdk:auth:2.20.26'
@@ -70,7 +75,7 @@ dependencies {
 }
 
 tasks.withType(JavaCompile).configureEach {
-    options.generatedSourceOutputDirectory = file("$buildDir/generated/sources/annotationProcessor/java/main")
+    options.generatedSourceOutputDirectory = file("${layout.buildDirectory.get()}/generated/sources/annotationProcessor/java/main")
     options.compilerArgs += ['-parameters']
     options.incremental = false
 }
@@ -79,7 +84,7 @@ editorconfig {
     includes = ['src/**', 'build.gradle']
     excludes = [
         '**/generated/**',
-        "${buildDir}/**"
+        "${layout.buildDirectory.get()}/**"
     ]
 }
 

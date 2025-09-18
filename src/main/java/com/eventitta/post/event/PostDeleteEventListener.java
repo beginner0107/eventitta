@@ -2,7 +2,6 @@ package com.eventitta.post.event;
 
 import com.eventitta.file.service.FileStorageService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -14,7 +13,7 @@ public class PostDeleteEventListener {
     private final FileStorageService fileStorageService;
 
     public PostDeleteEventListener(
-        @Qualifier(value = "localFileStorageService") FileStorageService fileStorageService) {
+        FileStorageService fileStorageService) {
         this.fileStorageService = fileStorageService;
     }
 

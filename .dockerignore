@@ -9,3 +9,6 @@ node_modules/
 .gitignore
 **/*.log
 **/*.sock
+.idea
+.gradle
+*.imls

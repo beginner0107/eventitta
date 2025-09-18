@@ -1,21 +1,18 @@
-# syntax=docker/dockerfile:1
 FROM gradle:8.13-jdk17 AS build
 WORKDIR /app
 
+COPY build.gradle settings.gradle gradle.properties ./
 COPY gradle/ gradle/
-COPY gradlew .
-COPY gradlew.bat .
-COPY build.gradle .
-COPY settings.gradle .
-COPY gradle.properties .
-RUN chmod +x ./gradlew
+RUN ./gradlew dependencies --no-daemon || true
 
 COPY src/ src/
+COPY gradlew .
+RUN chmod +x gradlew
 RUN ./gradlew clean bootJar --no-daemon --warning-mode=none
 
-FROM eclipse-temurin:17-jre
+FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
-COPY --from=build /app/build/libs/*.jar /app/app.jar
+COPY --from=build /app/build/libs/*.jar app.jar
+
 EXPOSE 8080
-ENV SPRING_PROFILES_ACTIVE=docker
 ENTRYPOINT ["java","-Dfile.encoding=UTF-8","-jar","/app/app.jar"]

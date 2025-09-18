@@ -10,7 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "region")
+@Table(name = "regions")
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor

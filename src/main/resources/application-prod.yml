@@ -2,25 +2,67 @@ spring:
   config:
     activate:
       on-profile: prod
-
   datasource:
-    url: ${JDBC_URL}
+    url: jdbc:mysql://${RDS_ENDPOINT}:3306/${DB_NAME}?useSSL=true&requireSSL=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
     username: ${JDBC_USERNAME}
     password: ${JDBC_PASSWORD}
-
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: none  # Flyway가 스키마 관리하므로 none으로 설정
     show-sql: false
-
   sql:
     init:
       mode: never
-
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 0
+    validate-on-migrate: true
+    out-of-order: false
+    clean-disabled: true  # 운영환경에서는 clean 비활성화
+    url: ${spring.datasource.url}
+    user: ${spring.datasource.username}
+    password: ${spring.datasource.password}
   servlet:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
+
+server:
+  port: ${SERVER_PORT:8080}
+
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-validity-ms: ${JWT_ACCESS_TOKEN_VALIDITY:3600000}
+  refresh-token-validity-ms: ${JWT_REFRESH_TOKEN_VALIDITY:86400000}
+
+file:
+  storage:
+    location: ${FILE_STORAGE_LOCATION:/app/uploads}
+
+festival:
+  seoul:
+    base-url: http://openapi.seoul.go.kr:8088
+  national:
+    base-url: http://api.data.go.kr/openapi/tn_pubr_public_cltur_fstvl_api
+
+api:
+  seoul:
+    key: ${SEOUL_API_KEY}
+  national:
+    key: ${NATIONAL_API_KEY}
 
 cloud:
   aws:
@@ -38,6 +80,10 @@ logging:
   level:
     root: INFO
     org.hibernate.SQL: WARN
+  file:
+    name: ${LOG_FILE_PATH:/app/logs/eventitta.log}
+    max-size: 10MB
+    max-history: 30
 
 async:
   core-pool-size: 4
@@ -47,3 +93,7 @@ async:
 notification:
   slack:
     enabled: true
+    webhook-url: ${SLACK_WEBHOOK_URL}
+    channel: ${SLACK_CHANNEL:#eventitta-alerts}
+    username: ${SLACK_USERNAME:eventitta-bot}
+    timeout-seconds: ${SLACK_TIMEOUT:5}

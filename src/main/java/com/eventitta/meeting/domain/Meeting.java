@@ -1,5 +1,6 @@
 package com.eventitta.meeting.domain;
 
+import com.eventitta.common.config.BaseEntity;
 import com.eventitta.meeting.dto.request.MeetingUpdateRequest;
 import com.eventitta.user.domain.User;
 import jakarta.persistence.*;
@@ -16,7 +17,7 @@ import java.util.Objects;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class Meeting {
+public class Meeting extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -89,6 +89,7 @@ public class UserActivityService {
         ActivityType activityType = activityTypeRepository.findByCode(activityCode)
             .orElseThrow(INVALID_ACTIVITY_TYPE::defaultException);
 
+        // 멱등성 처리 관련 -> 조건 문을 주어서 조회되지 않는 경우 return 시키면 됨
         userActivityRepository.findByUserIdAndActivityType_IdAndTargetId(userId, activityType.getId(), targetId)
             .ifPresent(activity -> {
                 UserPoints userPoints = userPointsRepository.findByUserId(userId)

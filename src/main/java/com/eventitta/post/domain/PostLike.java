@@ -1,14 +1,13 @@
 package com.eventitta.post.domain;
 
+import com.eventitta.common.config.BaseTimeEntity;
 import com.eventitta.user.domain.User;
 import jakarta.persistence.*;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "post_likes",
     uniqueConstraints = @UniqueConstraint(columnNames = {"post_id", "user_id"}))
-public class PostLike {
+public class PostLike extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -21,15 +20,12 @@ public class PostLike {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    private LocalDateTime likedAt;
-
     protected PostLike() {
     }
 
     public PostLike(Post post, User user) {
         this.post = post;
         this.user = user;
-        this.likedAt = LocalDateTime.now();
     }
 
     public Long getId() {
@@ -42,9 +38,5 @@ public class PostLike {
 
     public User getUser() {
         return user;
-    }
-
-    public LocalDateTime getLikedAt() {
-        return likedAt;
     }
 }

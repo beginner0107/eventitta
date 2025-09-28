@@ -1,5 +1,6 @@
 package com.eventitta.meeting.domain;
 
+import com.eventitta.common.config.BaseTimeEntity;
 import com.eventitta.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -14,7 +15,7 @@ import lombok.NoArgsConstructor;
 )
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class MeetingParticipant {
+public class MeetingParticipant extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

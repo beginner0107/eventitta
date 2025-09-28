@@ -1,24 +1,20 @@
 package com.eventitta.gamification.domain;
 
+import com.eventitta.common.config.BaseTimeEntity;
 import com.eventitta.user.domain.User;
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@EntityListeners(AuditingEntityListener.class)
 @Table(
     name = "user_activities",
     uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "activity_type_id", "target_id"})
 )
 @AllArgsConstructor
 @Builder
-public class UserActivity {
+public class UserActivity extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,10 +33,6 @@ public class UserActivity {
 
     @Column(nullable = false)
     private Long targetId;
-
-    @CreatedDate
-    @Column(updatable = false)
-    private LocalDateTime createdAt;
 
     public UserActivity(User user, ActivityType activityType, Long targetId) {
         this.user = user;

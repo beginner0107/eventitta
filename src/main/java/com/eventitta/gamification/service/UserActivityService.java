@@ -4,7 +4,6 @@ import com.eventitta.gamification.domain.ActivityType;
 import com.eventitta.gamification.domain.UserActivity;
 import com.eventitta.gamification.domain.UserPoints;
 import com.eventitta.gamification.dto.query.ActivitySummary;
-import com.eventitta.gamification.exception.UserActivityException;
 import com.eventitta.gamification.repository.ActivityTypeRepository;
 import com.eventitta.gamification.repository.UserActivityRepository;
 import com.eventitta.gamification.repository.UserPointsRepository;
@@ -13,20 +12,15 @@ import com.eventitta.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Recover;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-import static com.eventitta.gamification.exception.UserActivityErrorCode.CONCURRENT_MODIFICATION_RETRY_EXHAUSTED;
 import static com.eventitta.gamification.exception.UserActivityErrorCode.DUPLICATED_USER_ACTIVITY;
 import static com.eventitta.gamification.exception.UserActivityErrorCode.INVALID_ACTIVITY_TYPE;
-import static com.eventitta.user.exception.UserErrorCode.NOT_FOUND_USER_ID;
 import static com.eventitta.gamification.exception.UserPointsErrorCode.NOT_FOUND_USER_POINTS;
+import static com.eventitta.user.exception.UserErrorCode.NOT_FOUND_USER_ID;
 
 @Slf4j
 @Service
@@ -39,17 +33,6 @@ public class UserActivityService {
     private final BadgeService badgeService;
     private final UserPointsRepository userPointsRepository;
 
-
-    @Retryable(
-        retryFor = {ObjectOptimisticLockingFailureException.class},
-        noRetryFor = {UserActivityException.class},
-        maxAttempts = 3,
-        backoff = @Backoff(
-            delay = 50,
-            multiplier = 2.0,
-            random = true
-        )
-    )
     @Transactional
     public void recordActivity(Long userId, String activityCode, Long targetId) {
         User user = userRepository.findById(userId)
@@ -61,6 +44,8 @@ public class UserActivityService {
         try {
             userActivityRepository.saveAndFlush(new UserActivity(user, type, targetId));
         } catch (DataIntegrityViolationException dup) {
+            log.warn("중복된 활동 기록 시도: userId={}, activityCode={}, targetId={}",
+                userId, activityCode, targetId);
             throw DUPLICATED_USER_ACTIVITY.defaultException(dup);
         }
 
@@ -73,14 +58,6 @@ public class UserActivityService {
         badgeService.checkAndAwardBadges(user, currentPoints);
     }
 
-    @Recover
-    public void recoverRecordActivity(ObjectOptimisticLockingFailureException ex, Long userId, String activityCode, Long targetId) {
-        log.error("모든 재시도 후 활동 기록에 실패했습니다. 사용자ID={}, 활동코드={}, 대상ID={}",
-            userId, activityCode, targetId, ex);
-
-        throw CONCURRENT_MODIFICATION_RETRY_EXHAUSTED.defaultException(ex);
-    }
-
     @Transactional
     public void revokeActivity(Long userId, String activityCode, Long targetId) {
         userRepository.findById(userId)
@@ -89,15 +66,14 @@ public class UserActivityService {
         ActivityType activityType = activityTypeRepository.findByCode(activityCode)
             .orElseThrow(INVALID_ACTIVITY_TYPE::defaultException);
 
-        // 멱등성 처리 관련 -> 조건 문을 주어서 조회되지 않는 경우 return 시키면 됨
-        userActivityRepository.findByUserIdAndActivityType_IdAndTargetId(userId, activityType.getId(), targetId)
-            .ifPresent(activity -> {
-                UserPoints userPoints = userPointsRepository.findByUserId(userId)
-                    .orElseThrow(NOT_FOUND_USER_POINTS::defaultException);
+        long deletedCount = userActivityRepository
+            .deleteByUserIdAndActivityType_IdAndTargetId(userId, activityType.getId(), targetId);
 
-                userPoints.subtractPoints(activityType.getDefaultPoint());
-                userActivityRepository.delete(activity);
-            });
+        if (deletedCount > 0) {
+            UserPoints userPoints = userPointsRepository.findByUserId(userId)
+                .orElseThrow(NOT_FOUND_USER_POINTS::defaultException);
+            userPoints.subtractPoints(activityType.getDefaultPoint());
+        }
     }
 
     @Transactional(readOnly = true)

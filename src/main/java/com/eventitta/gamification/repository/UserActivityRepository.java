@@ -2,6 +2,7 @@ package com.eventitta.gamification.repository;
 
 import com.eventitta.gamification.domain.UserActivity;
 import com.eventitta.gamification.dto.query.ActivitySummary;
+import com.eventitta.user.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -23,4 +24,8 @@ public interface UserActivityRepository extends JpaRepository<UserActivity, Long
     List<ActivitySummary> countActivitiesByUser(@Param("userId") Long userId);
 
     long countByUserId(Long userId);
+
+    List<UserActivity> findByUserId(Long userId);
+
+    long deleteByUserIdAndActivityType_IdAndTargetId(Long userId, Long activityTypeId, Long targetId);
 }

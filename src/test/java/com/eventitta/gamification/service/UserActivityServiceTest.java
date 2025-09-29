@@ -131,8 +131,8 @@ class UserActivityServiceTest {
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(activityTypeRepository.findByCode(code)).thenReturn(Optional.of(type));
-        when(userActivityRepository.findByUserIdAndActivityType_IdAndTargetId(userId, type.getId(), targetId))
-            .thenReturn(Optional.of(activity));
+        when(userActivityRepository.deleteByUserIdAndActivityType_IdAndTargetId(userId, type.getId(), targetId))
+            .thenReturn(1L);
         when(userPointsRepository.findByUserId(userId)).thenReturn(Optional.of(points));
 
         // when
@@ -140,6 +140,7 @@ class UserActivityServiceTest {
 
         // then
         assertThat(points.getPoints()).isEqualTo(15);
-        verify(userActivityRepository).delete(activity);
+        verify(userActivityRepository)
+            .deleteByUserIdAndActivityType_IdAndTargetId(userId, type.getId(), targetId);
     }
 }

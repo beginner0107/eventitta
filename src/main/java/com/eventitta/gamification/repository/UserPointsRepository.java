@@ -12,7 +12,7 @@ public interface UserPointsRepository extends JpaRepository<UserPoints, Long> {
 
     Optional<UserPoints> findByUserId(@Param("userId") Long userId);
 
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Modifying(flushAutomatically = true)
     @Query(value = """
         insert into user_points (user_id, points, version)
         values (:userId, :delta, 1)

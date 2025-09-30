@@ -20,4 +20,7 @@ public interface UserPointsRepository extends JpaRepository<UserPoints, Long> {
                                 version = version + 1
         """, nativeQuery = true)
     int upsertAndAddPoints(@Param("userId") Long userId, @Param("delta") int delta);
+
+    @Query(value = "SELECT points, version FROM user_points WHERE user_id = :userId", nativeQuery = true)
+    Object[] getCurrentPointsAndVersionByUserId(@Param("userId") Long userId);
 }

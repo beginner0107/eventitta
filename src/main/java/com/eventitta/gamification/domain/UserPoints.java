@@ -14,7 +14,7 @@ public class UserPoints {
 
     @Id
     @Column(name = "user_id")
-    private Long userId; // @MapsId로 user의 PK를 공유. 직접 세팅 금지!
+    private Long userId;
 
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @MapsId
@@ -44,7 +44,6 @@ public class UserPoints {
         this.points = Math.max(0, this.points - amount);
     }
 
-    // 동등성은 식별자 기반으로만 (영속성 컨텍스트 안전)
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

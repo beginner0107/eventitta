@@ -1,10 +1,8 @@
 package com.eventitta.gamification.service;
 
 import com.eventitta.gamification.domain.ActivityType;
-import com.eventitta.gamification.domain.UserPoints;
 import com.eventitta.gamification.repository.ActivityTypeRepository;
 import com.eventitta.gamification.repository.UserActivityRepository;
-import com.eventitta.gamification.repository.UserPointsRepository;
 import com.eventitta.user.domain.Provider;
 import com.eventitta.user.domain.Role;
 import com.eventitta.user.domain.User;
@@ -28,9 +26,6 @@ class UserActivityServiceProblemsTest {
 
     @Autowired
     private UserActivityRepository userActivityRepository;
-
-    @Autowired
-    private UserPointsRepository userPointsRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -58,7 +53,6 @@ class UserActivityServiceProblemsTest {
     @Commit
     void cleanupData() {
         userActivityRepository.deleteAll();
-        userPointsRepository.deleteAll();
         userRepository.deleteAll();
         activityTypeRepository.deleteAll();
     }
@@ -66,7 +60,7 @@ class UserActivityServiceProblemsTest {
     @Transactional
     @Commit
     Long createTestData() {
-        // 테스트 사용자 생성
+        // 테스트 사용자 생성 (초기 포인트는 0)
         User testUser = userRepository.save(User.builder()
             .email("test@example.com")
             .password("pw1231231231231231231312132")
@@ -74,9 +68,6 @@ class UserActivityServiceProblemsTest {
             .role(Role.USER)
             .provider(Provider.LOCAL)
             .build());
-
-        // 초기 포인트 설정 - 같은 트랜잭션에서 처리
-        userPointsRepository.save(UserPoints.of(testUser));
 
         // 활동 타입들 생성
         activityTypeRepository.save(new ActivityType("LOGIN", "로그인", 10));
@@ -90,46 +81,54 @@ class UserActivityServiceProblemsTest {
     }
 
     @Test
-    @DisplayName("문제 1: REPEATABLE READ로 인한 데이터 불일치")
+    @DisplayName("활동 기록 및 포인트 적립 테스트")
     @Transactional
-    void JPA_Native_혼재_문제_증명() {
+    void testRecordActivity() {
         // given: 초기 상태 확인
-        UserPoints initialPoints = userPointsRepository.findByUserId(testUserId).orElseThrow();
-        System.out.println("=== JPA와 Native SQL 혼재 문제 ===");
-        System.out.println("초기 포인트: " + initialPoints.getPoints());
-        System.out.println("초기 버전: " + initialPoints.getVersion());
+        User initialUser = userRepository.findById(testUserId).orElseThrow();
+        System.out.println("=== 활동 기록 및 포인트 적립 테스트 ===");
+        System.out.println("초기 포인트: " + initialUser.getPoints());
 
-        // when: Native SQL로 포인트 직접 업데이트
-        userPointsRepository.upsertAndAddPoints(testUserId, 20);
-        System.out.println("Native SQL로 20 포인트 추가 완료");
-
-        // then: JPA로 다시 조회했을 때 문제 확인
-        UserPoints afterNativeUpdate = userPointsRepository.findByUserId(testUserId).orElseThrow();
-        System.out.println("JPA 조회 포인트: " + afterNativeUpdate.getPoints());
-        System.out.println("JPA 조회 버전: " + afterNativeUpdate.getVersion());
-
-        // native query로 조회
-        Object[] queryResult = userPointsRepository.getCurrentPointsAndVersionByUserId(testUserId);
-        Object[] actualResult = (Object[]) queryResult[0];
-        Integer currentPoints = (Integer) actualResult[0];
-        Long currentVersion = (Long) actualResult[1];
-        System.out.println("Native SQL 조회 포인트: " + currentPoints);
-        System.out.println("Native SQL 조회 버전: " + currentVersion);
-
-
-        // EntityManager 클리어 후 재조회
+        // when: 로그인 활동 기록
+        userActivityService.recordActivity(testUserId, "LOGIN", 1L);
+        entityManager.flush();
         entityManager.clear();
-        UserPoints afterClear = userPointsRepository.findByUserId(testUserId).orElseThrow();
-        System.out.println("EntityManager.clear() 후 포인트: " + afterClear.getPoints());
-        System.out.println("EntityManager.clear() 후 버전: " + afterClear.getVersion());
 
-        // DB에서 직접 확인
-        Object[] dbResult = (Object[]) entityManager.createNativeQuery(
-                "SELECT points, version FROM user_points WHERE user_id = ?")
-            .setParameter(1, testUserId)
-            .getSingleResult();
+        // then: 포인트 증가 확인
+        User afterLogin = userRepository.findById(testUserId).orElseThrow();
+        System.out.println("로그인 후 포인트: " + afterLogin.getPoints());
 
-        System.out.println("실제 DB 포인트: " + dbResult[0]);
-        System.out.println("실제 DB 버전: " + dbResult[1]);
+        // when: 댓글 작성 활동 기록
+        userActivityService.recordActivity(testUserId, "COMMENT", 1L);
+        entityManager.flush();
+        entityManager.clear();
+
+        // then: 포인트 추가 증가 확인
+        User afterComment = userRepository.findById(testUserId).orElseThrow();
+        System.out.println("댓글 작성 후 포인트: " + afterComment.getPoints());
+    }
+
+    @Test
+    @DisplayName("활동 취소 및 포인트 차감 테스트")
+    @Transactional
+    void testRevokeActivity() {
+        // given: 먼저 활동을 기록하여 포인트 적립
+        userActivityService.recordActivity(testUserId, "LOGIN", 1L);
+        userActivityService.recordActivity(testUserId, "COMMENT", 1L);
+        entityManager.flush();
+        entityManager.clear();
+
+        User userBeforeRevoke = userRepository.findById(testUserId).orElseThrow();
+        System.out.println("=== 활동 취소 및 포인트 차감 테스트 ===");
+        System.out.println("취소 전 포인트: " + userBeforeRevoke.getPoints());
+
+        // when: 댓글 활동 취소
+        userActivityService.revokeActivity(testUserId, "COMMENT", 1L);
+        entityManager.flush();
+        entityManager.clear();
+
+        // then: 포인트 차감 확인
+        User afterRevoke = userRepository.findById(testUserId).orElseThrow();
+        System.out.println("활동 취소 후 포인트: " + afterRevoke.getPoints());
     }
 }

@@ -4,7 +4,6 @@ import com.eventitta.gamification.domain.ActivityType;
 import com.eventitta.gamification.domain.Badge;
 import com.eventitta.gamification.domain.BadgeRule;
 import com.eventitta.gamification.domain.UserBadge;
-import com.eventitta.gamification.domain.UserPoints;
 import com.eventitta.gamification.evaluator.BadgeRuleEvaluator;
 import com.eventitta.gamification.repository.BadgeRuleRepository;
 import com.eventitta.gamification.repository.UserBadgeRepository;
@@ -51,8 +50,6 @@ class BadgeServiceTest {
             .nickname("testUser")
             .build();
 
-        UserPoints userPoints = UserPoints.of(user);
-
         ActivityType activityType = ActivityType.builder()
             .id(1L)
             .code("CREATE_POST")
@@ -81,7 +78,7 @@ class BadgeServiceTest {
         given(userBadgeRepository.existsByUserIdAndBadgeId(user.getId(), badge.getId())).willReturn(false);
 
         // when
-        List<String> result = badgeService.checkAndAwardBadges(user, userPoints);
+        List<String> result = badgeService.checkAndAwardBadges(user);
 
         // then
         assertThat(result).containsExactly("첫 게시글");
@@ -93,7 +90,6 @@ class BadgeServiceTest {
     void givenAlreadyAwardedBadge_whenCheckAndAward_thenNoDuplicateIssue() {
         // given
         User user = User.builder().id(1L).email("test@test.com").nickname("testUser").build();
-        UserPoints userPoints = UserPoints.of(user);
 
         ActivityType activityType = ActivityType.builder()
             .id(1L)
@@ -123,7 +119,7 @@ class BadgeServiceTest {
         given(userBadgeRepository.existsByUserIdAndBadgeId(user.getId(), badge.getId())).willReturn(true);
 
         // when
-        List<String> result = badgeService.checkAndAwardBadges(user, userPoints);
+        List<String> result = badgeService.checkAndAwardBadges(user);
 
         // then
         assertThat(result).isEmpty();
@@ -135,7 +131,6 @@ class BadgeServiceTest {
     void givenDisabledRule_whenCheckAndAward_thenRuleIgnored() {
         // given
         User user = User.builder().id(1L).email("test@test.com").nickname("testUser").build();
-        UserPoints userPoints = UserPoints.of(user);
 
         ActivityType activityType = ActivityType.builder()
             .id(1L)
@@ -161,7 +156,7 @@ class BadgeServiceTest {
         given(badgeRuleRepository.findAll()).willReturn(List.of(rule));
 
         // when
-        List<String> result = badgeService.checkAndAwardBadges(user, userPoints);
+        List<String> result = badgeService.checkAndAwardBadges(user);
 
         // then
         assertThat(result).isEmpty();
@@ -173,7 +168,6 @@ class BadgeServiceTest {
     void givenThresholdNotMet_whenCheckAndAward_thenNoBadgeIssued() {
         // given
         User user = User.builder().id(1L).email("test@test.com").nickname("testUser").build();
-        UserPoints userPoints = UserPoints.of(user);
 
         ActivityType activityType = ActivityType.builder()
             .id(1L)
@@ -202,7 +196,7 @@ class BadgeServiceTest {
         given(mockEvaluator.isSatisfied(user, rule)).willReturn(false);
 
         // when
-        List<String> result = badgeService.checkAndAwardBadges(user, userPoints);
+        List<String> result = badgeService.checkAndAwardBadges(user);
 
         // then
         assertThat(result).isEmpty();
@@ -214,7 +208,6 @@ class BadgeServiceTest {
     void givenMultipleRules_whenCheckAndAward_thenOnlyQualifiedBadgesIssued() {
         // given
         User user = User.builder().id(1L).email("test@test.com").nickname("testUser").build();
-        UserPoints userPoints = UserPoints.of(user);
 
         ActivityType postActivityType = ActivityType.builder()
             .id(1L).code("CREATE_POST").name("게시글 작성").defaultPoint(10).build();
@@ -237,7 +230,7 @@ class BadgeServiceTest {
         given(userBadgeRepository.existsByUserIdAndBadgeId(user.getId(), badge1.getId())).willReturn(false);
 
         // when
-        List<String> result = badgeService.checkAndAwardBadges(user, userPoints);
+        List<String> result = badgeService.checkAndAwardBadges(user);
 
         // then
         assertThat(result).containsExactly("첫 게시글");

@@ -6,7 +6,8 @@ import com.eventitta.comment.dto.query.CommentFlatDto;
 import com.eventitta.comment.dto.response.CommentWithChildrenDto;
 import com.eventitta.comment.exception.CommentException;
 import com.eventitta.comment.repository.CommentRepository;
-import com.eventitta.gamification.activitylog.ActivityEventPublisher;
+import com.eventitta.gamification.domain.ActivityType;
+import com.eventitta.gamification.event.ActivityEventPublisher;
 import com.eventitta.post.domain.Post;
 import com.eventitta.post.exception.PostException;
 import com.eventitta.post.repository.PostRepository;
@@ -23,7 +24,7 @@ import java.util.stream.Collectors;
 import static com.eventitta.auth.exception.AuthErrorCode.NOT_FOUND_USER_ID;
 import static com.eventitta.comment.exception.CommentErrorCode.NOT_FOUND_COMMENT_ID;
 import static com.eventitta.comment.exception.CommentErrorCode.NO_AUTHORITY_TO_MODIFY_COMMENT;
-import static com.eventitta.gamification.constant.ActivityCodes.CREATE_COMMENT;
+import static com.eventitta.gamification.domain.ActivityType.*;
 import static com.eventitta.post.exception.PostErrorCode.NOT_FOUND_POST_ID;
 
 @Service
@@ -93,6 +94,6 @@ public class CommentService {
             throw new CommentException(NO_AUTHORITY_TO_MODIFY_COMMENT);
         }
         comment.softDelete();
-        activityEventPublisher.publishRevoke(CREATE_COMMENT, userId, commentId);
+        activityEventPublisher.publishRevoke(DELETE_COMMENT, userId, commentId);
     }
 }

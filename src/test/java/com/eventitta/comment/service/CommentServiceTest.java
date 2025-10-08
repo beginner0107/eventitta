@@ -3,8 +3,7 @@ package com.eventitta.comment.service;
 import com.eventitta.comment.domain.Comment;
 import com.eventitta.comment.exception.CommentException;
 import com.eventitta.comment.repository.CommentRepository;
-import com.eventitta.gamification.activitylog.ActivityEventPublisher;
-import com.eventitta.gamification.constant.ActivityCodes;
+import com.eventitta.gamification.event.ActivityEventPublisher;
 import com.eventitta.post.domain.Post;
 import com.eventitta.post.exception.PostException;
 import com.eventitta.post.repository.PostRepository;
@@ -21,6 +20,8 @@ import java.util.Optional;
 
 import static com.eventitta.comment.exception.CommentErrorCode.NOT_FOUND_COMMENT_ID;
 import static com.eventitta.comment.exception.CommentErrorCode.NO_AUTHORITY_TO_MODIFY_COMMENT;
+import static com.eventitta.gamification.domain.ActivityType.CREATE_COMMENT;
+import static com.eventitta.gamification.domain.ActivityType.DELETE_COMMENT;
 import static com.eventitta.post.exception.PostErrorCode.NOT_FOUND_POST_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -74,7 +75,7 @@ class CommentServiceTest {
 
         // then
         verify(commentRepository).save(any(Comment.class));
-        verify(activityEventPublisher).publish(ActivityCodes.CREATE_COMMENT, userId, fakeCommentId);
+        verify(activityEventPublisher).publish(CREATE_COMMENT, userId, fakeCommentId);
     }
 
     @Test
@@ -222,7 +223,7 @@ class CommentServiceTest {
         commentService.deleteComment(commentId, userId);
 
         // then
-        verify(activityEventPublisher).publishRevoke(ActivityCodes.CREATE_COMMENT, userId, commentId);
+        verify(activityEventPublisher).publishRevoke(DELETE_COMMENT, userId, commentId);
     }
 
     private Comment createComment(Long id, Long authorId, boolean deleted) {

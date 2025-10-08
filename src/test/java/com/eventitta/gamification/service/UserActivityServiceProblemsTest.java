@@ -1,7 +1,5 @@
 package com.eventitta.gamification.service;
 
-import com.eventitta.gamification.domain.ActivityType;
-import com.eventitta.gamification.repository.ActivityTypeRepository;
 import com.eventitta.gamification.repository.UserActivityRepository;
 import com.eventitta.user.domain.Provider;
 import com.eventitta.user.domain.Role;
@@ -17,6 +15,9 @@ import org.springframework.test.annotation.Commit;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
+import static com.eventitta.gamification.domain.ActivityType.*;
+import static org.assertj.core.api.Assertions.assertThat;
+
 @SpringBootTest
 @ActiveProfiles("test")
 class UserActivityServiceProblemsTest {
@@ -29,9 +30,6 @@ class UserActivityServiceProblemsTest {
 
     @Autowired
     private UserRepository userRepository;
-
-    @Autowired
-    private ActivityTypeRepository activityTypeRepository;
 
     @Autowired
     private EntityManager entityManager;
@@ -54,7 +52,6 @@ class UserActivityServiceProblemsTest {
     void cleanupData() {
         userActivityRepository.deleteAll();
         userRepository.deleteAll();
-        activityTypeRepository.deleteAll();
     }
 
     @Transactional
@@ -69,14 +66,6 @@ class UserActivityServiceProblemsTest {
             .provider(Provider.LOCAL)
             .build());
 
-        // 활동 타입들 생성
-        activityTypeRepository.save(new ActivityType("LOGIN", "로그인", 10));
-        activityTypeRepository.save(new ActivityType("COMMENT", "댓글작성", 5));
-        activityTypeRepository.save(new ActivityType("LIKE", "좋아요", 3));
-
-        // 강제로 flush하여 DB에 확실히 저장
-        entityManager.flush();
-
         return testUser.getId();
     }
 
@@ -85,27 +74,13 @@ class UserActivityServiceProblemsTest {
     @Transactional
     void testRecordActivity() {
         // given: 초기 상태 확인
-        User initialUser = userRepository.findById(testUserId).orElseThrow();
-        System.out.println("=== 활동 기록 및 포인트 적립 테스트 ===");
-        System.out.println("초기 포인트: " + initialUser.getPoints());
 
-        // when: 로그인 활동 기록
-        userActivityService.recordActivity(testUserId, "LOGIN", 1L);
-        entityManager.flush();
-        entityManager.clear();
-
-        // then: 포인트 증가 확인
-        User afterLogin = userRepository.findById(testUserId).orElseThrow();
-        System.out.println("로그인 후 포인트: " + afterLogin.getPoints());
-
-        // when: 댓글 작성 활동 기록
-        userActivityService.recordActivity(testUserId, "COMMENT", 1L);
-        entityManager.flush();
-        entityManager.clear();
+        // when
+        userActivityService.recordActivity(testUserId, USER_LOGIN, 1L);
 
         // then: 포인트 추가 증가 확인
         User afterComment = userRepository.findById(testUserId).orElseThrow();
-        System.out.println("댓글 작성 후 포인트: " + afterComment.getPoints());
+        assertThat(afterComment.getPoints()).isEqualTo(5);
     }
 
     @Test
@@ -113,8 +88,7 @@ class UserActivityServiceProblemsTest {
     @Transactional
     void testRevokeActivity() {
         // given: 먼저 활동을 기록하여 포인트 적립
-        userActivityService.recordActivity(testUserId, "LOGIN", 1L);
-        userActivityService.recordActivity(testUserId, "COMMENT", 1L);
+        userActivityService.recordActivity(testUserId, CREATE_COMMENT, 1L);
         entityManager.flush();
         entityManager.clear();
 
@@ -123,7 +97,7 @@ class UserActivityServiceProblemsTest {
         System.out.println("취소 전 포인트: " + userBeforeRevoke.getPoints());
 
         // when: 댓글 활동 취소
-        userActivityService.revokeActivity(testUserId, "COMMENT", 1L);
+        userActivityService.revokeActivity(testUserId, DELETE_COMMENT, 1L);
         entityManager.flush();
         entityManager.clear();
 

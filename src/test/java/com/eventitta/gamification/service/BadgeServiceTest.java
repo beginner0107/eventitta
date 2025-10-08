@@ -17,6 +17,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 
+import static com.eventitta.gamification.domain.ActivityType.CREATE_COMMENT;
+import static com.eventitta.gamification.domain.ActivityType.CREATE_POST;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -50,12 +52,7 @@ class BadgeServiceTest {
             .nickname("testUser")
             .build();
 
-        ActivityType activityType = ActivityType.builder()
-            .id(1L)
-            .code("CREATE_POST")
-            .name("게시글 작성")
-            .defaultPoint(10)
-            .build();
+        ActivityType activityType = CREATE_POST;
 
         Badge badge = Badge.builder()
             .id(1L)
@@ -91,12 +88,7 @@ class BadgeServiceTest {
         // given
         User user = User.builder().id(1L).email("test@test.com").nickname("testUser").build();
 
-        ActivityType activityType = ActivityType.builder()
-            .id(1L)
-            .code("CREATE_POST")
-            .name("게시글 작성")
-            .defaultPoint(10)
-            .build();
+        ActivityType activityType = CREATE_POST;
 
         Badge badge = Badge.builder()
             .id(1L)
@@ -132,12 +124,7 @@ class BadgeServiceTest {
         // given
         User user = User.builder().id(1L).email("test@test.com").nickname("testUser").build();
 
-        ActivityType activityType = ActivityType.builder()
-            .id(1L)
-            .code("CREATE_POST")
-            .name("게시글 작성")
-            .defaultPoint(10)
-            .build();
+        ActivityType activityType = CREATE_POST;
 
         Badge badge = Badge.builder()
             .id(1L)
@@ -169,13 +156,6 @@ class BadgeServiceTest {
         // given
         User user = User.builder().id(1L).email("test@test.com").nickname("testUser").build();
 
-        ActivityType activityType = ActivityType.builder()
-            .id(1L)
-            .code("CREATE_POST")
-            .name("게시글 작성")
-            .defaultPoint(10)
-            .build();
-
         Badge badge = Badge.builder()
             .id(1L)
             .name("고급 배지")
@@ -185,7 +165,7 @@ class BadgeServiceTest {
         BadgeRule rule = BadgeRule.builder()
             .id(1L)
             .badge(badge)
-            .activityType(activityType)
+            .activityType(CREATE_POST)
             .threshold(10)
             .enabled(true)
             .build();
@@ -209,16 +189,11 @@ class BadgeServiceTest {
         // given
         User user = User.builder().id(1L).email("test@test.com").nickname("testUser").build();
 
-        ActivityType postActivityType = ActivityType.builder()
-            .id(1L).code("CREATE_POST").name("게시글 작성").defaultPoint(10).build();
-        ActivityType commentActivityType = ActivityType.builder()
-            .id(2L).code("CREATE_COMMENT").name("댓글 작성").defaultPoint(5).build();
-
         Badge badge1 = Badge.builder().id(1L).name("첫 게시글").description("첫 번째 게시글 작성").build();
         Badge badge2 = Badge.builder().id(2L).name("첫 댓글").description("첫 번째 댓글 작성").build();
 
-        BadgeRule rule1 = BadgeRule.builder().id(1L).badge(badge1).activityType(postActivityType).threshold(1).enabled(true).build();
-        BadgeRule rule2 = BadgeRule.builder().id(2L).badge(badge2).activityType(commentActivityType).threshold(1).enabled(true).build();
+        BadgeRule rule1 = BadgeRule.builder().id(1L).badge(badge1).activityType(CREATE_POST).threshold(1).enabled(true).build();
+        BadgeRule rule2 = BadgeRule.builder().id(2L).badge(badge2).activityType(CREATE_COMMENT).threshold(1).enabled(true).build();
 
         given(badgeRuleRepository.findAll()).willReturn(List.of(rule1, rule2));
         given(evaluators.iterator()).willReturn(List.of(mockEvaluator).iterator());

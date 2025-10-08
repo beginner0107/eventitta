@@ -29,7 +29,7 @@ public class DashboardRepository {
                 ua.createdAt.max()
             ))
             .from(ua)
-            .join(ua.user, user);
+            .join(user).on(ua.userId.eq(user.id));
 
         if (from != null) {
             query.where(ua.createdAt.goe(from));

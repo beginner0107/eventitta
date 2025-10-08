@@ -17,6 +17,8 @@ import static com.eventitta.gamification.domain.ResourceType.*;
 @Table(name = "user_activities")
 public class UserActivity extends BaseTimeEntity {
 
+    private static final Long SYSTEM_TARGET_ID = 0L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -83,7 +85,7 @@ public class UserActivity extends BaseTimeEntity {
             .userId(userId)
             .activityType(activityType)
             .resourceType(SYSTEM)
-            .targetId(0L) // 시스템 활동은 고정값 0 사용
+            .targetId(SYSTEM_TARGET_ID)
             .pointsEarned(activityType.getDefaultPoint())
             .build();
     }

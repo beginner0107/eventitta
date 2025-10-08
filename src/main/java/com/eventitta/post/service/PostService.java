@@ -4,7 +4,7 @@ import com.eventitta.auth.exception.AuthErrorCode;
 import com.eventitta.auth.exception.AuthException;
 import com.eventitta.comment.repository.CommentRepository;
 import com.eventitta.common.response.PageResponse;
-import com.eventitta.gamification.activitylog.ActivityEventPublisher;
+import com.eventitta.gamification.event.ActivityEventPublisher;
 import com.eventitta.post.domain.Post;
 import com.eventitta.post.domain.PostImage;
 import com.eventitta.post.domain.PostLike;
@@ -36,8 +36,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.eventitta.gamification.constant.ActivityCodes.CREATE_POST;
-import static com.eventitta.gamification.constant.ActivityCodes.LIKE_POST;
+import static com.eventitta.gamification.domain.ActivityType.*;
 import static com.eventitta.post.exception.PostErrorCode.ACCESS_DENIED;
 import static com.eventitta.post.exception.PostErrorCode.NOT_FOUND_POST_ID;
 import static com.eventitta.region.exception.RegionErrorCode.NOT_FOUND_REGION_CODE;
@@ -110,7 +109,7 @@ public class PostService {
         post.clearImages();
         post.softDelete();
 
-        activityEventPublisher.publishRevoke(CREATE_POST, userId, postId);
+        activityEventPublisher.publishRevoke(DELETE_POST, userId, postId);
         postDeleteEventPublisher.publish(new PostDeletedEvent(imageUrls));
     }
 
@@ -154,7 +153,7 @@ public class PostService {
             PostLike like = new PostLike(post, user);
             postLikeRepository.save(like);
             post.incrementLikeCount();
-            activityEventPublisher.publish(LIKE_POST, userId, postId);
+            activityEventPublisher.publish(LIKE_POST_CANCEL, userId, postId);
         }
     }
 

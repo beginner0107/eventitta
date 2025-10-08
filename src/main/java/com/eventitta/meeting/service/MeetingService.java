@@ -1,7 +1,7 @@
 package com.eventitta.meeting.service;
 
 import com.eventitta.common.response.PageResponse;
-import com.eventitta.gamification.activitylog.ActivityEventPublisher;
+import com.eventitta.gamification.event.ActivityEventPublisher;
 import com.eventitta.meeting.domain.Meeting;
 import com.eventitta.meeting.domain.MeetingParticipant;
 import com.eventitta.meeting.domain.MeetingStatus;
@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.eventitta.gamification.constant.ActivityCodes.JOIN_MEETING;
+import static com.eventitta.gamification.domain.ActivityType.JOIN_MEETING;
 import static com.eventitta.meeting.exception.MeetingErrorCode.*;
 import static com.eventitta.user.exception.UserErrorCode.NOT_FOUND_USER_ID;
 

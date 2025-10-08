@@ -148,12 +148,12 @@ public class PostService {
         if (existing.isPresent()) {
             postLikeRepository.delete(existing.get());
             post.decrementLikeCount();
-            activityEventPublisher.publishRevoke(LIKE_POST, userId, postId);
+            activityEventPublisher.publishRevoke(LIKE_POST_CANCEL, userId, postId);
         } else {
             PostLike like = new PostLike(post, user);
             postLikeRepository.save(like);
             post.incrementLikeCount();
-            activityEventPublisher.publish(LIKE_POST_CANCEL, userId, postId);
+            activityEventPublisher.publish(LIKE_POST, userId, postId);
         }
     }
 

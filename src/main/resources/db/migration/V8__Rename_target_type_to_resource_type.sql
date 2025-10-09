@@ -1,9 +1,9 @@
 -- V8: Rename target_type to resource_type and update enum values
 
 -- 1. user_activities 테이블의 target_type을 resource_type으로 변경
--- 1-1. 새로운 resource_type 컬럼 추가
+-- 1-1. 새로운 resource_type 컬럼 추가 (NOT NULL, 기본값 'UNKNOWN')
 ALTER TABLE user_activities
-  ADD COLUMN resource_type VARCHAR(50);
+  ADD COLUMN resource_type VARCHAR(50) NOT NULL DEFAULT 'UNKNOWN';
 
 -- 1-2. 기존 target_type 데이터를 resource_type으로 매핑하여 복사
 -- TargetType -> ResourceType enum 값 매핑
@@ -14,12 +14,12 @@ SET resource_type = CASE target_type
                       WHEN 'MEETING' THEN 'MEETING'
                       WHEN 'USER' THEN 'SYSTEM'
                       WHEN 'POST_LIKE' THEN 'POST' -- POST_LIKE는 POST로 매핑
-                      ELSE 'POST' -- 기본값
+                      ELSE 'UNKNOWN' -- 예상하지 못한 값이나 NULL은 UNKNOWN으로 처리
   END;
 
--- 1-3. resource_type을 NOT NULL로 설정
+-- 1-3. resource_type 컬럼의 DEFAULT 값 제거
 ALTER TABLE user_activities
-  MODIFY COLUMN resource_type VARCHAR(50) NOT NULL;
+  ALTER COLUMN resource_type DROP DEFAULT;
 
 -- 1-4. 기존 target_type 컬럼과 인덱스 삭제
 ALTER TABLE user_activities

@@ -31,6 +31,7 @@ public enum ActivityType {
             case COMMENT -> UserActivity.forComment(userId, this, targetId);
             case MEETING -> UserActivity.forMeeting(userId, this, targetId);
             case SYSTEM -> UserActivity.forSystem(userId, this);
+            case UNKNOWN -> UserActivity.forUnknown(userId, this);
         };
     }
 }

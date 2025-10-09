@@ -18,6 +18,7 @@ import static com.eventitta.gamification.domain.ResourceType.*;
 public class UserActivity extends BaseTimeEntity {
 
     private static final Long SYSTEM_TARGET_ID = 0L;
+    private static final Long UNKNOWN_TARGET_ID = 0L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,7 +32,7 @@ public class UserActivity extends BaseTimeEntity {
     private ActivityType activityType;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "target_type", nullable = false, length = 50)
+    @Column(name = "resource_type", nullable = false, length = 50)
     private ResourceType resourceType;
 
     @Column(nullable = false)
@@ -87,6 +88,16 @@ public class UserActivity extends BaseTimeEntity {
             .resourceType(SYSTEM)
             .targetId(SYSTEM_TARGET_ID)
             .pointsEarned(activityType.getDefaultPoint())
+            .build();
+    }
+
+    public static UserActivity forUnknown(Long userId, ActivityType activityType) {
+        return UserActivity.builder()
+            .userId(userId)
+            .activityType(activityType)
+            .resourceType(UNKNOWN)
+            .targetId(UNKNOWN_TARGET_ID)
+            .pointsEarned(0)
             .build();
     }
 }

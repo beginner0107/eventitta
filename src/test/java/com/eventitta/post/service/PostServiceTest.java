@@ -508,7 +508,7 @@ class PostServiceTest {
         verify(post).decrementLikeCount();
 
         // 이벤트 발행 검증
-        verify(activityEventPublisher).publishRevoke(LIKE_POST, userId, postId);
+        verify(activityEventPublisher).publishRevoke(LIKE_POST_CANCEL, userId, postId);
     }
 
     @Test

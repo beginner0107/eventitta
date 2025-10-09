@@ -1,6 +1,7 @@
 package com.eventitta.user.domain;
 
 import com.eventitta.common.config.BaseEntity;
+import com.eventitta.user.exception.UserErrorCode;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -64,6 +65,9 @@ public class User extends BaseEntity {
     @Column(precision = 9, scale = 6)
     private BigDecimal longitude;
 
+    @Column(nullable = false)
+    private int points = 0;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
     private Role role;
@@ -103,5 +107,24 @@ public class User extends BaseEntity {
 
     public void delete() {
         this.deleted = true;
+    }
+
+    public void earnPoints(int amount) {
+        if (amount <= 0) {
+            throw UserErrorCode.INVALID_POINTS_AMOUNT.defaultException();
+        }
+        this.points += amount;
+    }
+
+    public void deductPoints(int amount) {
+        if (amount <= 0) {
+            throw UserErrorCode.INVALID_POINTS_AMOUNT.defaultException();
+        }
+
+        if (this.points < amount) {
+            throw UserErrorCode.INSUFFICIENT_POINTS.defaultException();
+        }
+
+        this.points -= amount;
     }
 }

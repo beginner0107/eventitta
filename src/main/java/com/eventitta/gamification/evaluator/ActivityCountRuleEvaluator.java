@@ -21,8 +21,8 @@ public class ActivityCountRuleEvaluator implements BadgeRuleEvaluator {
 
     @Override
     public boolean isSatisfied(User user, BadgeRule rule) {
-        long count = userActivityRepository.countByUserIdAndActivityType_Id(
-            user.getId(), rule.getActivityType().getId()
+        long count = userActivityRepository.countByUserIdAndActivityType(
+            user.getId(), rule.getActivityType()
         );
         return count >= rule.getThreshold();
     }

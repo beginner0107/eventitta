@@ -3,7 +3,6 @@ package com.eventitta.gamification.service;
 import com.eventitta.gamification.domain.Badge;
 import com.eventitta.gamification.domain.BadgeRule;
 import com.eventitta.gamification.domain.UserBadge;
-import com.eventitta.gamification.domain.UserPoints;
 import com.eventitta.gamification.evaluator.BadgeRuleEvaluator;
 import com.eventitta.gamification.repository.BadgeRuleRepository;
 import com.eventitta.gamification.repository.UserBadgeRepository;
@@ -25,7 +24,8 @@ public class BadgeService {
     private final UserBadgeRepository userBadgeRepository;
     private final List<BadgeRuleEvaluator> evaluators;
 
-    public List<String> checkAndAwardBadges(User user, UserPoints userPoints) {
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public List<String> checkAndAwardBadges(User user) {
         List<BadgeRule> rules = badgeRuleRepository.findAll();
         List<String> awarded = new ArrayList<>();
 

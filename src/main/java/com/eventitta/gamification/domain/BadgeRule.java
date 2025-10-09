@@ -21,8 +21,8 @@ public class BadgeRule extends BaseTimeEntity {
     @JoinColumn(name = "badge_id", nullable = false)
     private Badge badge;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "activity_type_id", nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "activity_type", nullable = false, length = 50)
     private ActivityType activityType;
 
     @Column(nullable = false)

@@ -1,4 +1,4 @@
-package com.eventitta.gamification.activitylog;
+package com.eventitta.gamification.event;
 
 import com.eventitta.gamification.service.UserActivityService;
 import lombok.RequiredArgsConstructor;
@@ -20,10 +20,10 @@ public class UserActivityEventListener {
     @TransactionalEventListener(phase = AFTER_COMMIT)
     public void handleUserActivity(UserActivityLogRequestedEvent event) {
         try {
-            userActivityService.recordActivity(event.userId(), event.activityCode(), event.targetId());
+            userActivityService.recordActivity(event.userId(), event.activityType(), event.targetId());
         } catch (Exception e) {
             log.error("[활동 기록 실패] userId={}, activityCode={}, targetId={}",
-                event.userId(), event.activityCode(), event.targetId(), e);
+                event.userId(), event.activityType().getDisplayName(), event.targetId(), e);
         }
     }
 
@@ -31,10 +31,10 @@ public class UserActivityEventListener {
     @TransactionalEventListener(phase = AFTER_COMMIT)
     public void handleUserActivityRevoke(UserActivityRevokeRequestedEvent event) {
         try {
-            userActivityService.revokeActivity(event.userId(), event.activityCode(), event.targetId());
+            userActivityService.revokeActivity(event.userId(), event.activityType(), event.targetId());
         } catch (Exception e) {
             log.error("[활동 취소 실패] userId={}, activityCode={}, targetId={}",
-                event.userId(), event.activityCode(), event.targetId(), e);
+                event.userId(), event.activityType(), event.targetId(), e);
         }
     }
 }

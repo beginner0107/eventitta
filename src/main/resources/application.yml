@@ -16,7 +16,7 @@ logging:
     com.eventitta.festivals: DEBUG
     com.eventitta.common.logging: INFO
     festival.error: INFO
-    
+
 # 축제 데이터 처리 관련 설정
 festival:
   geocoding:

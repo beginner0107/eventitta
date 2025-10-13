@@ -8,10 +8,23 @@ spring:
     init:
       mode: never
       schema-locations: classpath:schema.sql
+
 logging:
   level:
     root: INFO
     org.hibernate.SQL: WARN
+    com.eventitta.festivals: DEBUG
+    com.eventitta.common.logging: INFO
+    festival.error: INFO
+
+# 축제 데이터 처리 관련 설정
+festival:
+  geocoding:
+    base-url: https://nominatim.openstreetmap.org
+    user-agent: Eventitta/1.0 (${GEOCODING_CONTACT_EMAIL:dev@eventitta.com})
+    timeout-seconds: 5
+    request-delay-ms: 1000
+    enabled: true
 
 notification:
   slack:

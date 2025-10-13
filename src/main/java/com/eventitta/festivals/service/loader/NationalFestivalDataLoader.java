@@ -1,7 +1,7 @@
 package com.eventitta.festivals.service.loader;
 
 import com.eventitta.festivals.api.NationalFestivalApi;
-import com.eventitta.festivals.config.NationalFestivalConfig;
+import com.eventitta.festivals.config.NationalFestivalProperties;
 import com.eventitta.festivals.domain.Festival;
 import com.eventitta.festivals.dto.NationalFestivalItem;
 import com.eventitta.festivals.dto.NationalFestivalResponse;
@@ -21,7 +21,7 @@ public class NationalFestivalDataLoader {
 
     private final NationalFestivalApi nationalFestivalApi;
     private final FestivalMapper mapper;
-    private final NationalFestivalConfig config;
+    private final NationalFestivalProperties config;
 
     public Iterator<Festival> loadEvents(String serviceKey) {
         return new NationalEventIterator(serviceKey);

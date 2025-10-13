@@ -63,6 +63,8 @@ festival:
     base-url: http://openapi.seoul.go.kr:8088
   national:
     base-url: https://apis.data.go.kr
+  geocoding:
+    enabled: false
 
 api:
   seoul:

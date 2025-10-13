@@ -15,7 +15,6 @@ import java.time.LocalDate;
 
 @Slf4j
 @Service
-@Transactional
 @RequiredArgsConstructor
 public class FestivalService {
 

@@ -15,13 +15,17 @@ import java.util.Optional;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class NominatimGeocodingService implements GeocodingService {
 
     private final GeocodingProperties properties;
-
-    @Qualifier("geocodingRestClient")
     private final RestClient geocodingRestClient;
+
+    public NominatimGeocodingService(
+        GeocodingProperties properties,
+        @Qualifier("geocodingRestClient") RestClient geocodingRestClient) {
+        this.properties = properties;
+        this.geocodingRestClient = geocodingRestClient;
+    }
 
     @Override
     public Optional<Coordinates> getCoordinates(String address) {

@@ -7,9 +7,13 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.support.RestClientAdapter;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
+
+import java.net.http.HttpClient;
+import java.time.Duration;
 
 @Configuration
 public class RestClientConfig {
@@ -51,6 +55,31 @@ public class RestClientConfig {
     @Bean
     public RestClient slackRestClient() {
         return RestClient.builder()
+            .requestInterceptor(new RestClientLoggingInterceptor())
+            .build();
+    }
+
+    @Bean
+    public HttpClient geocodingHttpClient() {
+        return HttpClient.newBuilder()
+            .version(HttpClient.Version.HTTP_1_1)
+            .connectTimeout(Duration.ofSeconds(10))
+            .build();
+    }
+
+    @Bean
+    public RestClient geocodingRestClient(
+        @Value("${festival.geocoding.base-url}") String baseUrl,
+        @Value("${festival.geocoding.user-agent}") String userAgent,
+        @Qualifier("geocodingHttpClient") HttpClient httpClient
+    ) {
+        JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(httpClient);
+
+        return RestClient.builder()
+            .baseUrl(baseUrl)
+            .requestFactory(requestFactory)
+            .defaultHeader("User-Agent", userAgent)
+            .defaultHeader("Connection", "close")
             .requestInterceptor(new RestClientLoggingInterceptor())
             .build();
     }

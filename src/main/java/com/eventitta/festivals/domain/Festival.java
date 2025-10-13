@@ -130,7 +130,6 @@ public class Festival extends BaseTimeEntity {
         this.externalId = externalId;
     }
 
-    // 서울시 축제 생성을 위한 정적 팩토리 메서드
     public static Festival createSeoulFestival(String title, String venue, LocalDate startDate, LocalDate endDate,
                                                String category, String district, String targetAudience, String feeInfo,
                                                Boolean isFree, String performers, String programInfo, String mainImageUrl,
@@ -163,7 +162,6 @@ public class Festival extends BaseTimeEntity {
             .build();
     }
 
-    // 전국축제 생성을 위한 정적 팩토리 메서드
     public static Festival createNationalFestival(String title, String venue, LocalDate startDate, LocalDate endDate,
                                                   String content, String organizer, String homepageUrl,
                                                   BigDecimal latitude, BigDecimal longitude, String externalId) {
@@ -182,7 +180,6 @@ public class Festival extends BaseTimeEntity {
             .build();
     }
 
-    // 축제 정보 업데이트 - updatedAt이 자동으로 갱신됨
     public void updateFestivalInfo(Festival updatedFestival) {
         this.title = updatedFestival.getTitle();
         this.venue = updatedFestival.getVenue();
@@ -201,8 +198,15 @@ public class Festival extends BaseTimeEntity {
         this.organizer = updatedFestival.getOrganizer();
         this.homepageUrl = updatedFestival.getHomepageUrl();
         this.detailUrl = updatedFestival.getDetailUrl();
-        this.latitude = updatedFestival.getLatitude();
-        this.longitude = updatedFestival.getLongitude();
+        if (updatedFestival.getLatitude() != null && updatedFestival.getLongitude() != null) {
+            this.latitude = updatedFestival.getLatitude();
+            this.longitude = updatedFestival.getLongitude();
+        }
         this.content = updatedFestival.getContent();
+    }
+
+    public void updateCoordinates(BigDecimal latitude, BigDecimal longitude) {
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
 }

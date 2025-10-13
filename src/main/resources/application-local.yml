@@ -57,6 +57,9 @@ festival:
     base-url: http://openapi.seoul.go.kr:8088
   national:
     base-url: http://api.data.go.kr/openapi/tn_pubr_public_cltur_fstvl_api
+  geocoding:
+    enabled: true
+
 api:
   seoul:
     key: ${SEOUL_API_KEY:your-seoul-api-key-here}

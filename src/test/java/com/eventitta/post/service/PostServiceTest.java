@@ -3,7 +3,7 @@ package com.eventitta.post.service;
 import com.eventitta.auth.exception.AuthException;
 import com.eventitta.comment.repository.CommentRepository;
 import com.eventitta.common.response.PageResponse;
-import com.eventitta.gamification.activitylog.ActivityEventPublisher;
+import com.eventitta.gamification.event.ActivityEventPublisher;
 import com.eventitta.post.domain.Post;
 import com.eventitta.post.domain.PostImage;
 import com.eventitta.post.domain.PostLike;
@@ -41,8 +41,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.util.List;
 import java.util.Optional;
 
-import static com.eventitta.gamification.constant.ActivityCodes.CREATE_POST;
-import static com.eventitta.gamification.constant.ActivityCodes.LIKE_POST;
+import static com.eventitta.gamification.domain.ActivityType.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -509,7 +508,7 @@ class PostServiceTest {
         verify(post).decrementLikeCount();
 
         // 이벤트 발행 검증
-        verify(activityEventPublisher).publishRevoke(LIKE_POST, userId, postId);
+        verify(activityEventPublisher).publishRevoke(LIKE_POST_CANCEL, userId, postId);
     }
 
     @Test

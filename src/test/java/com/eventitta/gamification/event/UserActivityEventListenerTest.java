@@ -1,6 +1,6 @@
-package com.eventitta.gamification.activitylog;
+package com.eventitta.gamification.event;
 
-import com.eventitta.gamification.constant.ActivityCodes;
+import com.eventitta.gamification.domain.ActivityType;
 import com.eventitta.gamification.service.UserActivityService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,6 +18,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.eventitta.gamification.domain.ActivityType.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -45,34 +46,34 @@ class UserActivityEventListenerTest {
     @DisplayName("게시글 작성 시 활동 내역이 기록된다")
     void givenLogEvent_whenPublished_thenRecordActivityInvoked() {
         // given
-        doNothing().when(userActivityService).recordActivity(anyLong(), anyString(), anyLong());
+        doNothing().when(userActivityService).recordActivity(anyLong(), any(ActivityType.class), anyLong());
 
         // when - 트랜잭션 안에서 이벤트 발행
         transactionTemplate.execute(status -> {
-            eventPublisher.publishEvent(new UserActivityLogRequestedEvent(1L, ActivityCodes.CREATE_POST, 10L));
+            eventPublisher.publishEvent(new UserActivityLogRequestedEvent(1L, CREATE_POST, 10L));
             return null;
         }); // 여기서 커밋 발생 → AFTER_COMMIT 이벤트 실행
 
         // then
         verify(userActivityService, timeout(2000).times(1))
-            .recordActivity(1L, ActivityCodes.CREATE_POST, 10L);
+            .recordActivity(1L, CREATE_POST, 10L);
     }
 
     @Test
     @DisplayName("좋아요 취소 시 활동 내역이 삭제된다")
     void givenRevokeEvent_whenPublished_thenRevokeActivityInvoked() {
         // given
-        doNothing().when(userActivityService).revokeActivity(anyLong(), anyString(), anyLong());
+        doNothing().when(userActivityService).revokeActivity(anyLong(), any(ActivityType.class), anyLong());
 
         // when
         transactionTemplate.execute(status -> {
-            eventPublisher.publishEvent(new UserActivityRevokeRequestedEvent(2L, ActivityCodes.LIKE_POST, 20L));
+            eventPublisher.publishEvent(new UserActivityRevokeRequestedEvent(2L, LIKE_POST_CANCEL, 20L));
             return null;
         });
 
         // then
         verify(userActivityService, timeout(2000).times(1))
-            .revokeActivity(2L, ActivityCodes.LIKE_POST, 20L);
+            .revokeActivity(2L, LIKE_POST_CANCEL, 20L);
     }
 
     @Test
@@ -83,19 +84,19 @@ class UserActivityEventListenerTest {
         doAnswer(invocation -> {
             listenerThread.set(Thread.currentThread().getName());
             return null;
-        }).when(userActivityService).recordActivity(anyLong(), anyString(), anyLong());
+        }).when(userActivityService).recordActivity(anyLong(), any(ActivityType.class), anyLong());
 
         String mainThread = Thread.currentThread().getName();
 
         // when
         transactionTemplate.execute(status -> {
-            eventPublisher.publishEvent(new UserActivityLogRequestedEvent(3L, ActivityCodes.CREATE_POST, 30L));
+            eventPublisher.publishEvent(new UserActivityLogRequestedEvent(3L, CREATE_POST, 30L));
             return null;
         });
 
         // then
         verify(userActivityService, timeout(2000).times(1))
-            .recordActivity(3L, ActivityCodes.CREATE_POST, 30L);
+            .recordActivity(3L, CREATE_POST, 30L);
 
         assertThat(listenerThread.get()).isNotNull();
         assertThat(listenerThread.get()).isNotEqualTo(mainThread);
@@ -111,17 +112,17 @@ class UserActivityEventListenerTest {
         doAnswer(invocation -> {
             exceptionThrown.set(true);
             throw new RuntimeException("에러 발생");
-        }).when(userActivityService).recordActivity(anyLong(), anyString(), anyLong());
+        }).when(userActivityService).recordActivity(anyLong(), any(ActivityType.class), anyLong());
 
         // when
         transactionTemplate.execute(status -> {
-            eventPublisher.publishEvent(new UserActivityLogRequestedEvent(4L, ActivityCodes.CREATE_POST, 40L));
+            eventPublisher.publishEvent(new UserActivityLogRequestedEvent(4L, CREATE_POST, 40L));
             return null;
         });
 
         // then
         verify(userActivityService, timeout(2000).times(1))
-            .recordActivity(4L, ActivityCodes.CREATE_POST, 40L);
+            .recordActivity(4L, CREATE_POST, 40L);
 
         // 예외가 실제로 발생했는지 확인
         assertThat(exceptionThrown.get()).isTrue();
@@ -132,7 +133,7 @@ class UserActivityEventListenerTest {
     void givenInvalidParameter_whenEventPublished_thenExceptionLoggedAndHandled() {
         // given
         doThrow(new IllegalArgumentException("Invalid activityCode"))
-            .when(userActivityService).recordActivity(anyLong(), anyString(), anyLong());
+            .when(userActivityService).recordActivity(anyLong(), any(ActivityType.class), anyLong());
 
         // when
         transactionTemplate.execute(status -> {
@@ -150,18 +151,18 @@ class UserActivityEventListenerTest {
     @DisplayName("동일한 이벤트가 여러 번 발생해도 중복 기록되지 않는다")
     void givenDuplicateEvent_whenPublished_thenNoDuplicateActivity() {
         // given
-        doNothing().when(userActivityService).recordActivity(anyLong(), anyString(), anyLong());
+        doNothing().when(userActivityService).recordActivity(anyLong(), any(ActivityType.class), anyLong());
 
         // when - 동일한 이벤트를 두 번 발행
         transactionTemplate.execute(status -> {
-            eventPublisher.publishEvent(new UserActivityLogRequestedEvent(6L, ActivityCodes.CREATE_POST, 60L));
-            eventPublisher.publishEvent(new UserActivityLogRequestedEvent(6L, ActivityCodes.CREATE_POST, 60L));
+            eventPublisher.publishEvent(new UserActivityLogRequestedEvent(6L, CREATE_POST, 60L));
+            eventPublisher.publishEvent(new UserActivityLogRequestedEvent(6L, CREATE_POST, 60L));
             return null;
         });
 
         // then - 이벤트는 2번 발행되므로 리스너도 2번 호출됨
         verify(userActivityService, timeout(2000).times(2))
-            .recordActivity(6L, ActivityCodes.CREATE_POST, 60L);
+            .recordActivity(6L, CREATE_POST, 60L);
         // 참고: 실제 중복 방지는 UserActivityService 내부 로직에서 처리됨
     }
 
@@ -180,11 +181,11 @@ class UserActivityEventListenerTest {
             } finally {
                 latch.countDown(); // 완료 신호
             }
-        }).when(userActivityService).recordActivity(anyLong(), anyString(), anyLong());
+        }).when(userActivityService).recordActivity(anyLong(), any(ActivityType.class), anyLong());
 
         // when
         transactionTemplate.execute(status -> {
-            eventPublisher.publishEvent(new UserActivityLogRequestedEvent(7L, ActivityCodes.CREATE_POST, 70L));
+            eventPublisher.publishEvent(new UserActivityLogRequestedEvent(7L, CREATE_POST, 70L));
             return null;
         });
 
@@ -192,7 +193,7 @@ class UserActivityEventListenerTest {
         assertTrue(latch.await(3, TimeUnit.SECONDS), "이벤트 처리가 완료되지 않았습니다");
 
         verify(userActivityService, times(1))
-            .recordActivity(7L, ActivityCodes.CREATE_POST, 70L);
+            .recordActivity(7L, CREATE_POST, 70L);
 
         // 예외가 발생했지만 시스템은 정상 동작함을 확인
         assertThat(exceptionOccurred.get()).isTrue();

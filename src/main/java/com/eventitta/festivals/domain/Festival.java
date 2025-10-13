@@ -1,5 +1,6 @@
 package com.eventitta.festivals.domain;
 
+import com.eventitta.common.config.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -22,7 +23,7 @@ import java.time.LocalDate;
     })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Festival extends BaseEntity {
+public class Festival extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -75,26 +76,11 @@ public class Festival extends BaseEntity {
     @Column(name = "organizer", length = 500)
     private String organizer; // 주관기관/기관명
 
-    @Column(name = "host", length = 500)
-    private String host; // 주최기관 (전국축제만)
-
-    @Column(name = "supporter", length = 500)
-    private String supporter; // 후원기관 (전국축제만)
-
-    @Column(name = "phone_number", length = 50)
-    private String phoneNumber;
-
     @Column(name = "homepage_url", length = 1000)
     private String homepageUrl;
 
     @Column(name = "detail_url", length = 1000)
     private String detailUrl; // 상세페이지 URL
-
-    @Column(name = "road_address", length = 500)
-    private String roadAddress;
-
-    @Column(name = "jibun_address", length = 500)
-    private String jibunAddress;
 
     @Column(precision = 10, scale = 7)
     private BigDecimal latitude;
@@ -104,9 +90,6 @@ public class Festival extends BaseEntity {
 
     @Column(name = "content", columnDefinition = "TEXT")
     private String content; // 행사내용/기타내용
-
-    @Column(name = "related_info", columnDefinition = "TEXT")
-    private String relatedInfo; // 관련정보 (전국축제만)
 
     @Enumerated(EnumType.STRING)
     @Column(name = "data_source", nullable = false)
@@ -120,10 +103,9 @@ public class Festival extends BaseEntity {
     private Festival(String title, String venue, LocalDate startDate, LocalDate endDate,
                      String category, String district, String targetAudience, String feeInfo,
                      Boolean isFree, String performers, String programInfo, String mainImageUrl,
-                     String themeCode, String ticketType, String organizer, String host,
-                     String supporter, String phoneNumber, String homepageUrl, String detailUrl,
-                     String roadAddress, String jibunAddress, BigDecimal latitude, BigDecimal longitude,
-                     String content, String relatedInfo, DataSource dataSource, String externalId) {
+                     String themeCode, String ticketType, String organizer, String homepageUrl, String detailUrl,
+                     BigDecimal latitude, BigDecimal longitude,
+                     String content, DataSource dataSource, String externalId) {
         this.title = title;
         this.venue = venue;
         this.startDate = startDate;
@@ -139,22 +121,15 @@ public class Festival extends BaseEntity {
         this.themeCode = themeCode;
         this.ticketType = ticketType;
         this.organizer = organizer;
-        this.host = host;
-        this.supporter = supporter;
-        this.phoneNumber = phoneNumber;
         this.homepageUrl = homepageUrl;
         this.detailUrl = detailUrl;
-        this.roadAddress = roadAddress;
-        this.jibunAddress = jibunAddress;
         this.latitude = latitude;
         this.longitude = longitude;
         this.content = content;
-        this.relatedInfo = relatedInfo;
         this.dataSource = dataSource;
         this.externalId = externalId;
     }
 
-    // 서울시 축제 생성을 위한 정적 팩토리 메서드
     public static Festival createSeoulFestival(String title, String venue, LocalDate startDate, LocalDate endDate,
                                                String category, String district, String targetAudience, String feeInfo,
                                                Boolean isFree, String performers, String programInfo, String mainImageUrl,
@@ -187,7 +162,6 @@ public class Festival extends BaseEntity {
             .build();
     }
 
-    // 전국축제 생성을 위한 정적 팩토리 메서드
     public static Festival createNationalFestival(String title, String venue, LocalDate startDate, LocalDate endDate,
                                                   String content, String organizer, String homepageUrl,
                                                   BigDecimal latitude, BigDecimal longitude, String externalId) {
@@ -206,7 +180,6 @@ public class Festival extends BaseEntity {
             .build();
     }
 
-    // 축제 정보 업데이트 - updatedAt이 자동으로 갱신됨
     public void updateFestivalInfo(Festival updatedFestival) {
         this.title = updatedFestival.getTitle();
         this.venue = updatedFestival.getVenue();
@@ -225,9 +198,14 @@ public class Festival extends BaseEntity {
         this.organizer = updatedFestival.getOrganizer();
         this.homepageUrl = updatedFestival.getHomepageUrl();
         this.detailUrl = updatedFestival.getDetailUrl();
-        this.latitude = updatedFestival.getLatitude();
-        this.longitude = updatedFestival.getLongitude();
+        if (updatedFestival.getLatitude() != null && updatedFestival.getLongitude() != null) {
+            updateCoordinates(latitude, longitude);
+        }
         this.content = updatedFestival.getContent();
-        // updatedAt은 @UpdateTimestamp로 자동 갱신됨
+    }
+
+    public void updateCoordinates(BigDecimal latitude, BigDecimal longitude) {
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
 }

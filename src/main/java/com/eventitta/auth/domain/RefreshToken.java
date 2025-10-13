@@ -1,5 +1,6 @@
 package com.eventitta.auth.domain;
 
+import com.eventitta.common.config.BaseTimeEntity;
 import com.eventitta.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -17,7 +18,7 @@ import java.time.ZoneId;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "refresh_tokens")
-public class RefreshToken {
+public class RefreshToken extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -29,16 +30,12 @@ public class RefreshToken {
     @Column(name = "token_hash", nullable = false, length = 255)
     private String tokenHash;
 
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
-
     @Column(name = "expires_at", nullable = false)
     private LocalDateTime expiresAt;
 
     public RefreshToken(User user, String tokenHash, Instant expiresAt) {
         this.user = user;
         this.tokenHash = tokenHash;
-        this.createdAt = LocalDateTime.now();
         this.expiresAt = LocalDateTime.ofInstant(expiresAt, ZoneId.systemDefault());
     }
 

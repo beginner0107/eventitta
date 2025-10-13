@@ -1,5 +1,6 @@
 package com.eventitta.gamification.domain;
 
+import com.eventitta.common.config.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -10,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "badge_rules")
-public class BadgeRule {
+public class BadgeRule extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,8 +21,8 @@ public class BadgeRule {
     @JoinColumn(name = "badge_id", nullable = false)
     private Badge badge;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "activity_type_id", nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "activity_type", nullable = false, length = 50)
     private ActivityType activityType;
 
     @Column(nullable = false)

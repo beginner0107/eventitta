@@ -1,6 +1,6 @@
 package com.eventitta.meeting.service;
 
-import com.eventitta.gamification.activitylog.ActivityEventPublisher;
+import com.eventitta.gamification.event.ActivityEventPublisher;
 import com.eventitta.meeting.domain.Meeting;
 import com.eventitta.meeting.domain.MeetingParticipant;
 import com.eventitta.meeting.domain.MeetingStatus;
@@ -27,12 +27,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-import static com.eventitta.gamification.constant.ActivityCodes.JOIN_MEETING;
+import static com.eventitta.gamification.domain.ActivityType.JOIN_MEETING;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)

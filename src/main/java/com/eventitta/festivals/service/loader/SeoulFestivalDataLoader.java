@@ -1,7 +1,7 @@
 package com.eventitta.festivals.service.loader;
 
 import com.eventitta.festivals.api.SeoulFestivalApi;
-import com.eventitta.festivals.config.SeoulFestivalConfig;
+import com.eventitta.festivals.config.SeoulFestivalProperties;
 import com.eventitta.festivals.domain.Festival;
 import com.eventitta.festivals.dto.SeoulFestivalResponse;
 import com.eventitta.festivals.dto.SeoulFestivalRow;
@@ -22,7 +22,7 @@ public class SeoulFestivalDataLoader {
 
     private final SeoulFestivalApi seoulFestivalApi;
     private final FestivalMapper mapper;
-    private final SeoulFestivalConfig config;
+    private final SeoulFestivalProperties config;
 
     public Iterator<Festival> loadEvents(String serviceKey) {
         return new SeoulEventIterator(serviceKey);

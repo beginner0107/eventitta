@@ -87,99 +87,112 @@ jobs:
           envs: DEPLOY_MODE,IMAGE_TAG,IMAGE_DIGEST,ACTOR,SERVER_PORT,REMOTE_DIR,FILE_STORAGE_LOCATION,LOG_FILE_PATH,SLACK_CHANNEL,SLACK_USERNAME,SLACK_TIMEOUT,RDS_ENDPOINT,DB_NAME,JDBC_USERNAME,JDBC_PASSWORD,JWT_SECRET,JWT_ACCESS_TOKEN_VALIDITY,JWT_REFRESH_TOKEN_VALIDITY,SEOUL_API_KEY,NATIONAL_API_KEY,AWS_REGION,S3_BUCKET_NAME,AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,SLACK_WEBHOOK_URL,GEOCODING_CONTACT_EMAIL
           script: |
             #!/bin/bash
-            set -e
+            set -euo pipefail
             
-            # 디버깅을 위한 초기 확인
+            # 에러 발생 시 라인 번호 출력
+            trap 'echo "Error at line $LINENO"' ERR
+            
             echo "========================================="
             echo "🚀 Starting Production Deployment"
             echo "========================================="
             echo "Current directory: $(pwd)"
             echo "User: $(whoami)"
             
-            # 환경 변수 확인 (중요 변수만)
-            if [ -z "$IMAGE_TAG" ]; then
+            # 필수 환경 변수 확인
+            if [ -z "${IMAGE_TAG:-}" ]; then
               echo "❌ ERROR: IMAGE_TAG is empty"
               exit 1
             fi
             
-            if [ -z "$REMOTE_DIR" ]; then
-              echo "❌ ERROR: REMOTE_DIR is empty"
-              REMOTE_DIR="~/eventitta"
+            # REMOTE_DIR 처리
+            if [ -z "${REMOTE_DIR:-}" ]; then
+              REMOTE_DIR="$HOME/eventitta"
               echo "⚠️ Using default REMOTE_DIR: $REMOTE_DIR"
+            else
+              # 틸드를 홈 디렉토리로 변환
+              REMOTE_DIR="${REMOTE_DIR/#\~/$HOME}"
             fi
             
-            if [ -z "$SERVER_PORT" ]; then
+            if [ -z "${SERVER_PORT:-}" ]; then
               SERVER_PORT="8080"
               echo "⚠️ Using default SERVER_PORT: $SERVER_PORT"
             fi
             
-            echo "Deploy Mode: $DEPLOY_MODE"
+            echo "Deploy Mode: ${DEPLOY_MODE:-tag}"
             echo "Version: $IMAGE_TAG"
-            echo "Digest: $IMAGE_DIGEST"
-            echo "Deployed by: $ACTOR"
+            echo "Digest: ${IMAGE_DIGEST:-none}"
+            echo "Deployed by: ${ACTOR:-unknown}"
             echo "Server Port: $SERVER_PORT"
             echo "Remote Dir: $REMOTE_DIR"
             echo "Time: $(date '+%Y-%m-%d %H:%M:%S')"
             echo ""
             
             # 디렉토리 생성 및 이동
+            echo "Creating directory: $REMOTE_DIR"
             mkdir -p "$REMOTE_DIR"
             cd "$REMOTE_DIR"
             echo "✅ Changed to directory: $(pwd)"
             echo ""
             
             # Docker 이미지 설정
-            if [ "$DEPLOY_MODE" = "digest" ] && [ -n "$IMAGE_DIGEST" ]; then
-              APP_IMAGE="ahnco/eventitta@${IMAGE_DIGEST}"
+            DOCKER_REPO="ahnco/eventitta"
+            
+            if [ "${DEPLOY_MODE:-tag}" = "digest" ] && [ -n "${IMAGE_DIGEST:-}" ]; then
+              APP_IMAGE="${DOCKER_REPO}@${IMAGE_DIGEST}"
               echo "🔒 Using digest-based deployment"
             else
-              APP_IMAGE="ahnco/eventitta:${IMAGE_TAG}"
+              APP_IMAGE="${DOCKER_REPO}:${IMAGE_TAG}"
               echo "🏷️ Using tag-based deployment"
             fi
             echo "📦 Target image: $APP_IMAGE"
             echo ""
             
-            # .env 파일 생성
+            # .env 파일 생성 (printf 사용)
             echo "📝 Creating .env file..."
-            cat > .env << EOF
-            APP_IMAGE=$APP_IMAGE
-            SERVER_PORT=$SERVER_PORT
-            FILE_STORAGE_LOCATION=$FILE_STORAGE_LOCATION
-            LOG_FILE_PATH=$LOG_FILE_PATH
-            SLACK_CHANNEL=$SLACK_CHANNEL
-            SLACK_USERNAME=$SLACK_USERNAME
-            SLACK_TIMEOUT=$SLACK_TIMEOUT
-            EOF
-            chmod 600 .env
-            echo "✅ .env file created"
+            {
+              printf "APP_IMAGE=%s\n" "$APP_IMAGE"
+              printf "SERVER_PORT=%s\n" "${SERVER_PORT:-8080}"
+              printf "FILE_STORAGE_LOCATION=%s\n" "${FILE_STORAGE_LOCATION:-}"
+              printf "LOG_FILE_PATH=%s\n" "${LOG_FILE_PATH:-}"
+              printf "SLACK_CHANNEL=%s\n" "${SLACK_CHANNEL:-}"
+              printf "SLACK_USERNAME=%s\n" "${SLACK_USERNAME:-}"
+              printf "SLACK_TIMEOUT=%s\n" "${SLACK_TIMEOUT:-}"
+              printf "RDS_ENDPOINT=%s\n" "${RDS_ENDPOINT:-}"
+              printf "DB_NAME=%s\n" "${DB_NAME:-}"
+              printf "JDBC_USERNAME=%s\n" "${JDBC_USERNAME:-}"
+              printf "JDBC_PASSWORD=%s\n" "${JDBC_PASSWORD:-}"
+              printf "JWT_SECRET=%s\n" "${JWT_SECRET:-}"
+              printf "JWT_ACCESS_TOKEN_VALIDITY=%s\n" "${JWT_ACCESS_TOKEN_VALIDITY:-}"
+              printf "JWT_REFRESH_TOKEN_VALIDITY=%s\n" "${JWT_REFRESH_TOKEN_VALIDITY:-}"
+              printf "SEOUL_API_KEY=%s\n" "${SEOUL_API_KEY:-}"
+              printf "NATIONAL_API_KEY=%s\n" "${NATIONAL_API_KEY:-}"
+              printf "AWS_REGION=%s\n" "${AWS_REGION:-}"
+              printf "S3_BUCKET_NAME=%s\n" "${S3_BUCKET_NAME:-}"
+              printf "AWS_ACCESS_KEY_ID=%s\n" "${AWS_ACCESS_KEY_ID:-}"
+              printf "AWS_SECRET_ACCESS_KEY=%s\n" "${AWS_SECRET_ACCESS_KEY:-}"
+              printf "SLACK_WEBHOOK_URL=%s\n" "${SLACK_WEBHOOK_URL:-}"
+              printf "GEOCODING_CONTACT_EMAIL=%s\n" "${GEOCODING_CONTACT_EMAIL:-}"
+            } > .env
             
-            # .env.secrets 파일 생성
-            echo "📝 Creating .env.secrets file..."
-            cat > .env.secrets << EOF
-            RDS_ENDPOINT=$RDS_ENDPOINT
-            DB_NAME=$DB_NAME
-            JDBC_USERNAME=$JDBC_USERNAME
-            JDBC_PASSWORD=$JDBC_PASSWORD
-            JWT_SECRET=$JWT_SECRET
-            JWT_ACCESS_TOKEN_VALIDITY=$JWT_ACCESS_TOKEN_VALIDITY
-            JWT_REFRESH_TOKEN_VALIDITY=$JWT_REFRESH_TOKEN_VALIDITY
-            SEOUL_API_KEY=$SEOUL_API_KEY
-            NATIONAL_API_KEY=$NATIONAL_API_KEY
-            AWS_REGION=$AWS_REGION
-            S3_BUCKET_NAME=$S3_BUCKET_NAME
-            AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
-            AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
-            SLACK_WEBHOOK_URL=$SLACK_WEBHOOK_URL
-            GEOCODING_CONTACT_EMAIL=$GEOCODING_CONTACT_EMAIL
-            EOF
-            chmod 400 .env.secrets
-            echo "✅ .env.secrets file created"
-            echo ""
+            if [ -f .env ]; then
+              chmod 600 .env
+              echo "✅ .env file created successfully"
+              echo "File size: $(wc -c < .env) bytes"
+            else
+              echo "❌ Failed to create .env file"
+              exit 1
+            fi
             
             # Docker 이미지 pull
+            echo ""
             echo "⬇️ Pulling image from Docker Hub..."
+            echo "Executing: docker pull $APP_IMAGE"
             if ! docker pull "$APP_IMAGE"; then
-              echo "❌ Failed to pull Docker image"
+              echo "❌ Failed to pull Docker image: $APP_IMAGE"
+              echo "Please check:"
+              echo "1. Image name is correct"
+              echo "2. Image exists in Docker Hub"
+              echo "3. Docker Hub credentials are valid"
               exit 1
             fi
             echo "✅ Image pulled successfully"
@@ -197,25 +210,32 @@ jobs:
               exit 1
             fi
             
-            # 기존 컨테이너 중지 (있는 경우)
+            # 기존 컨테이너 중지
             echo "🔄 Stopping existing containers..."
             $DOCKER_COMPOSE down 2>/dev/null || true
             
             # 새 버전 배포
             export APP_IMAGE
             echo "🔄 Deploying new version..."
+            echo "Executing: $DOCKER_COMPOSE up -d --force-recreate"
+            
             if ! $DOCKER_COMPOSE up -d --force-recreate; then
               echo "❌ Failed to start container"
-              docker logs eventitta-app --tail 100 2>&1 || true
+              echo "Docker Compose logs:"
+              $DOCKER_COMPOSE logs --tail=50
               exit 1
             fi
+            
+            # 컨테이너 시작 대기
+            echo ""
+            echo "⏳ Waiting for container to start..."
+            sleep 5
             
             # 헬스 체크
             echo "⏳ Performing health check..."
             HEALTH_CHECK_PASSED=false
             MAX_ATTEMPTS=40
             SLEEP_BETWEEN=3
-            AFTER_START_WAIT=5
             
             for i in $(seq 1 $MAX_ATTEMPTS); do
               sleep "$SLEEP_BETWEEN"
@@ -223,14 +243,13 @@ jobs:
               # 컨테이너 상태 확인
               if ! docker ps --filter "name=eventitta-app" --filter "status=running" -q | grep -q .; then
                 echo "❌ Container not running (attempt $i/$MAX_ATTEMPTS)"
-                docker logs eventitta-app --tail 100 2>&1 || true
-                break
+                docker logs eventitta-app --tail 50 2>&1 || true
+                continue
               fi
               
               # Spring Boot 시작 확인
               if docker logs eventitta-app 2>&1 | grep -qi "Started.*Application"; then
                 echo "✅ Spring Boot application started! (attempt $i/$MAX_ATTEMPTS)"
-                sleep "$AFTER_START_WAIT"
                 
                 # HTTP 엔드포인트 확인
                 HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${SERVER_PORT}/" 2>/dev/null || echo "000")

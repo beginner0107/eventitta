@@ -118,11 +118,13 @@ jobs:
             echo ""
 
             # 작업 디렉터리 이동
-            cd "$REMOTE_DIR"
+            echo "🔍 Changing to directory: $REMOTE_DIR"
+            cd "$REMOTE_DIR" || { echo "❌ Failed to cd to $REMOTE_DIR"; exit 1; }
             echo "✅ Changed to directory: $(pwd)"
             echo ""
 
             # 배포 대상 이미지 결정
+            echo "🔍 Determining target image..."
             if [ "$DEPLOY_MODE" = "digest" ]; then
               APP_IMAGE="ahnco/eventitta@${IMAGE_DIGEST}"
               echo "🔒 Using digest-based deployment"
@@ -133,169 +135,171 @@ jobs:
             echo "📦 Target image: $APP_IMAGE"
             echo ""
 
-            # .env 파일 생성 (HERE document 들여쓰기 주의)
+            # .env 파일 생성
             echo "📝 Creating .env file..."
-            cat > .env << 'ENVEOF'
-            APP_IMAGE=placeholder
-            APP_PORT=8080
-            SERVER_PORT=8080
-            ENVEOF
+            cat > .env <<EOF
+  APP_IMAGE=${APP_IMAGE}
+  APP_PORT=${SERVER_PORT}
+  SERVER_PORT=${SERVER_PORT}
+  FILE_STORAGE_LOCATION=${FILE_STORAGE_LOCATION:-/tmp/uploads}
+  LOG_FILE_PATH=${LOG_FILE_PATH:-/tmp/logs}
+  SLACK_CHANNEL=${SLACK_CHANNEL:-general}
+  SLACK_USERNAME=${SLACK_USERNAME:-bot}
+  SLACK_TIMEOUT=${SLACK_TIMEOUT:-5000}
+  EOF
+  chmod 600 .env
+  echo "✅ .env file created"
+  echo ""
 
-            # APP_IMAGE 값 동적으로 업데이트
-            sed -i "s|APP_IMAGE=.*|APP_IMAGE=${APP_IMAGE}|" .env
-            sed -i "s|APP_PORT=.*|APP_PORT=${SERVER_PORT}|" .env
-            sed -i "s|SERVER_PORT=.*|SERVER_PORT=${SERVER_PORT}|" .env
+  # .env.secrets 파일 생성
+  echo "📝 Creating .env.secrets file..."
+  cat > .env.secrets <<EOF
+  SECRET_KEY=${JWT_SECRET}
+  MYSQL_DATABASE=${DB_NAME}
+  MYSQL_USER=${JDBC_USERNAME}
+  MYSQL_PASSWORD=${JDBC_PASSWORD}
+  RDS_ENDPOINT=${RDS_ENDPOINT}
+  DB_NAME=${DB_NAME}
+  JDBC_USERNAME=${JDBC_USERNAME}
+  JDBC_PASSWORD=${JDBC_PASSWORD}
+  JWT_SECRET=${JWT_SECRET}
+  JWT_ACCESS_TOKEN_VALIDITY=${JWT_ACCESS_TOKEN_VALIDITY:-3600000}
+  JWT_REFRESH_TOKEN_VALIDITY=${JWT_REFRESH_TOKEN_VALIDITY:-86400000}
+  SEOUL_API_KEY=${SEOUL_API_KEY}
+  NATIONAL_API_KEY=${NATIONAL_API_KEY}
+  AWS_REGION=${AWS_REGION}
+  S3_BUCKET_NAME=${S3_BUCKET_NAME}
+  AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+  AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+  SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+  GEOCODING_CONTACT_EMAIL=${GEOCODING_CONTACT_EMAIL}
+  EOF
+  chmod 400 .env.secrets
+  echo "✅ .env.secrets file created"
+  echo ""
 
-            # .env에 나머지 변수 추가
-            cat >> .env << ENVEOF2
-            FILE_STORAGE_LOCATION=${FILE_STORAGE_LOCATION}
-            LOG_FILE_PATH=${LOG_FILE_PATH}
-            SLACK_CHANNEL=${SLACK_CHANNEL}
-            SLACK_USERNAME=${SLACK_USERNAME}
-            SLACK_TIMEOUT=${SLACK_TIMEOUT}
-            ENVEOF2
+  # 이미지 Pull
+  echo "⬇️  Pulling image from Docker Hub..."
+  if docker pull "$APP_IMAGE"; then
+  echo "✅ Image pulled successfully"
+  else
+echo "❌ Failed to pull image: $APP_IMAGE"
+  exit 1
+  fi
+  echo ""
 
-            chmod 600 .env
-            echo "✅ .env file created"
+  # Docker Compose 명령어 확인
+  echo "🔍 Checking Docker Compose..."
+  if docker compose version >/dev/null 2>&1; then
+  DOCKER_COMPOSE="docker compose"
+  echo "✅ Using Docker Compose V2"
+  elif command -v docker-compose >/dev/null 2>&1; then
+  DOCKER_COMPOSE="docker-compose"
+  echo "✅ Using Docker Compose V1"
+  else
+  echo "❌ Docker Compose not found"
+  exit 1
+  fi
+  echo ""
 
-            # .env.secrets 파일 생성
-            echo "📝 Creating .env.secrets file..."
-            cat > .env.secrets << SECRETSEOF
-            SECRET_KEY=${JWT_SECRET}
-            MYSQL_DATABASE=${DB_NAME}
-            MYSQL_USER=${JDBC_USERNAME}
-            MYSQL_PASSWORD=${JDBC_PASSWORD}
-            RDS_ENDPOINT=${RDS_ENDPOINT}
-            DB_NAME=${DB_NAME}
-            JDBC_USERNAME=${JDBC_USERNAME}
-            JDBC_PASSWORD=${JDBC_PASSWORD}
-            JWT_SECRET=${JWT_SECRET}
-            JWT_ACCESS_TOKEN_VALIDITY=${JWT_ACCESS_TOKEN_VALIDITY}
-            JWT_REFRESH_TOKEN_VALIDITY=${JWT_REFRESH_TOKEN_VALIDITY}
-            SEOUL_API_KEY=${SEOUL_API_KEY}
-            NATIONAL_API_KEY=${NATIONAL_API_KEY}
-            AWS_REGION=${AWS_REGION}
-            S3_BUCKET_NAME=${S3_BUCKET_NAME}
-            AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-            AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-            SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
-            GEOCODING_CONTACT_EMAIL=${GEOCODING_CONTACT_EMAIL}
-            SECRETSEOF
+  # APP_IMAGE 환경변수 export
+  export APP_IMAGE
+  echo "✅ Exported APP_IMAGE=$APP_IMAGE"
+  echo ""
 
-            chmod 400 .env.secrets
-            echo "✅ .env.secrets file created"
-            echo ""
+  # 배포 실행
+  echo "🔄 Deploying new version..."
+  if $DOCKER_COMPOSE up -d --force-recreate; then
+  echo "✅ Containers started"
+  else
+  echo "❌ Failed to start containers"
+  docker ps -a
+  exit 1
+  fi
+  echo ""
 
-            # 이미지 Pull
-            echo "⬇️  Pulling image from Docker Hub..."
-            docker pull "$APP_IMAGE" || { echo "❌ Failed to pull image"; exit 1; }
-            echo "✅ Image pulled successfully"
-            echo ""
+  # 헬스체크
+  echo "⏳ Performing health check..."
+  HEALTH_CHECK_PASSED=false
+  MAX_ATTEMPTS=40
+  SLEEP_BETWEEN=3
 
-            # Docker Compose 명령어 확인
-            if docker compose version >/dev/null 2>&1; then
-              DOCKER_COMPOSE="docker compose"
-              echo "✅ Using Docker Compose V2"
-            elif command -v docker-compose >/dev/null 2>&1; then
-              DOCKER_COMPOSE="docker-compose"
-              echo "✅ Using Docker Compose V1"
-            else
-              echo "❌ Docker Compose not found"
-              exit 1
-            fi
-            echo ""
+  for i in $(seq 1 $MAX_ATTEMPTS); do
+  sleep $SLEEP_BETWEEN
 
-            # APP_IMAGE 환경변수 export
-            export APP_IMAGE
+  # 컨테이너 실행 상태 확인
+  if ! docker ps --filter "name=eventitta-app" --filter "status=running" -q | grep -q .; then
+  echo "❌ Container not running (attempt $i/$MAX_ATTEMPTS)"
+  docker logs eventitta-app --tail 50 2>&1 || true
+  break
+  fi
 
-            # 배포 실행 (REMOTE_DIR에 있는 docker-compose.yml 사용)
-            echo "🔄 Deploying new version..."
-            $DOCKER_COMPOSE up -d --force-recreate
-            echo "✅ Containers started"
-            echo ""
+  # Spring Boot 시작 로그 확인
+  if docker logs eventitta-app 2>&1 | grep -qi "Started.*Application"; then
+  echo "✅ Spring Boot application started! (attempt $i/$MAX_ATTEMPTS)"
+  sleep 5
 
-            # 헬스체크
-            echo "⏳ Performing health check..."
-            HEALTH_CHECK_PASSED=false
-            MAX_ATTEMPTS=40
-            SLEEP_BETWEEN=3
+  # HTTP 엔드포인트 확인
+  HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${SERVER_PORT}/" 2>/dev/null || echo "000")
+  if [ "$HTTP_CODE" != "000" ]; then
+echo "✅ HTTP endpoint responding with code: $HTTP_CODE"
+  HEALTH_CHECK_PASSED=true
+  break
+  fi
+  fi
 
-            for i in $(seq 1 $MAX_ATTEMPTS); do
-              sleep $SLEEP_BETWEEN
+  echo "⏳ Waiting for application... (attempt $i/$MAX_ATTEMPTS)"
+  done
 
-              # 컨테이너 실행 상태 확인
-              if ! docker ps --filter "name=eventitta-app" --filter "status=running" -q | grep -q .; then
-                echo "❌ Container not running (attempt $i/$MAX_ATTEMPTS)"
-                docker logs eventitta-app --tail 50 2>&1 || true
-                break
-              fi
+  echo ""
+  if [ "$HEALTH_CHECK_PASSED" = true ]; then
+  echo "$APP_IMAGE" > "$REMOTE_DIR/.current_image"
+  echo "========================================="
+  echo "✅ Deployment Successful!"
+  echo "========================================="
+echo "Image: $APP_IMAGE"
+echo "Version: ${IMAGE_TAG:-<none>}"
+  echo ""
+  echo "📊 Container Status:"
+  docker ps --filter "name=eventitta-app" --format "table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}"
+  echo ""
+  echo "📝 Recent Logs:"
+  docker logs eventitta-app --tail 20
+  echo ""
+  echo "🎉 Production is now running!"
 
-              # Spring Boot 시작 로그 확인
-              if docker logs eventitta-app 2>&1 | grep -qi "Started.*Application"; then
-                echo "✅ Spring Boot application started! (attempt $i/$MAX_ATTEMPTS)"
-                sleep 5
+  # 오래된 이미지 정리
+  echo ""
+  echo "🧹 Cleaning up old images..."
+  docker images ahnco/eventitta --format "{{.Tag}}" | grep "^prod-" | sort -r | tail -n +6 | xargs -r -I {} docker rmi ahnco/eventitta:{} 2>/dev/null || true
+  echo "✅ Cleanup complete"
+  else
+  echo "========================================="
+  echo "❌ Deployment Failed!"
+  echo "========================================="
+  echo ""
+  echo "📝 Full Container Logs:"
+  docker logs eventitta-app --tail 100 2>&1 || true
+  echo ""
+  echo "📊 Container Status:"
+  docker ps -a --filter "name=eventitta-app"
 
-                # HTTP 엔드포인트 확인
-                HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${SERVER_PORT}/" 2>/dev/null || echo "000")
-                if [ "$HTTP_CODE" != "000" ]; then
-                  echo "✅ HTTP endpoint responding with code: $HTTP_CODE"
-                  HEALTH_CHECK_PASSED=true
-                  break
-                fi
-              fi
-
-              echo "⏳ Waiting for application... (attempt $i/$MAX_ATTEMPTS)"
-            done
-
-            echo ""
-            if [ "$HEALTH_CHECK_PASSED" = true ]; then
-              echo "$APP_IMAGE" > "$REMOTE_DIR/.current_image"
-              echo "========================================="
-              echo "✅ Deployment Successful!"
-              echo "========================================="
-              echo "Image: $APP_IMAGE"
-              echo "Version: ${IMAGE_TAG:-<none>}"
-              echo ""
-              echo "📊 Container Status:"
-              docker ps --filter "name=eventitta-app" --format "table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}"
-              echo ""
-              echo "📝 Recent Logs:"
-              docker logs eventitta-app --tail 20
-              echo ""
-              echo "🎉 Production is now running!"
-
-              # 오래된 이미지 정리
-              echo ""
-              echo "🧹 Cleaning up old images..."
-              docker images ahnco/eventitta --format "{{.Tag}}" | grep "^prod-" | sort -r | tail -n +6 | xargs -r -I {} docker rmi ahnco/eventitta:{} 2>/dev/null || true
-              echo "✅ Cleanup complete"
-            else
-              echo "========================================="
-              echo "❌ Deployment Failed!"
-              echo "========================================="
-              echo ""
-              echo "📝 Full Container Logs:"
-              docker logs eventitta-app --tail 100 2>&1 || true
-              echo ""
-              echo "📊 Container Status:"
-              docker ps -a --filter "name=eventitta-app"
-
-              # 롤백 시도
-              if [ -f "$REMOTE_DIR/.current_image" ]; then
-                PREVIOUS_IMAGE=$(cat "$REMOTE_DIR/.current_image")
-                if [ -n "$PREVIOUS_IMAGE" ]; then
-                  echo ""
-                  echo "🔄 Attempting rollback to: $PREVIOUS_IMAGE"
-                  export APP_IMAGE="$PREVIOUS_IMAGE"
-                  docker pull "$PREVIOUS_IMAGE" 2>/dev/null || true
-                  $DOCKER_COMPOSE up -d --force-recreate
-                  sleep 5
-                  if docker ps --filter "name=eventitta-app" --filter "status=running" -q | grep -q .; then
-                    echo "✅ Rollback successful"
-                  else
-                    echo "❌ Rollback failed"
-                  fi
-                fi
-              fi
-              exit 1
-            fi
+  # 롤백 시도
+  if [ -f "$REMOTE_DIR/.current_image" ]; then
+  PREVIOUS_IMAGE=$(cat "$REMOTE_DIR/.current_image")
+  if [ -n "$PREVIOUS_IMAGE" ]; then
+  echo ""
+echo "🔄 Attempting rollback to: $PREVIOUS_IMAGE"
+  export APP_IMAGE="$PREVIOUS_IMAGE"
+  docker pull "$PREVIOUS_IMAGE" 2>/dev/null || true
+  $DOCKER_COMPOSE up -d --force-recreate
+  sleep 5
+  if docker ps --filter "name=eventitta-app" --filter "status=running" -q | grep -q .; then
+  echo "✅ Rollback successful"
+  else
+  echo "❌ Rollback failed"
+  fi
+  fi
+  fi
+  exit 1
+  fi

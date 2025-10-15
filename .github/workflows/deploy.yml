@@ -157,38 +157,36 @@ jobs:
             echo ""
 
             echo "📝 Creating .env file..."
-            cat > .env <<ENVEOF
-            APP_IMAGE=$APP_IMAGE
-            SERVER_PORT=$SERVER_PORT
-            FILE_STORAGE_LOCATION=$FILE_STORAGE_LOCATION
-            LOG_FILE_PATH=$LOG_FILE_PATH
-            SLACK_CHANNEL=$SLACK_CHANNEL
-            SLACK_USERNAME=$SLACK_USERNAME
-            SLACK_TIMEOUT=$SLACK_TIMEOUT
-            ENVEOF
-
+            {
+              echo "APP_IMAGE=$APP_IMAGE"
+              echo "SERVER_PORT=$SERVER_PORT"
+              echo "FILE_STORAGE_LOCATION=$FILE_STORAGE_LOCATION"
+              echo "LOG_FILE_PATH=$LOG_FILE_PATH"
+              echo "SLACK_CHANNEL=$SLACK_CHANNEL"
+              echo "SLACK_USERNAME=$SLACK_USERNAME"
+              echo "SLACK_TIMEOUT=$SLACK_TIMEOUT"
+            } > .env
             chmod 600 .env
             echo "✅ .env file created"
 
             echo "📝 Creating .env.secrets file..."
-            cat > .env.secrets <<SECRETSEOF
-            RDS_ENDPOINT=$RDS_ENDPOINT
-            DB_NAME=$DB_NAME
-            JDBC_USERNAME=$JDBC_USERNAME
-            JDBC_PASSWORD=$JDBC_PASSWORD
-            JWT_SECRET=$JWT_SECRET
-            JWT_ACCESS_TOKEN_VALIDITY=$JWT_ACCESS_TOKEN_VALIDITY
-            JWT_REFRESH_TOKEN_VALIDITY=$JWT_REFRESH_TOKEN_VALIDITY
-            SEOUL_API_KEY=$SEOUL_API_KEY
-            NATIONAL_API_KEY=$NATIONAL_API_KEY
-            AWS_REGION=$AWS_REGION
-            S3_BUCKET_NAME=$S3_BUCKET_NAME
-            AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
-            AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
-            SLACK_WEBHOOK_URL=$SLACK_WEBHOOK_URL
-            GEOCODING_CONTACT_EMAIL=$GEOCODING_CONTACT_EMAIL
-            SECRETSEOF
-
+            {
+              echo "RDS_ENDPOINT=$RDS_ENDPOINT"
+              echo "DB_NAME=$DB_NAME"
+              echo "JDBC_USERNAME=$JDBC_USERNAME"
+              echo "JDBC_PASSWORD=$JDBC_PASSWORD"
+              echo "JWT_SECRET=$JWT_SECRET"
+              echo "JWT_ACCESS_TOKEN_VALIDITY=$JWT_ACCESS_TOKEN_VALIDITY"
+              echo "JWT_REFRESH_TOKEN_VALIDITY=$JWT_REFRESH_TOKEN_VALIDITY"
+              echo "SEOUL_API_KEY=$SEOUL_API_KEY"
+              echo "NATIONAL_API_KEY=$NATIONAL_API_KEY"
+              echo "AWS_REGION=$AWS_REGION"
+              echo "S3_BUCKET_NAME=$S3_BUCKET_NAME"
+              echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID"
+              echo "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY"
+              echo "SLACK_WEBHOOK_URL=$SLACK_WEBHOOK_URL"
+              echo "GEOCODING_CONTACT_EMAIL=$GEOCODING_CONTACT_EMAIL"
+            } > .env.secrets
             chmod 400 .env.secrets
             echo "✅ .env.secrets file created"
             echo ""

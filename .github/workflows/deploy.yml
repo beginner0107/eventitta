@@ -11,30 +11,6 @@ concurrency:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    env:
-      DEPLOY_MODE: tag
-      SERVER_PORT: ${{ secrets.SERVER_PORT }}
-      REMOTE_DIR: ${{ secrets.REMOTE_DIR }}
-      FILE_STORAGE_LOCATION: ${{ secrets.FILE_STORAGE_LOCATION }}
-      LOG_FILE_PATH: ${{ secrets.LOG_FILE_PATH }}
-      SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL }}
-      SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
-      SLACK_TIMEOUT: ${{ secrets.SLACK_TIMEOUT }}
-      RDS_ENDPOINT: ${{ secrets.RDS_ENDPOINT }}
-      DB_NAME: ${{ secrets.DB_NAME }}
-      JDBC_USERNAME: ${{ secrets.JDBC_USERNAME }}
-      JDBC_PASSWORD: ${{ secrets.JDBC_PASSWORD }}
-      JWT_SECRET: ${{ secrets.JWT_SECRET }}
-      JWT_ACCESS_TOKEN_VALIDITY: ${{ secrets.JWT_ACCESS_TOKEN_VALIDITY }}
-      JWT_REFRESH_TOKEN_VALIDITY: ${{ secrets.JWT_REFRESH_TOKEN_VALIDITY }}
-      SEOUL_API_KEY: ${{ secrets.SEOUL_API_KEY }}
-      NATIONAL_API_KEY: ${{ secrets.NATIONAL_API_KEY }}
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-      S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-      GEOCODING_CONTACT_EMAIL: ${{ secrets.GEOCODING_CONTACT_EMAIL }}
 
     steps:
       - name: Checkout code
@@ -49,240 +25,27 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Extract version info
-        id: version
-        run: |
-          SHORT_SHA=$(echo $GITHUB_SHA | cut -c1-7)
-          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
-          VERSION="prod-${SHORT_SHA}-${TIMESTAMP}"
-
-          echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
-          echo "timestamp=$TIMESTAMP" >> $GITHUB_OUTPUT
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-          # Export to job environment for ssh-action
-          echo "IMAGE_TAG=$VERSION" >> $GITHUB_ENV
-
       - name: Build and Push Docker image
-        id: docker_build
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          platforms: linux/amd64
-          push: true
-          tags: ahnco/eventitta:${{ steps.version.outputs.version }}
-          cache-from: type=registry,ref=ahnco/eventitta:buildcache
-          cache-to: type=registry,ref=ahnco/eventitta:buildcache,mode=max
-          provenance: false
-
-      - name: Set deployment environment variables
+        id: build
         run: |
-          echo "IMAGE_DIGEST=${{ steps.docker_build.outputs.digest }}" >> $GITHUB_ENV
-          echo "ACTOR=${{ github.actor }}" >> $GITHUB_ENV
+          VERSION="prod-$(git rev-parse --short HEAD)-$(date +%Y%m%d%H%M%S)"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          
+          docker buildx build \
+            --platform linux/amd64 \
+            --push \
+            -t ahnco/eventitta:$VERSION \
+            -t ahnco/eventitta:latest \
+            .
 
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
-        env:
-          IMAGE_TAG: ${{ steps.version.outputs.version }}
-          IMAGE_DIGEST: ${{ steps.docker_build.outputs.digest }}
-          ACTOR: ${{ github.actor }}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          # Use action default 22 unless secret provided; omit invalid expression fallback
-          port: ${{ secrets.EC2_SSH_PORT }}
-          script_stop: true
-          command_timeout: 30m
-          envs: DEPLOY_MODE,IMAGE_TAG,IMAGE_DIGEST,ACTOR,SERVER_PORT,REMOTE_DIR,FILE_STORAGE_LOCATION,LOG_FILE_PATH,SLACK_CHANNEL,SLACK_USERNAME,SLACK_TIMEOUT,RDS_ENDPOINT,DB_NAME,JDBC_USERNAME,JDBC_PASSWORD,JWT_SECRET,JWT_ACCESS_TOKEN_VALIDITY,JWT_REFRESH_TOKEN_VALIDITY,SEOUL_API_KEY,NATIONAL_API_KEY,AWS_REGION,S3_BUCKET_NAME,AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,SLACK_WEBHOOK_URL,GEOCODING_CONTACT_EMAIL
+          port: 22
+          command_timeout: 10m
           script: |
-            set -Eeuo pipefail
-            trap 'echo "❌ failed at line $LINENO: $BASH_COMMAND" >&2' ERR
-
-            # --- helper to strip CR ---
-            sanitize() { v="$(printenv "$1" 2>/dev/null || true)"; printf "%s" "$v" | tr -d "\r"; }
-
-            # --- normalize envs ---
-            DEPLOY_MODE="$(sanitize DEPLOY_MODE)"; DEPLOY_MODE="${DEPLOY_MODE:-tag}"
-            IMAGE_TAG="$(sanitize IMAGE_TAG)"
-            IMAGE_DIGEST="$(sanitize IMAGE_DIGEST)"
-            ACTOR="$(sanitize ACTOR)"; ACTOR="${ACTOR:-unknown}"
-            SERVER_PORT="$(sanitize SERVER_PORT)"; SERVER_PORT="${SERVER_PORT:-8080}"
-            REMOTE_DIR="$(sanitize REMOTE_DIR)"; REMOTE_DIR="${REMOTE_DIR:-$HOME/eventitta}"
-            FILE_STORAGE_LOCATION="$(sanitize FILE_STORAGE_LOCATION)"
-            LOG_FILE_PATH="$(sanitize LOG_FILE_PATH)"
-            SLACK_CHANNEL="$(sanitize SLACK_CHANNEL)"
-            SLACK_USERNAME="$(sanitize SLACK_USERNAME)"
-            SLACK_TIMEOUT="$(sanitize SLACK_TIMEOUT)"
-            RDS_ENDPOINT="$(sanitize RDS_ENDPOINT)"
-            DB_NAME="$(sanitize DB_NAME)"
-            JDBC_USERNAME="$(sanitize JDBC_USERNAME)"
-            JDBC_PASSWORD="$(sanitize JDBC_PASSWORD)"
-            JWT_SECRET="$(sanitize JWT_SECRET)"
-            JWT_ACCESS_TOKEN_VALIDITY="$(sanitize JWT_ACCESS_TOKEN_VALIDITY)"
-            JWT_REFRESH_TOKEN_VALIDITY="$(sanitize JWT_REFRESH_TOKEN_VALIDITY)"
-            SEOUL_API_KEY="$(sanitize SEOUL_API_KEY)"
-            NATIONAL_API_KEY="$(sanitize NATIONAL_API_KEY)"
-            AWS_REGION="$(sanitize AWS_REGION)"
-            S3_BUCKET_NAME="$(sanitize S3_BUCKET_NAME)"
-            AWS_ACCESS_KEY_ID="$(sanitize AWS_ACCESS_KEY_ID)"
-            AWS_SECRET_ACCESS_KEY="$(sanitize AWS_SECRET_ACCESS_KEY)"
-            SLACK_WEBHOOK_URL="$(sanitize SLACK_WEBHOOK_URL)"
-            GEOCODING_CONTACT_EMAIL="$(sanitize GEOCODING_CONTACT_EMAIL)"
-
-            # --- guards ---
-            case "$DEPLOY_MODE" in digest|tag) ;; *) echo "❌ Invalid DEPLOY_MODE: [$DEPLOY_MODE]"; exit 1;; esac
-            require() { for v in "$@"; do [ -n "${!v:-}" ] || { echo "❌ Missing env: $v"; exit 1; }; done; }
-            if [ "$DEPLOY_MODE" = "tag" ]; then require IMAGE_TAG; else require IMAGE_DIGEST; fi
-
-            echo "========================================="
-            echo "🚀 Starting Production Deployment"
-            echo "========================================="
-            echo "Deploy Mode: $DEPLOY_MODE"
-            echo "Version: ${IMAGE_TAG:-<none>}"
-            echo "Digest: ${IMAGE_DIGEST:-<none>}"
-            echo "Deployed by: ${ACTOR}"
-            echo "Server Port: $SERVER_PORT"
-            echo "Remote Dir: $REMOTE_DIR"
-            echo "Time: $(date "+%Y-%m-%d %H:%M:%S")"
-            echo ""
-
-            mkdir -p "$REMOTE_DIR"
-            cd "$REMOTE_DIR"
-            echo "✅ Changed to directory: $(pwd)"
-            echo ""
-
-            # --- image ref ---
-            if [ "$DEPLOY_MODE" = "digest" ]; then
-              APP_IMAGE="ahnco/eventitta@${IMAGE_DIGEST}"
-              echo "🔒 Using digest-based deployment"
-            else
-              APP_IMAGE="ahnco/eventitta:${IMAGE_TAG}"
-              echo "🏷️  Using tag-based deployment"
-            fi
-            echo "📦 Target image: $APP_IMAGE"
-            echo ""
-
-            echo "📝 Creating .env file..."
-            {
-              echo "APP_IMAGE=$APP_IMAGE"
-              echo "SERVER_PORT=$SERVER_PORT"
-              echo "FILE_STORAGE_LOCATION=$FILE_STORAGE_LOCATION"
-              echo "LOG_FILE_PATH=$LOG_FILE_PATH"
-              echo "SLACK_CHANNEL=$SLACK_CHANNEL"
-              echo "SLACK_USERNAME=$SLACK_USERNAME"
-              echo "SLACK_TIMEOUT=$SLACK_TIMEOUT"
-            } > .env
-            chmod 600 .env
-            echo "✅ .env file created"
-
-            echo "📝 Creating .env.secrets file..."
-            {
-              echo "RDS_ENDPOINT=$RDS_ENDPOINT"
-              echo "DB_NAME=$DB_NAME"
-              echo "JDBC_USERNAME=$JDBC_USERNAME"
-              echo "JDBC_PASSWORD=$JDBC_PASSWORD"
-              echo "JWT_SECRET=$JWT_SECRET"
-              echo "JWT_ACCESS_TOKEN_VALIDITY=$JWT_ACCESS_TOKEN_VALIDITY"
-              echo "JWT_REFRESH_TOKEN_VALIDITY=$JWT_REFRESH_TOKEN_VALIDITY"
-              echo "SEOUL_API_KEY=$SEOUL_API_KEY"
-              echo "NATIONAL_API_KEY=$NATIONAL_API_KEY"
-              echo "AWS_REGION=$AWS_REGION"
-              echo "S3_BUCKET_NAME=$S3_BUCKET_NAME"
-              echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID"
-              echo "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY"
-              echo "SLACK_WEBHOOK_URL=$SLACK_WEBHOOK_URL"
-              echo "GEOCODING_CONTACT_EMAIL=$GEOCODING_CONTACT_EMAIL"
-            } > .env.secrets
-            chmod 400 .env.secrets
-            echo "✅ .env.secrets file created"
-            echo ""
-
-            # --- ensure compose file exists and uses APP_IMAGE ---
-            echo "🛠️  Creating docker-compose.yml for production..."
-            cat > docker-compose.yml <<'COMPOSEYAML'
-            services:
-              app:
-                image: ${APP_IMAGE}
-                container_name: eventitta-app
-                env_file:
-                  - .env
-                  - .env.secrets
-                environment:
-                  SPRING_PROFILES_ACTIVE: prod
-                ports:
-                  - "${SERVER_PORT:-8080}:8080"
-                restart: unless-stopped
-            COMPOSEYAML
-            echo "✅ docker-compose.yml written"
-
-            echo "⬇️  Pulling image from Docker Hub..."
-            docker pull "$APP_IMAGE"
-            echo "✅ Image pulled successfully"
-            echo ""
-
-            if docker compose version >/dev/null 2>&1; then
-              DOCKER_COMPOSE="docker compose"
-              echo "✅ Using Docker Compose V2"
-            elif command -v docker-compose >/dev/null 2>&1; then
-              DOCKER_COMPOSE="docker-compose"
-              echo "✅ Using Docker Compose V1"
-            else
-              echo "❌ Docker Compose not found"
-              exit 1
-            fi
-
-            export APP_IMAGE
-            echo "🔄 Deploying new version..."
-            $DOCKER_COMPOSE up -d --force-recreate
-
-            echo "⏳ Performing health check..."
-            HEALTH_CHECK_PASSED=false
-            MAX_ATTEMPTS=40
-            SLEEP_BETWEEN=3
-            AFTER_START_WAIT=5
-
-            for i in $(seq 1 $MAX_ATTEMPTS); do
-              sleep "$SLEEP_BETWEEN"
-              if ! docker ps --filter "name=eventitta-app" --filter "status=running" -q | grep -q .; then
-                echo "❌ Container not running (attempt $i/$MAX_ATTEMPTS)"
-                docker logs eventitta-app --tail 100 2>&1 || true
-                continue
-              fi
-              if docker logs eventitta-app 2>&1 | grep -qi "Started.*Application"; then
-                echo "✅ Spring Boot application started! (attempt $i/$MAX_ATTEMPTS)"
-                sleep "$AFTER_START_WAIT"
-                HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${SERVER_PORT}/" 2>/dev/null || echo "000")
-                if [ "$HTTP_CODE" != "000" ]; then
-                  echo "✅ HTTP endpoint responding with code: $HTTP_CODE"
-                  HEALTH_CHECK_PASSED=true
-                  break
-                fi
-              fi
-              echo "⏳ Waiting for application... (attempt $i/$MAX_ATTEMPTS)"
-            done
-
-            echo ""
-            if [ "$HEALTH_CHECK_PASSED" = true ]; then
-              echo "$APP_IMAGE" > .current_image
-              echo "========================================="
-              echo "✅ Deployment Successful!"
-              echo "========================================="
-              docker ps --filter "name=eventitta-app" --format "table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}"
-            else
-              echo "========================================="
-              echo "❌ Deployment Failed!"
-              echo "========================================="
-              docker logs eventitta-app --tail 200 2>&1 || true
-              docker ps -a --filter "name=eventitta-app"
-              if [ -f .current_image ]; then
-                PREVIOUS_IMAGE=$(cat .current_image || true)
-                if [ -n "$PREVIOUS_IMAGE" ]; then
-                  echo "🔄 Attempting rollback to: $PREVIOUS_IMAGE"
-                  export APP_IMAGE="$PREVIOUS_IMAGE"
-                  docker pull "$PREVIOUS_IMAGE" 2>/dev/null || true
-                  $DOCKER_COMPOSE up -d --force-recreate
-                fi
-              fi
-              exit 1
-            fi
+            cd ~/eventitta
+            ./deploy.sh ${{ steps.build.outputs.version }}

@@ -41,7 +41,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           push: true
           tags: ahnco/eventitta:${{ steps.version.outputs.version }}
           cache-from: type=registry,ref=ahnco/eventitta:buildcache
@@ -59,14 +59,37 @@ jobs:
         env:
           IMAGE_TAG: ${{ steps.version.outputs.version }}
           IMAGE_DIGEST: ${{ steps.docker_build.outputs.digest }}
-          DEPLOY_MODE: ${{ vars.DEPLOY_MODE || 'tag' }}
+          DEPLOY_MODE: tag
+          SHORT_SHA: ${{ steps.version.outputs.short_sha }}
+          ACTOR: ${{ github.actor }}
+          SERVER_PORT: ${{ secrets.SERVER_PORT }}
+          FILE_STORAGE_LOCATION: ${{ secrets.FILE_STORAGE_LOCATION }}
+          LOG_FILE_PATH: ${{ secrets.LOG_FILE_PATH }}
+          SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL }}
+          SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
+          SLACK_TIMEOUT: ${{ secrets.SLACK_TIMEOUT }}
+          RDS_ENDPOINT: ${{ secrets.RDS_ENDPOINT }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          JDBC_USERNAME: ${{ secrets.JDBC_USERNAME }}
+          JDBC_PASSWORD: ${{ secrets.JDBC_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_ACCESS_TOKEN_VALIDITY: ${{ secrets.JWT_ACCESS_TOKEN_VALIDITY }}
+          JWT_REFRESH_TOKEN_VALIDITY: ${{ secrets.JWT_REFRESH_TOKEN_VALIDITY }}
+          SEOUL_API_KEY: ${{ secrets.SEOUL_API_KEY }}
+          NATIONAL_API_KEY: ${{ secrets.NATIONAL_API_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          GEOCODING_CONTACT_EMAIL: ${{ secrets.GEOCODING_CONTACT_EMAIL }}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
           script_stop: true
           command_timeout: 10m
-          envs: IMAGE_TAG,IMAGE_DIGEST,DEPLOY_MODE
+          envs: IMAGE_TAG,IMAGE_DIGEST,DEPLOY_MODE,SHORT_SHA,ACTOR,SERVER_PORT,FILE_STORAGE_LOCATION,LOG_FILE_PATH,SLACK_CHANNEL,SLACK_USERNAME,SLACK_TIMEOUT,RDS_ENDPOINT,DB_NAME,JDBC_USERNAME,JDBC_PASSWORD,JWT_SECRET,JWT_ACCESS_TOKEN_VALIDITY,JWT_REFRESH_TOKEN_VALIDITY,SEOUL_API_KEY,NATIONAL_API_KEY,AWS_REGION,S3_BUCKET_NAME,AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,SLACK_WEBHOOK_URL,GEOCODING_CONTACT_EMAIL
           script: |
             set -euo pipefail
 
@@ -76,8 +99,8 @@ jobs:
             echo "Deploy Mode: $DEPLOY_MODE"
             echo "Version: $IMAGE_TAG"
             echo "Digest: $IMAGE_DIGEST"
-            echo "Commit: ${{ steps.version.outputs.short_sha }}"
-            echo "Deployed by: ${{ github.actor }}"
+            echo "Commit: $SHORT_SHA"
+            echo "Deployed by: $ACTOR"
             echo "Time: $(date '+%Y-%m-%d %H:%M:%S')"
             echo ""
 
@@ -99,10 +122,10 @@ jobs:
             docker ps --filter "name=eventitta-app" --format "table {{.Names}}\t{{.Image}}\t{{.Status}}" || echo "No container running"
             echo ""
 
-            # ✅ 배포할 이미지 결정 (태그 vs 다이제스트)
+            # 배포할 이미지 결정
             if [ "$DEPLOY_MODE" = "digest" ]; then
               APP_IMAGE="ahnco/eventitta@${IMAGE_DIGEST}"
-              echo "🔒 Using digest-based deployment for maximum reproducibility"
+              echo "🔒 Using digest-based deployment"
             else
               APP_IMAGE="ahnco/eventitta:${IMAGE_TAG}"
               echo "🏷️  Using tag-based deployment"
@@ -111,63 +134,37 @@ jobs:
             echo "📦 Target image: $APP_IMAGE"
             echo ""
 
-            # .env 파일 생성 (heredoc 변수 치환 처리)
+            # .env 파일 생성
             echo "📝 Creating .env file..."
-
-            # ✅ heredoc 따옴표 없이 사용하여 변수 확장 허용
-            cat > .env.tmp << EOF
-            # --- Docker Image ---
+            cat > .env << EOF
             APP_IMAGE=${APP_IMAGE}
-
-            # --- Server ---
-            SERVER_PORT=${{ secrets.SERVER_PORT }}
-
-            # --- File Upload ---
-            FILE_STORAGE_LOCATION=${{ secrets.FILE_STORAGE_LOCATION }}
-
-            # --- Logging ---
-            LOG_FILE_PATH=${{ secrets.LOG_FILE_PATH }}
-
-            # --- Slack Notifications ---
-            SLACK_CHANNEL=${{ secrets.SLACK_CHANNEL }}
-            SLACK_USERNAME=${{ secrets.SLACK_USERNAME }}
-            SLACK_TIMEOUT=${{ secrets.SLACK_TIMEOUT }}
+            SERVER_PORT=${SERVER_PORT}
+            FILE_STORAGE_LOCATION=${FILE_STORAGE_LOCATION}
+            LOG_FILE_PATH=${LOG_FILE_PATH}
+            SLACK_CHANNEL=${SLACK_CHANNEL}
+            SLACK_USERNAME=${SLACK_USERNAME}
+            SLACK_TIMEOUT=${SLACK_TIMEOUT}
             EOF
-
-            mv .env.tmp .env
             chmod 600 .env
 
-            # 민감한 정보는 별도 파일
-            cat > .env.secrets.tmp << EOF
-            # --- Database (RDS) ---
-            RDS_ENDPOINT=${{ secrets.RDS_ENDPOINT }}
-            DB_NAME=${{ secrets.DB_NAME }}
-            JDBC_USERNAME=${{ secrets.JDBC_USERNAME }}
-            JDBC_PASSWORD=${{ secrets.JDBC_PASSWORD }}
-
-            # --- JWT ---
-            JWT_SECRET=${{ secrets.JWT_SECRET }}
-            JWT_ACCESS_TOKEN_VALIDITY=${{ secrets.JWT_ACCESS_TOKEN_VALIDITY }}
-            JWT_REFRESH_TOKEN_VALIDITY=${{ secrets.JWT_REFRESH_TOKEN_VALIDITY }}
-
-            # --- Open API Keys ---
-            SEOUL_API_KEY=${{ secrets.SEOUL_API_KEY }}
-            NATIONAL_API_KEY=${{ secrets.NATIONAL_API_KEY }}
-
-            # --- AWS S3 ---
-            AWS_REGION=${{ secrets.AWS_REGION }}
-            S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}
-            AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
-            AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
-            # --- Slack Webhook ---
-            SLACK_WEBHOOK_URL=${{ secrets.SLACK_WEBHOOK_URL }}
-
-            # --- Geo Coding ---
-            GEOCODING_CONTACT_EMAIL=${{ secrets.GEOCODING_CONTACT_EMAIL }}
+            # .env.secrets 파일 생성
+            cat > .env.secrets << EOF
+            RDS_ENDPOINT=${RDS_ENDPOINT}
+            DB_NAME=${DB_NAME}
+            JDBC_USERNAME=${JDBC_USERNAME}
+            JDBC_PASSWORD=${JDBC_PASSWORD}
+            JWT_SECRET=${JWT_SECRET}
+            JWT_ACCESS_TOKEN_VALIDITY=${JWT_ACCESS_TOKEN_VALIDITY}
+            JWT_REFRESH_TOKEN_VALIDITY=${JWT_REFRESH_TOKEN_VALIDITY}
+            SEOUL_API_KEY=${SEOUL_API_KEY}
+            NATIONAL_API_KEY=${NATIONAL_API_KEY}
+            AWS_REGION=${AWS_REGION}
+            S3_BUCKET_NAME=${S3_BUCKET_NAME}
+            AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+            AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+            SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+            GEOCODING_CONTACT_EMAIL=${GEOCODING_CONTACT_EMAIL}
             EOF
-
-            mv .env.secrets.tmp .env.secrets
             chmod 400 .env.secrets
 
             echo "✅ Environment files created"
@@ -179,8 +176,7 @@ jobs:
             echo "✅ Image pulled successfully"
             echo ""
 
-            # ✅ docker compose 사용 (V2)
-            # docker-compose.yml에서 ${APP_IMAGE} 변수 사용
+            # docker compose 사용 (V2)
             export APP_IMAGE
 
             # 컨테이너 재시작
@@ -211,7 +207,7 @@ jobs:
                 sleep 5
 
                 # HTTP 응답 확인
-                HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:${SERVER_PORT:-8080}/ 2>/dev/null || echo "000")
+                HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:${SERVER_PORT}/ 2>/dev/null || echo "000")
 
                 if [ "$HTTP_CODE" != "000" ]; then
                   echo "✅ HTTP endpoint responding with code: $HTTP_CODE"
@@ -227,7 +223,6 @@ jobs:
 
             # 결과 처리
             if [ "$HEALTH_CHECK_PASSED" = true ]; then
-              # 현재 이미지 저장
               echo "$APP_IMAGE" > .current_image
 
               echo "========================================="
@@ -245,7 +240,7 @@ jobs:
               echo ""
               echo "🎉 Production is now running: $APP_IMAGE"
 
-              # 이전 이미지 정리 (최근 5개만 유지)
+              # 이전 이미지 정리
               echo ""
               echo "🧹 Cleaning up old images..."
               docker images ahnco/eventitta --format "{{.Tag}}" \
@@ -266,24 +261,18 @@ jobs:
               docker ps -a --filter "name=eventitta-app"
               echo ""
 
-              # ✅ 롤백 (환경변수 기반)
+              # 롤백
               if [ -n "$PREVIOUS_IMAGE" ]; then
                 echo "🔄 Attempting rollback to: $PREVIOUS_IMAGE"
                 export APP_IMAGE="$PREVIOUS_IMAGE"
-
-                # 이전 이미지 Pull
                 docker pull $PREVIOUS_IMAGE 2>/dev/null || true
-
-                # 롤백 실행
                 docker compose up -d --force-recreate
 
-                # 롤백 검증
                 sleep 5
                 if docker ps --filter "name=eventitta-app" --filter "status=running" -q | grep -q .; then
                   echo "✅ Rollback successful"
-                  echo "Current image: $PREVIOUS_IMAGE"
                 else
-                  echo "❌ Rollback also failed - manual intervention required!"
+                  echo "❌ Rollback also failed!"
                 fi
               else
                 echo "⚠️  No previous version available for rollback"

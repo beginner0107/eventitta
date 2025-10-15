@@ -11,6 +11,30 @@ concurrency:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    env:
+      DEPLOY_MODE: tag
+      SERVER_PORT: ${{ secrets.SERVER_PORT }}
+      REMOTE_DIR: ${{ secrets.REMOTE_DIR }}
+      FILE_STORAGE_LOCATION: ${{ secrets.FILE_STORAGE_LOCATION }}
+      LOG_FILE_PATH: ${{ secrets.LOG_FILE_PATH }}
+      SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL }}
+      SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
+      SLACK_TIMEOUT: ${{ secrets.SLACK_TIMEOUT }}
+      RDS_ENDPOINT: ${{ secrets.RDS_ENDPOINT }}
+      DB_NAME: ${{ secrets.DB_NAME }}
+      JDBC_USERNAME: ${{ secrets.JDBC_USERNAME }}
+      JDBC_PASSWORD: ${{ secrets.JDBC_PASSWORD }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      JWT_ACCESS_TOKEN_VALIDITY: ${{ secrets.JWT_ACCESS_TOKEN_VALIDITY }}
+      JWT_REFRESH_TOKEN_VALIDITY: ${{ secrets.JWT_REFRESH_TOKEN_VALIDITY }}
+      SEOUL_API_KEY: ${{ secrets.SEOUL_API_KEY }}
+      NATIONAL_API_KEY: ${{ secrets.NATIONAL_API_KEY }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      GEOCODING_CONTACT_EMAIL: ${{ secrets.GEOCODING_CONTACT_EMAIL }}
 
     steps:
       - name: Checkout code
@@ -35,6 +59,9 @@ jobs:
           echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
           echo "timestamp=$TIMESTAMP" >> $GITHUB_OUTPUT
           echo "version=$VERSION" >> $GITHUB_OUTPUT
+          
+          # Export to job environment for ssh-action
+          echo "IMAGE_TAG=$VERSION" >> $GITHUB_ENV
 
       - name: Build and Push Docker image
         id: docker_build
@@ -47,6 +74,11 @@ jobs:
           cache-from: type=registry,ref=ahnco/eventitta:buildcache
           cache-to: type=registry,ref=ahnco/eventitta:buildcache,mode=max
           provenance: false
+
+      - name: Set deployment environment variables
+        run: |
+          echo "IMAGE_DIGEST=${{ steps.docker_build.outputs.digest }}" >> $GITHUB_ENV
+          echo "ACTOR=${{ github.actor }}" >> $GITHUB_ENV
 
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
@@ -142,7 +174,7 @@ jobs:
               EOF
                 chmod 600 .env
                 echo "✅ .env file created"
-                      
+
                 echo "📝 Creating .env.secrets file..."
                 cat > .env.secrets << EOF
                 RDS_ENDPOINT=${RDS_ENDPOINT}
@@ -235,4 +267,3 @@ jobs:
                 exit 1
                 fi
                 '
-

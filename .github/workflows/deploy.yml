@@ -157,18 +157,7 @@ jobs:
             echo ""
 
             echo "📝 Creating .env file..."
-            cat > .env << 'EOF'
-            APP_IMAGE=${APP_IMAGE}
-            SERVER_PORT=${SERVER_PORT}
-            FILE_STORAGE_LOCATION=${FILE_STORAGE_LOCATION}
-            LOG_FILE_PATH=${LOG_FILE_PATH}
-            SLACK_CHANNEL=${SLACK_CHANNEL}
-            SLACK_USERNAME=${SLACK_USERNAME}
-            SLACK_TIMEOUT=${SLACK_TIMEOUT}
-            EOF
-            
-            # 환경변수 치환 수행
-            eval "cat > .env << 'ENVEOF'
+            cat > .env <<ENVEOF
             APP_IMAGE=$APP_IMAGE
             SERVER_PORT=$SERVER_PORT
             FILE_STORAGE_LOCATION=$FILE_STORAGE_LOCATION
@@ -176,13 +165,13 @@ jobs:
             SLACK_CHANNEL=$SLACK_CHANNEL
             SLACK_USERNAME=$SLACK_USERNAME
             SLACK_TIMEOUT=$SLACK_TIMEOUT
-            ENVEOF"
-            
+            ENVEOF
+
             chmod 600 .env
             echo "✅ .env file created"
 
             echo "📝 Creating .env.secrets file..."
-            eval "cat > .env.secrets << 'SECRETSEOF'
+            cat > .env.secrets <<SECRETSEOF
             RDS_ENDPOINT=$RDS_ENDPOINT
             DB_NAME=$DB_NAME
             JDBC_USERNAME=$JDBC_USERNAME
@@ -198,8 +187,8 @@ jobs:
             AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
             SLACK_WEBHOOK_URL=$SLACK_WEBHOOK_URL
             GEOCODING_CONTACT_EMAIL=$GEOCODING_CONTACT_EMAIL
-            SECRETSEOF"
-            
+            SECRETSEOF
+
             chmod 400 .env.secrets
             echo "✅ .env.secrets file created"
             echo ""

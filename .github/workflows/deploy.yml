@@ -209,7 +209,7 @@ jobs:
                   - .env
                   - .env.secrets
                 environment:
-                  SPRING_PROFILES_ACTIVE: docker
+                  SPRING_PROFILES_ACTIVE: prod
                 ports:
                   - "${SERVER_PORT:-8080}:8080"
                 restart: unless-stopped

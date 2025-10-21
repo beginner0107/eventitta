@@ -17,7 +17,6 @@ public class SeoulFestivalInitializer {
 
     private final SeoulFestivalDataLoader dataLoader;
     private final FestivalProcessor eventProcessor;
-    private final FestivalMetricsLogger metricsLogger;
 
     @Value("${api.seoul.key}")
     private String seoulServiceKey;
@@ -26,7 +25,11 @@ public class SeoulFestivalInitializer {
         try {
             LocalDate cutoff = calculateCutoffDate();
             var metrics = processEvents(cutoff);
-            metricsLogger.logSeoulResults(metrics);
+            log.info("서울시 문화행사 적재 완료: INSERT={}, UPDATE={}, SKIP={}, OUTDATED={}",
+                metrics.getInsertCount(),
+                metrics.getUpdateCount(),
+                metrics.getSkipCount(),
+                metrics.getOutdatedCount());
         } catch (Exception e) {
             log.error("서울시 축제 데이터 로딩 중 오류 발생", e);
             throw FestivalErrorCode.DATA_SYNC_ERROR.defaultException(e);
@@ -40,7 +43,11 @@ public class SeoulFestivalInitializer {
         try {
             LocalDate cutoff = calculateCutoffDate();
             var metrics = processEventsForDate(targetDate, cutoff);
-            metricsLogger.logSeoulResults(metrics);
+            log.info("서울시 문화행사 적재 완료: INSERT={}, UPDATE={}, SKIP={}, OUTDATED={}",
+                metrics.getInsertCount(),
+                metrics.getUpdateCount(),
+                metrics.getSkipCount(),
+                metrics.getOutdatedCount());
             log.info("서울시 축제 데이터 날짜별 로드 완료 - 대상 날짜: {}", targetDate);
         } catch (Exception e) {
             log.error("서울시 축제 데이터 날짜별 로딩 중 오류 발생 - 대상 날짜: {}", targetDate, e);

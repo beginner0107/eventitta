@@ -17,7 +17,6 @@ public class NationalFestivalInitializer {
 
     private final NationalFestivalDataLoader dataLoader;
     private final FestivalProcessor eventProcessor;
-    private final FestivalMetricsLogger metricsLogger;
 
     @Value("${api.national.key}")
     private String nationalServiceKey;
@@ -26,7 +25,11 @@ public class NationalFestivalInitializer {
         try {
             LocalDate cutoff = calculateCutoffDate();
             var metrics = processEvents(cutoff);
-            metricsLogger.logNationalResults(metrics);
+            log.info("국가 문화행사 적재 완료: INSERT={}, UPDATE={}, SKIP={}, OUTDATED={}",
+                metrics.getInsertCount(),
+                metrics.getUpdateCount(),
+                metrics.getSkipCount(),
+                metrics.getOutdatedCount());
         } catch (Exception e) {
             log.error("전국 축제 데이터 로딩 중 오류 발생", e);
             throw FestivalErrorCode.DATA_SYNC_ERROR.defaultException(e);

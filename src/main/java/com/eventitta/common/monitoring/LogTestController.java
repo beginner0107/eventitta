@@ -2,9 +2,9 @@ package com.eventitta.common.monitoring;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,12 +19,12 @@ import java.util.Map;
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/test/logs")
-@RequiredArgsConstructor
 @Tag(name = "Log Test", description = "로그 시스템 테스트 API (개발 환경 전용)")
-@ConditionalOnProperty(name = "spring.profiles.active", havingValue = "local", matchIfMissing = false)
+@Profile({"local", "test"})
 public class LogTestController {
 
-    private final LogMonitor logMonitor;
+    @Autowired(required = false)
+    private LogMonitor logMonitor;
 
     @GetMapping("/all-levels")
     @Operation(summary = "모든 로그 레벨 테스트", description = "TRACE부터 ERROR까지 모든 로그 레벨을 출력합니다")

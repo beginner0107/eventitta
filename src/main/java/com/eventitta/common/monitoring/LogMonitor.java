@@ -42,19 +42,21 @@ public class LogMonitor {
     @Value("${logging.file.path:/app/logs}")
     private String logPath;
 
-    // 에러 로그 임계치: 5분간 10건 이상
-    private static final int ERROR_THRESHOLD = 10;
-    private static final int TIME_WINDOW_MINUTES = 5;
+    @Value("${monitoring.log.error-threshold:10}")
+    private int errorThreshold;
 
-    // 로그 파일 크기 임계치: 800MB (1GB 제한 고려)
-    private static final long LOG_SIZE_THRESHOLD_MB = 800;
+    @Value("${monitoring.log.time-window-minutes:5}")
+    private int timeWindowMinutes;
+
+    @Value("${monitoring.log.size-threshold-mb:800}")
+    private long logSizeThresholdMb;
+
+    @Value("${monitoring.log.alert-cooldown-minutes:30}")
+    private int alertCooldownMinutes;
 
     // 마지막 알림 시간 (중복 알림 방지)
     private Instant lastErrorAlert = Instant.MIN;
     private Instant lastSizeAlert = Instant.MIN;
-
-    // 알림 간격: 30분 (동일한 알림을 30분마다 최대 1회만)
-    private static final int ALERT_COOLDOWN_MINUTES = 30;
 
     /**
      * 1분마다 에러 로그 모니터링
@@ -72,7 +74,7 @@ public class LogMonitor {
 
             int recentErrorCount = countRecentErrors(errorLogPath);
 
-            if (recentErrorCount >= ERROR_THRESHOLD) {
+            if (recentErrorCount >= errorThreshold) {
                 sendErrorThresholdAlert(recentErrorCount);
             }
 
@@ -96,7 +98,7 @@ public class LogMonitor {
 
             long totalSizeMB = calculateDirectorySize(logDirectory);
 
-            if (totalSizeMB >= LOG_SIZE_THRESHOLD_MB) {
+            if (totalSizeMB >= logSizeThresholdMb) {
                 sendLogSizeAlert(totalSizeMB);
             }
 
@@ -106,10 +108,10 @@ public class LogMonitor {
     }
 
     /**
-     * 최근 5분간 에러 로그 개수 카운트
+     * 최근 N분간 에러 로그 개수 카운트
      */
     private int countRecentErrors(Path errorLogPath) throws IOException {
-        Instant cutoffTime = Instant.now().minus(TIME_WINDOW_MINUTES, ChronoUnit.MINUTES);
+        Instant cutoffTime = Instant.now().minus(timeWindowMinutes, ChronoUnit.MINUTES);
         AtomicInteger errorCount = new AtomicInteger(0);
 
         try (Stream<String> lines = Files.lines(errorLogPath)) {
@@ -169,15 +171,15 @@ public class LogMonitor {
      * 에러 임계치 초과 알림 전송
      */
     private void sendErrorThresholdAlert(int errorCount) {
-        // 중복 알림 방지: 마지막 알림 후 30분 이내에는 재전송 안 함
-        if (Instant.now().isBefore(lastErrorAlert.plus(ALERT_COOLDOWN_MINUTES, ChronoUnit.MINUTES))) {
+        // 중복 알림 방지: 마지막 알림 후 N분 이내에는 재전송 안 함
+        if (Instant.now().isBefore(lastErrorAlert.plus(alertCooldownMinutes, ChronoUnit.MINUTES))) {
             log.debug("에러 알림 쿨다운 기간 중 - 알림 생략");
             return;
         }
 
         String message = String.format(
             "최근 %d분간 ERROR 로그가 %d건 발생했습니다 (임계치: %d건). 서버 상태를 확인해주세요.",
-            TIME_WINDOW_MINUTES, errorCount, ERROR_THRESHOLD
+            timeWindowMinutes, errorCount, errorThreshold
         );
 
         slackNotificationService.sendAlert(
@@ -198,14 +200,14 @@ public class LogMonitor {
      */
     private void sendLogSizeAlert(long totalSizeMB) {
         // 중복 알림 방지
-        if (Instant.now().isBefore(lastSizeAlert.plus(ALERT_COOLDOWN_MINUTES, ChronoUnit.MINUTES))) {
+        if (Instant.now().isBefore(lastSizeAlert.plus(alertCooldownMinutes, ChronoUnit.MINUTES))) {
             log.debug("로그 크기 알림 쿨다운 기간 중 - 알림 생략");
             return;
         }
 
         String message = String.format(
             "로그 디렉토리 크기가 %d MB입니다 (임계치: %d MB). 디스크 용량을 확인하고 오래된 로그를 정리해주세요.",
-            totalSizeMB, LOG_SIZE_THRESHOLD_MB
+            totalSizeMB, logSizeThresholdMb
         );
 
         slackNotificationService.sendAlert(
@@ -237,7 +239,7 @@ public class LogMonitor {
 
             return String.format(
                 "로그 디렉토리: %s, 전체 크기: %d MB, 최근 %d분간 에러: %d건",
-                logPath, totalSizeMB, TIME_WINDOW_MINUTES, recentErrors
+                logPath, totalSizeMB, timeWindowMinutes, recentErrors
             );
         } catch (Exception e) {
             return "로그 상태 조회 실패: " + e.getMessage();

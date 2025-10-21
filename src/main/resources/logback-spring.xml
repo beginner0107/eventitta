@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <!-- 속성 정의 -->
+  <property name="LOG_PATH" value="${LOG_PATH:-/app/logs}"/>
+  <property name="LOG_FILE" value="${LOG_FILE:-eventitta}"/>
+  <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"/>
+
+  <!-- 콘솔 Appender (local, test 프로파일용) -->
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>${LOG_PATTERN}</pattern>
+      <charset>UTF-8</charset>
+    </encoder>
+  </appender>
+
+  <!-- =========================== -->
+  <!-- Production 프로파일 설정 -->
+  <!-- =========================== -->
+  <springProfile name="prod">
+    <!-- 일반 로그 파일 Appender (7일 보관) -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+      <file>${LOG_PATH}/${LOG_FILE}.log</file>
+      <encoder>
+        <pattern>${LOG_PATTERN}</pattern>
+        <charset>UTF-8</charset>
+      </encoder>
+      <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+        <!-- 파일명 패턴: eventitta-2025-10-21.0.log.gz -->
+        <fileNamePattern>${LOG_PATH}/${LOG_FILE}-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+        <!-- 최대 파일 크기 -->
+        <maxFileSize>50MB</maxFileSize>
+        <!-- 보관 기간: 7일 -->
+        <maxHistory>7</maxHistory>
+        <!-- 전체 로그 용량 제한: 700MB (에러 로그 300MB 고려) -->
+        <totalSizeCap>700MB</totalSizeCap>
+        <!-- 시작 시 오래된 로그 정리 -->
+        <cleanHistoryOnStart>true</cleanHistoryOnStart>
+      </rollingPolicy>
+      <!-- TRACE, DEBUG 로그는 파일에 기록하지 않음 -->
+      <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+        <level>INFO</level>
+      </filter>
+    </appender>
+
+    <!-- 에러 전용 로그 파일 Appender (30일 보관) -->
+    <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+      <file>${LOG_PATH}/error.log</file>
+      <encoder>
+        <pattern>${LOG_PATTERN}</pattern>
+        <charset>UTF-8</charset>
+      </encoder>
+      <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+        <fileNamePattern>${LOG_PATH}/error-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+        <maxFileSize>30MB</maxFileSize>
+        <!-- 에러 로그는 30일 보관 (장애 추적용) -->
+        <maxHistory>30</maxHistory>
+        <!-- 에러 로그 용량 제한: 300MB -->
+        <totalSizeCap>300MB</totalSizeCap>
+        <cleanHistoryOnStart>true</cleanHistoryOnStart>
+      </rollingPolicy>
+      <!-- ERROR 레벨만 기록 -->
+      <filter class="ch.qos.logback.classic.filter.LevelFilter">
+        <level>ERROR</level>
+        <onMatch>ACCEPT</onMatch>
+        <onMismatch>DENY</onMismatch>
+      </filter>
+    </appender>
+
+    <!-- Async Appender로 I/O 성능 최적화 -->
+    <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
+      <!-- 큐 크기: 메모리 1GB 환경 고려하여 256으로 제한 -->
+      <queueSize>256</queueSize>
+      <!-- 큐가 80% 차면 TRACE, DEBUG 로그 버림 (20% discarding) -->
+      <discardingThreshold>51</discardingThreshold>
+      <!-- false: 큐가 가득 차면 로그 작성 대기 (로그 손실 방지) -->
+      <neverBlock>false</neverBlock>
+      <!-- 최대 flush 시간: 애플리케이션 종료 시 로그 손실 방지 -->
+      <maxFlushTime>5000</maxFlushTime>
+      <appender-ref ref="FILE"/>
+    </appender>
+
+    <appender name="ASYNC_ERROR_FILE" class="ch.qos.logback.classic.AsyncAppender">
+      <queueSize>128</queueSize>
+      <!-- 에러 로그는 절대 버리지 않음 -->
+      <discardingThreshold>0</discardingThreshold>
+      <neverBlock>false</neverBlock>
+      <maxFlushTime>5000</maxFlushTime>
+      <appender-ref ref="ERROR_FILE"/>
+    </appender>
+
+    <!-- 애플리케이션 로거 -->
+    <logger name="com.eventitta" level="INFO" additivity="false">
+      <appender-ref ref="ASYNC_FILE"/>
+      <appender-ref ref="ASYNC_ERROR_FILE"/>
+    </logger>
+
+    <!-- 축제 스케줄러: WARN만 기록 (동기화 시 대량 로그 방지) -->
+    <logger name="com.eventitta.festivals.scheduler" level="WARN" additivity="false">
+      <appender-ref ref="ASYNC_FILE"/>
+      <appender-ref ref="ASYNC_ERROR_FILE"/>
+    </logger>
+
+    <!-- Spring Framework: ERROR만 -->
+    <logger name="org.springframework" level="ERROR"/>
+    <logger name="org.springframework.web" level="ERROR"/>
+    <logger name="org.springframework.security" level="ERROR"/>
+
+    <!-- Hibernate: ERROR만 -->
+    <logger name="org.hibernate" level="ERROR"/>
+    <logger name="org.hibernate.SQL" level="ERROR"/>
+
+    <!-- P6Spy: 운영 환경에서는 비활성화 -->
+    <logger name="p6spy" level="OFF"/>
+
+    <!-- QueryDSL -->
+    <logger name="com.querydsl" level="ERROR"/>
+
+    <!-- HikariCP: WARN (커넥션 풀 이슈만) -->
+    <logger name="com.zaxxer.hikari" level="WARN"/>
+
+    <!-- Root Logger -->
+    <root level="WARN">
+      <appender-ref ref="ASYNC_FILE"/>
+      <appender-ref ref="ASYNC_ERROR_FILE"/>
+    </root>
+  </springProfile>
+
+  <!-- =========================== -->
+  <!-- Local 프로파일 설정 -->
+  <!-- =========================== -->
+  <springProfile name="local">
+    <!-- 로컬 환경용 파일 Appender -->
+    <appender name="LOCAL_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+      <file>./logs/eventitta.log</file>
+      <encoder>
+        <pattern>${LOG_PATTERN}</pattern>
+        <charset>UTF-8</charset>
+      </encoder>
+      <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+        <fileNamePattern>./logs/eventitta-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+        <maxFileSize>10MB</maxFileSize>
+        <maxHistory>3</maxHistory>
+        <totalSizeCap>30MB</totalSizeCap>
+      </rollingPolicy>
+    </appender>
+
+    <!-- 로컬 환경용 에러 파일 Appender -->
+    <appender name="LOCAL_ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+      <file>./logs/error.log</file>
+      <encoder>
+        <pattern>${LOG_PATTERN}</pattern>
+        <charset>UTF-8</charset>
+      </encoder>
+      <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+        <fileNamePattern>./logs/error-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+        <maxFileSize>10MB</maxFileSize>
+        <maxHistory>3</maxHistory>
+        <totalSizeCap>30MB</totalSizeCap>
+      </rollingPolicy>
+      <filter class="ch.qos.logback.classic.filter.LevelFilter">
+        <level>ERROR</level>
+        <onMatch>ACCEPT</onMatch>
+        <onMismatch>DENY</onMismatch>
+      </filter>
+    </appender>
+
+    <logger name="com.eventitta" level="DEBUG"/>
+    <logger name="com.eventitta.festivals" level="DEBUG"/>
+    <logger name="org.springframework.web" level="INFO"/>
+    <logger name="org.springframework.security" level="INFO"/>
+    <logger name="org.hibernate.SQL" level="WARN"/>
+    <logger name="p6spy" level="DEBUG"/>
+
+    <root level="INFO">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="LOCAL_FILE"/>
+      <appender-ref ref="LOCAL_ERROR_FILE"/>
+    </root>
+  </springProfile>
+
+  <!-- =========================== -->
+  <!-- Test 프로파일 설정 -->
+  <!-- =========================== -->
+  <springProfile name="test">
+    <logger name="com.eventitta" level="INFO"/>
+    <logger name="org.springframework" level="WARN"/>
+    <logger name="org.hibernate" level="WARN"/>
+    <logger name="p6spy" level="OFF"/>
+
+    <root level="WARN">
+      <appender-ref ref="CONSOLE"/>
+    </root>
+  </springProfile>
+
+  <!-- =========================== -->
+  <!-- Docker 프로파일 설정 -->
+  <!-- =========================== -->
+  <springProfile name="docker">
+    <logger name="com.eventitta" level="INFO"/>
+    <logger name="org.springframework" level="WARN"/>
+    <logger name="org.hibernate.SQL" level="WARN"/>
+
+    <root level="INFO">
+      <appender-ref ref="CONSOLE"/>
+    </root>
+  </springProfile>
+</configuration>

@@ -14,7 +14,8 @@ logging:
     root: INFO
     org.hibernate.SQL: WARN
     com.eventitta.festivals: DEBUG
-    com.eventitta.common.logging: INFO
+    com.eventitta.common.filter: INFO
+    com.eventitta.common.interceptor: DEBUG
     festival.error: INFO
 
 # 축제 데이터 처리 관련 설정
@@ -33,3 +34,7 @@ notification:
     channel: "#eventitta-alerts"
     username: "eventitta-bot"
     timeout-seconds: 5
+
+monitoring:
+  log:
+    enabled: false

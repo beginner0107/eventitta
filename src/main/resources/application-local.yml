@@ -9,8 +9,8 @@ spring:
     driver-class-name: com.p6spy.engine.spy.P6SpyDriver
   jpa:
     hibernate:
-      ddl-auto: none  # Flyway로 스키마 관리
-    defer-datasource-initialization: false  # Flyway가 먼저 실행되도록
+      ddl-auto: none
+    defer-datasource-initialization: false
     properties:
       hibernate:
         format_sql: true
@@ -28,7 +28,7 @@ spring:
     baseline-on-migrate: true
     baseline-version: 0
     validate-on-migrate: true
-    clean-disabled: false  # 로컬 환경에서는 clean 허용
+    clean-disabled: false
   devtools:
     restart:
       enabled: true
@@ -36,6 +36,7 @@ spring:
     serialization:
       write-dates-as-timestamps: false
     default-property-inclusion: non_null
+
 springdoc:
   api-docs:
     path: /v3/api-docs
@@ -45,13 +46,16 @@ springdoc:
     operations-sorter: alpha
     with-credentials: true
     persist-authorization: true
+
 jwt:
   secret: ${SECRET_KEY}
   access-token-validity-ms: 3600000
   refresh-token-validity-ms: 86400000
+
 file:
   storage:
     location: ./uploads
+
 festival:
   seoul:
     base-url: http://openapi.seoul.go.kr:8088
@@ -65,11 +69,17 @@ api:
     key: ${SEOUL_API_KEY:your-seoul-api-key-here}
   national:
     key: ${NATIONAL_API_KEY:your-national-api-key-here}
+
 logging:
   level:
     root: INFO
+    com.eventitta: DEBUG  # 로컬에서는 DEBUG
     org.hibernate.SQL: WARN
     p6spy: DEBUG
+  file: # 로컬에서도 파일 로깅 활성화 (테스트용)
+    path: ./logs
+    name: ./logs/eventitta.log
+
 async:
   core-pool-size: 4
   max-pool-size: 20
@@ -77,3 +87,28 @@ async:
 
 server:
   port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,loggers,metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    loggers:
+      enabled: true
+
+monitoring:
+  log:
+    enabled: true
+    error-threshold: 3
+    time-window-minutes: 2
+    size-threshold-mb: 10
+    alert-cooldown-minutes: 30
+
+# Slack 알림은 로컬에서 비활성화
+notification:
+  slack:
+    enabled: false

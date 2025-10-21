@@ -15,6 +15,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
@@ -57,6 +60,11 @@ public class LogMonitor {
     // 마지막 알림 시간 (중복 알림 방지)
     private Instant lastErrorAlert = Instant.MIN;
     private Instant lastSizeAlert = Instant.MIN;
+
+    // 로그 타임스탬프 파싱용 (Asia/Seoul 타임존)
+    private static final DateTimeFormatter LOG_TIMESTAMP_FORMATTER =
+        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+    private static final ZoneId SEOUL_ZONE = ZoneId.of("Asia/Seoul");
 
     /**
      * 1분마다 에러 로그 모니터링
@@ -126,6 +134,7 @@ public class LogMonitor {
 
     /**
      * 로그 라인이 특정 시간 이후인지 확인
+     * 로그는 Asia/Seoul 타임존으로 기록되므로 올바른 타임존 변환 필요
      */
     private boolean isWithinTimeWindow(String logLine, Instant cutoffTime) {
         try {
@@ -135,11 +144,15 @@ public class LogMonitor {
             }
 
             String timestampStr = logLine.substring(0, 23); // "2025-10-21 15:30:00.123"
-            Instant logTime = Instant.parse(timestampStr.replace(' ', 'T') + "Z");
+
+            // Asia/Seoul 타임존으로 파싱
+            LocalDateTime localDateTime = LocalDateTime.parse(timestampStr, LOG_TIMESTAMP_FORMATTER);
+            Instant logTime = localDateTime.atZone(SEOUL_ZONE).toInstant();
 
             return logTime.isAfter(cutoffTime);
         } catch (Exception e) {
             // 타임스탬프 파싱 실패 시 최근 로그로 간주
+            log.trace("로그 타임스탬프 파싱 실패: {}", logLine, e);
             return true;
         }
     }

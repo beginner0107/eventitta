@@ -363,3 +363,4 @@ HELP.md
 *.iml
 .idea/
 /db/
+/logs

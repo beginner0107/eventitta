@@ -70,7 +70,7 @@
     <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
       <!-- 큐 크기: 메모리 1GB 환경 고려하여 256으로 제한 -->
       <queueSize>256</queueSize>
-      <!-- 큐가 80% 차면 TRACE, DEBUG 로그 버림 (20% discarding) -->
+      <!-- 큐의 여유 공간이 51(20%) 이하일 때 TRACE, DEBUG 로그 버림 -->
       <discardingThreshold>51</discardingThreshold>
       <!-- false: 큐가 가득 차면 로그 작성 대기 (로그 손실 방지) -->
       <neverBlock>false</neverBlock>

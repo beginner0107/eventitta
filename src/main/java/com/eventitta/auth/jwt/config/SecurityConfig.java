@@ -65,7 +65,7 @@ public class SecurityConfig {
                     // Actuator 전체 허용 (로컬 환경)
                     .requestMatchers("/actuator/**").permitAll()
                     // 테스트 엔드포인트 허용
-                    .requestMatchers("/test/**").permitAll()
+                    .requestMatchers("/api/v1/test/**").permitAll()
                     // 기존 public 엔드포인트
                     .requestMatchers(
                         "/api/v1/auth/**",

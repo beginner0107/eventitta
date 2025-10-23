@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -53,13 +54,20 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    @Profile("local")
+    public SecurityFilterChain localSecurityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth ->
-                auth.requestMatchers(
+                auth
+                    // Actuator 전체 허용 (로컬 환경)
+                    .requestMatchers("/actuator/**").permitAll()
+                    // 테스트 엔드포인트 허용
+                    .requestMatchers("/api/v1/test/**").permitAll()
+                    // 기존 public 엔드포인트
+                    .requestMatchers(
                         "/api/v1/auth/**",
                         "/v3/api-docs/**",
                         "/swagger-ui/**",
@@ -67,11 +75,49 @@ public class SecurityConfig {
                         "/api/v1/uploads/**"
                     )
                     .permitAll()
-                    .requestMatchers(HttpMethod.GET
-                        , "/api/v1/posts"
-                        , "/api/v1/posts/**"
-                        , "/api/v1/regions"
-                        , "/api/v1/regions/**").permitAll()
+                    .requestMatchers(HttpMethod.GET,
+                        "/api/v1/posts",
+                        "/api/v1/posts/**",
+                        "/api/v1/regions",
+                        "/api/v1/regions/**"
+                    ).permitAll()
+                    .anyRequest().authenticated()
+            )
+            .authenticationProvider(authenticationProvider())
+            .exceptionHandling(ex -> ex.authenticationEntryPoint(authenticationEntryPoint))
+            .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
+
+    @Bean
+    @Profile("!local")
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(AbstractHttpConfigurer::disable)
+            .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .authorizeHttpRequests(auth ->
+                auth
+                    // Actuator health는 public
+                    .requestMatchers("/actuator/health").permitAll()
+                    // 나머지 Actuator는 ADMIN만
+                    .requestMatchers("/actuator/**").hasRole("ADMIN")
+                    // 기존 public 엔드포인트
+                    .requestMatchers(
+                        "/api/v1/auth/**",
+                        "/v3/api-docs/**",
+                        "/swagger-ui/**",
+                        "/swagger-ui.html",
+                        "/api/v1/uploads/**"
+                    )
+                    .permitAll()
+                    .requestMatchers(HttpMethod.GET,
+                        "/api/v1/posts",
+                        "/api/v1/posts/**",
+                        "/api/v1/regions",
+                        "/api/v1/regions/**"
+                    ).permitAll()
                     .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())

@@ -30,7 +30,7 @@ jobs:
         run: |
           VERSION="prod-$(git rev-parse --short HEAD)-$(date +%Y%m%d%H%M%S)"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          
+
           docker buildx build \
             --platform linux/amd64 \
             --push \

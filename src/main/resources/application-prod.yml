@@ -81,17 +81,41 @@ cloud:
 
 logging:
   level:
-    root: INFO
-    org.hibernate.SQL: WARN
+    root: WARN
+    com.eventitta: INFO
+    com.eventitta.festivals.scheduler: WARN
+    org.springframework: ERROR
+    org.springframework.web: ERROR
+    org.springframework.security: ERROR
+    org.hibernate: ERROR
+    org.hibernate.SQL: ERROR
+    p6spy: OFF
+    com.zaxxer.hikari: WARN
   file:
-    name: ${LOG_FILE_PATH:/app/logs/eventitta.log}
-    max-size: 10MB
-    max-history: 30
+    path: ${LOG_PATH:/app/logs}
+    name: ${LOG_PATH:/app/logs}/eventitta.log
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
 
 async:
   core-pool-size: 4
   max-pool-size: 20
   queue-capacity: 200
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,loggers
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+    loggers:
+      enabled: true
+  security:
+    enabled: false
 
 notification:
   slack:
@@ -100,3 +124,11 @@ notification:
     channel: ${SLACK_CHANNEL:#eventitta-alerts}
     username: ${SLACK_USERNAME:eventitta-bot}
     timeout-seconds: ${SLACK_TIMEOUT:5}
+
+monitoring:
+  log:
+    enabled: true
+    error-threshold: 10
+    time-window-minutes: 5
+    size-threshold-mb: 800
+    alert-cooldown-minutes: 30

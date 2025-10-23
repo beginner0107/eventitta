@@ -43,8 +43,6 @@ class UserActivityServiceProblemsTest {
 
         // 테스트 데이터 생성 - 별도 트랜잭션으로 처리
         testUserId = createTestData();
-
-        System.out.println("setUp 완료 - testUserId: " + testUserId);
     }
 
     @Transactional
@@ -93,8 +91,6 @@ class UserActivityServiceProblemsTest {
         entityManager.clear();
 
         User userBeforeRevoke = userRepository.findById(testUserId).orElseThrow();
-        System.out.println("=== 활동 취소 및 포인트 차감 테스트 ===");
-        System.out.println("취소 전 포인트: " + userBeforeRevoke.getPoints());
 
         // when: 댓글 활동 취소
         userActivityService.revokeActivity(testUserId, DELETE_COMMENT, 1L);
@@ -103,6 +99,5 @@ class UserActivityServiceProblemsTest {
 
         // then: 포인트 차감 확인
         User afterRevoke = userRepository.findById(testUserId).orElseThrow();
-        System.out.println("활동 취소 후 포인트: " + afterRevoke.getPoints());
     }
 }

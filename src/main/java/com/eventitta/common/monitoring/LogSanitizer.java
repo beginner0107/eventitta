@@ -29,8 +29,12 @@ public class LogSanitizer {
             "([A-Za-z0-9._\\-\\/=]{16,})"
     );
 
-    private static final Pattern PASSWORD_PATTERN =
-        Pattern.compile("(password|pwd|passwd)[\"']?\\s*[:=]\\s*[\"']?([^\\s&\"']+)");
+    private static final Pattern PASSWORD_PATTERN = Pattern.compile(
+        "(?i)(password|passwd|pwd|pass|secret|token|api[_-]?key|access[_-]?key)" +
+            "[\"']?\\s*[:=]\\s*[\"']?([^\\s&\"']+)",
+        Pattern.CASE_INSENSITIVE
+    );
+
 
     private static final Pattern CREDIT_CARD_PATTERN =
         Pattern.compile("\\b\\d{4}[-\\s]?\\d{4}[-\\s]?\\d{4}[-\\s]?\\d{4}\\b");

@@ -99,8 +99,7 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth ->
                 auth
-                    // Actuator health는 public
-                    .requestMatchers("/actuator/health").permitAll()
+                    .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                     // 나머지 Actuator는 ADMIN만
                     .requestMatchers("/actuator/**").hasRole("ADMIN")
                     // 기존 public 엔드포인트

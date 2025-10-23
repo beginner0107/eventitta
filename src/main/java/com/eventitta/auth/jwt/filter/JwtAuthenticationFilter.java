@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -18,6 +19,16 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider tokenProvider;
+    private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
+    private static final String[] WHITELIST = {
+        "/actuator/**",
+        "/v3/api-docs/**",
+        "/swagger-ui/**",
+        "/swagger-ui.html",
+        "/api/v1/auth/**",
+        "/error",
+        "/favicon.ico"
+    };
 
     public JwtAuthenticationFilter(JwtTokenProvider tokenProvider) {
         this.tokenProvider = tokenProvider;
@@ -50,7 +61,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) return true;
+
         String path = request.getRequestURI();
-        return path.startsWith("/api/v1/auth/");
+        for (String pattern : WHITELIST) {
+            if (PATH_MATCHER.match(pattern, path)) return true;
+        }
+        return false;
     }
 }

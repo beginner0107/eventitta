@@ -2,6 +2,7 @@ package com.eventitta.common.monitoring;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
@@ -13,18 +14,18 @@ import java.util.Map;
 
 /**
  * 로그 시스템 테스트용 컨트롤러
- *
+ * <p>
  * 로컬/개발 환경에서만 활성화되며, 프로덕션에서는 비활성화됩니다.
  */
 @Slf4j
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/v1/test/logs")
 @Tag(name = "Log Test", description = "로그 시스템 테스트 API (개발 환경 전용)")
 @Profile({"local", "test"})
 public class LogTestController {
 
-    @Autowired(required = false)
-    private LogMonitor logMonitor;
+    private final LogMonitor logMonitor;
 
     @GetMapping("/all-levels")
     @Operation(summary = "모든 로그 레벨 테스트", description = "TRACE부터 ERROR까지 모든 로그 레벨을 출력합니다")

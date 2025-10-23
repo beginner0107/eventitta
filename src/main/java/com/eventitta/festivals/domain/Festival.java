@@ -199,7 +199,7 @@ public class Festival extends BaseTimeEntity {
         this.homepageUrl = updatedFestival.getHomepageUrl();
         this.detailUrl = updatedFestival.getDetailUrl();
         if (updatedFestival.getLatitude() != null && updatedFestival.getLongitude() != null) {
-            updateCoordinates(latitude, longitude);
+            updateCoordinates(updatedFestival.getLatitude(), updatedFestival.getLongitude());
         }
         this.content = updatedFestival.getContent();
     }

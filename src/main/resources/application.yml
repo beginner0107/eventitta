@@ -14,7 +14,6 @@ logging:
     root: INFO
     org.hibernate.SQL: WARN
     com.eventitta.festivals: DEBUG
-    com.eventitta.common.filter: INFO
     com.eventitta.common.interceptor: DEBUG
     festival.error: INFO
 

@@ -62,11 +62,8 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth ->
                 auth
-                    // Actuator 전체 허용 (로컬 환경)
                     .requestMatchers("/actuator/**").permitAll()
-                    // 테스트 엔드포인트 허용
                     .requestMatchers("/api/v1/test/**").permitAll()
-                    // 기존 public 엔드포인트
                     .requestMatchers(
                         "/api/v1/auth/**",
                         "/v3/api-docs/**",
@@ -100,9 +97,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth ->
                 auth
                     .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
-                    // 나머지 Actuator는 ADMIN만
                     .requestMatchers("/actuator/**").hasRole("ADMIN")
-                    // 기존 public 엔드포인트 (Swagger 제외)
                     .requestMatchers(
                         "/api/v1/auth/**",
                         "/api/v1/uploads/**"

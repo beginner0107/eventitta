@@ -17,6 +17,12 @@ logging:
     com.eventitta.common.interceptor: DEBUG
     festival.error: INFO
 
+# Swagger/OpenAPI 서버 설정
+springdoc:
+  server:
+    url: http://localhost:8080
+    description: Development server
+
 # 축제 데이터 처리 관련 설정
 festival:
   geocoding:

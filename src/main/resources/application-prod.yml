@@ -15,7 +15,7 @@ spring:
       max-lifetime: 1800000
   jpa:
     hibernate:
-      ddl-auto: none  # Flyway가 스키마 관리하므로 none으로 설정
+      ddl-auto: none
     show-sql: false
   sql:
     init:
@@ -27,7 +27,7 @@ spring:
     baseline-version: 0
     validate-on-migrate: true
     out-of-order: false
-    clean-disabled: true  # 운영환경에서는 clean 비활성화
+    clean-disabled: true
     url: ${spring.datasource.url}
     user: ${spring.datasource.username}
     password: ${spring.datasource.password}
@@ -42,6 +42,20 @@ spring:
 
 server:
   port: ${SERVER_PORT:8080}
+  forward-headers-strategy: framework
+  tomcat:
+    remoteip:
+      protocol-header: X-Forwarded-Proto
+      remote-ip-header: X-Forwarded-For
+
+springdoc:
+  swagger-ui:
+    enabled: false
+  api-docs:
+    enabled: false
+  server:
+    url: https://eventitta.com
+    description: Production server
 
 jwt:
   secret: ${JWT_SECRET}

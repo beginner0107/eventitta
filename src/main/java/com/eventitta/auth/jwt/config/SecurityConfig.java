@@ -102,12 +102,9 @@ public class SecurityConfig {
                     .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                     // 나머지 Actuator는 ADMIN만
                     .requestMatchers("/actuator/**").hasRole("ADMIN")
-                    // 기존 public 엔드포인트
+                    // 기존 public 엔드포인트 (Swagger 제외)
                     .requestMatchers(
                         "/api/v1/auth/**",
-                        "/v3/api-docs/**",
-                        "/swagger-ui/**",
-                        "/swagger-ui.html",
                         "/api/v1/uploads/**"
                     )
                     .permitAll()

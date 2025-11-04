@@ -21,8 +21,11 @@ import static com.eventitta.auth.constants.AuthConstants.REFRESH_TOKEN;
 @Configuration
 public class OpenApiConfig {
 
-    @Value("${spring.profiles.active:local}")
-    private String activeProfile;
+    @Value("${springdoc.server.url:http://localhost:8080}")
+    private String serverUrl;
+
+    @Value("${springdoc.server.description:Development server}")
+    private String serverDescription;
 
     @Bean
     public OpenAPI customOpenAPI() {
@@ -49,16 +52,9 @@ public class OpenApiConfig {
     }
 
     private List<Server> createServers() {
-        if ("prod".equals(activeProfile)) {
-            Server prodServer = new Server();
-            prodServer.setUrl("https://eventitta.com");
-            prodServer.setDescription("Production server");
-            return List.of(prodServer);
-        } else {
-            Server localServer = new Server();
-            localServer.setUrl("http://localhost:8080");
-            localServer.setDescription("Local development server");
-            return List.of(localServer);
-        }
+        Server server = new Server();
+        server.setUrl(serverUrl);
+        server.setDescription(serverDescription);
+        return List.of(server);
     }
 }

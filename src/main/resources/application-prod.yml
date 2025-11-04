@@ -53,6 +53,9 @@ springdoc:
     enabled: false
   api-docs:
     enabled: false
+  server:
+    url: https://eventitta.com
+    description: Production server
 
 jwt:
   secret: ${JWT_SECRET}

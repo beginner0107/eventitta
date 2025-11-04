@@ -48,6 +48,9 @@ springdoc:
     operations-sorter: alpha
     with-credentials: true
     persist-authorization: true
+  server:
+    url: http://localhost:8080
+    description: Test server
 
 jwt:
   secret: eb583f5872f5bde4833167f91002f263fdec66cc9b3be80eb3517692dd8c245b

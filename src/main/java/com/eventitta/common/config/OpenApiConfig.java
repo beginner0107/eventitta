@@ -6,14 +6,21 @@ import io.swagger.v3.oas.models.headers.Header;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.responses.ApiResponse;
+import io.swagger.v3.oas.models.servers.Server;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.List;
 
 import static com.eventitta.auth.constants.AuthConstants.ACCESS_TOKEN;
 import static com.eventitta.auth.constants.AuthConstants.REFRESH_TOKEN;
 
 @Configuration
 public class OpenApiConfig {
+
+    @Value("${spring.profiles.active:local}")
+    private String activeProfile;
 
     @Bean
     public OpenAPI customOpenAPI() {
@@ -23,6 +30,7 @@ public class OpenApiConfig {
                 .version("v1.0.0")
                 .description("Eventitta 프로젝트의 REST API 명세서입니다.")
             )
+            .servers(createServers())
             .components(new Components()
                 .addResponses("TokensSetCookies", new ApiResponse()
                     .description("로그인/토큰 재발급 성공 시 `" + ACCESS_TOKEN + "`, `" + REFRESH_TOKEN + "` 쿠키 설정")
@@ -36,5 +44,19 @@ public class OpenApiConfig {
                     )
                 )
             );
+    }
+
+    private List<Server> createServers() {
+        if ("prod".equals(activeProfile)) {
+            Server prodServer = new Server();
+            prodServer.setUrl("https://eventitta.com");
+            prodServer.setDescription("Production server");
+            return List.of(prodServer);
+        } else {
+            Server localServer = new Server();
+            localServer.setUrl("http://localhost:8080");
+            localServer.setDescription("Local development server");
+            return List.of(localServer);
+        }
     }
 }

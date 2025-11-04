@@ -46,6 +46,9 @@ springdoc:
     operations-sorter: alpha
     with-credentials: true
     persist-authorization: true
+  server:
+    url: http://localhost:8080
+    description: Local development server
 
 jwt:
   secret: ${SECRET_KEY}

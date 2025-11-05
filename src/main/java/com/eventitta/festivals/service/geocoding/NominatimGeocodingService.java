@@ -1,7 +1,8 @@
 package com.eventitta.festivals.service.geocoding;
 
-import com.eventitta.festivals.service.geocoding.dto.Coordinates;
-import com.eventitta.festivals.service.geocoding.dto.NominatimResponse;
+import com.eventitta.festivals.properties.GeocodingProperties;
+import com.eventitta.festivals.dto.external.geocoding.Coordinates;
+import com.eventitta.festivals.dto.external.geocoding.NominatimResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;

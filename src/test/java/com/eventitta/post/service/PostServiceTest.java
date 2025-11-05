@@ -11,8 +11,8 @@ import com.eventitta.post.dto.PostFilter;
 import com.eventitta.post.dto.request.CreatePostRequest;
 import com.eventitta.post.dto.request.UpdatePostRequest;
 import com.eventitta.post.dto.response.CreatePostResponse;
-import com.eventitta.post.dto.response.PostDetailDto;
-import com.eventitta.post.dto.response.PostSummaryDto;
+import com.eventitta.post.dto.response.PostDetailResponse;
+import com.eventitta.post.dto.response.PostSummaryResponse;
 import com.eventitta.post.event.PostDeleteEventPublisher;
 import com.eventitta.post.event.PostDeletedEvent;
 import com.eventitta.post.exception.PostErrorCode;
@@ -311,11 +311,11 @@ class PostServiceTest {
         // given
         PostFilter filter = new PostFilter(0, 5, null, null, null);
         Pageable pageable = PageRequest.of(0, 5, Sort.by("createdAt").descending());
-        Page<PostSummaryDto> emptyPage = new PageImpl<>(List.of(), pageable, 0);
+        Page<PostSummaryResponse> emptyPage = new PageImpl<>(List.of(), pageable, 0);
         given(postRepository.findSummaries(eq(filter), any(Pageable.class))).willReturn(emptyPage);
 
         // when
-        PageResponse<PostSummaryDto> response = postService.getPosts(filter);
+        PageResponse<PostSummaryResponse> response = postService.getPosts(filter);
 
         // then
         assertThat(response.content()).isEmpty();
@@ -336,20 +336,20 @@ class PostServiceTest {
         User user2 = User.builder().id(11L).build();
         Post p1 = createPost(10L, user1, "t1", "c1", createRegion(VALID_REGION));
         Post p2 = createPost(11L, user2, "t2", "c2", createRegion(VALID_REGION));
-        PostSummaryDto p1Dto = PostSummaryDto.from(p1);
-        PostSummaryDto p2Dto = PostSummaryDto.from(p2);
-        List<PostSummaryDto> content = List.of(p1Dto, p2Dto);
+        PostSummaryResponse p1Dto = PostSummaryResponse.from(p1);
+        PostSummaryResponse p2Dto = PostSummaryResponse.from(p2);
+        List<PostSummaryResponse> content = List.of(p1Dto, p2Dto);
         long total = 7;
-        Page<PostSummaryDto> page = new PageImpl<>(content, pageable, total);
+        Page<PostSummaryResponse> page = new PageImpl<>(content, pageable, total);
 
         given(postRepository.findSummaries(eq(filter), any(Pageable.class)))
             .willReturn(page);
         // when
-        PageResponse<PostSummaryDto> response = postService.getPosts(filter);
+        PageResponse<PostSummaryResponse> response = postService.getPosts(filter);
 
         // then
         assertThat(response.content())
-            .extracting(PostSummaryDto::id, PostSummaryDto::title)
+            .extracting(PostSummaryResponse::id, PostSummaryResponse::title)
             .containsExactly(
                 tuple(10L, "t1"),
                 tuple(11L, "t2")
@@ -376,7 +376,7 @@ class PostServiceTest {
             .willReturn(1);
 
         // when
-        PostDetailDto response = postService.getPost(postId);
+        PostDetailResponse response = postService.getPost(postId);
 
         // then
         assertThat(response.id()).isEqualTo(post.getId());

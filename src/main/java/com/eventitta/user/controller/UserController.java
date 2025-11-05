@@ -84,7 +84,7 @@ public class UserController {
 
     @GetMapping("/me/activities")
     public ResponseEntity<List<ActivitySummaryResponse>> getMyActivitySummary(@CurrentUser Long userId) {
-        List<ActivitySummaryResponse> result = userActivityService.getActivitySummary(userId).stream()
+        List<ActivitySummaryResponse> result = userActivityService.getActivitySummaryProjection(userId).stream()
             .map(summary -> new ActivitySummaryResponse(summary.getActivityType().toString(), summary.getCount()))
             .toList();
         return ResponseEntity.ok(result);

@@ -1,7 +1,7 @@
 package com.eventitta.common.monitoring;
 
-import com.eventitta.common.notification.domain.AlertLevel;
-import com.eventitta.common.notification.service.SlackNotificationService;
+import com.eventitta.notification.domain.AlertLevel;
+import com.eventitta.notification.service.SlackNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

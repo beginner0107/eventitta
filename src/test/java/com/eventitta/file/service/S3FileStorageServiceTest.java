@@ -1,6 +1,6 @@
 package com.eventitta.file.service;
 
-import com.eventitta.file.dto.internal.FileDownloadResponse;
+import com.eventitta.file.dto.response.FileDownloadResponse;
 import com.eventitta.common.exception.CustomException;
 import com.eventitta.file.exception.FileStorageErrorCode;
 import org.junit.jupiter.api.BeforeEach;

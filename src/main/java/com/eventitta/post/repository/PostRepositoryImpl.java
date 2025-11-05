@@ -2,7 +2,7 @@ package com.eventitta.post.repository;
 
 import com.eventitta.post.domain.Post;
 import com.eventitta.post.dto.PostFilter;
-import com.eventitta.post.dto.response.PostSummaryDto;
+import com.eventitta.post.dto.response.PostSummaryResponse;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Path;
 import com.querydsl.core.types.Projections;
@@ -56,13 +56,13 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
     }
 
     @Override
-    public Page<PostSummaryDto> findSummaries(PostFilter filter, Pageable pageable) {
+    public Page<PostSummaryResponse> findSummaries(PostFilter filter, Pageable pageable) {
         BooleanBuilder predicate = buildFilter(filter);
         com.eventitta.user.domain.QUser postUser = new com.eventitta.user.domain.QUser("postUser");
 
-        List<PostSummaryDto> content = queryFactory
+        List<PostSummaryResponse> content = queryFactory
             .select(Projections.constructor(
-                PostSummaryDto.class,
+                PostSummaryResponse.class,
                 post.id,
                 post.title,
                 post.user.nickname,

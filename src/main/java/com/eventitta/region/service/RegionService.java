@@ -1,8 +1,8 @@
 package com.eventitta.region.service;
 
 import com.eventitta.region.domain.Region;
-import com.eventitta.region.dto.RegionDto;
-import com.eventitta.region.dto.RegionOptionDto;
+import com.eventitta.region.dto.response.RegionResponse;
+import com.eventitta.region.dto.response.RegionOptionResponse;
 import com.eventitta.region.repository.RegionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,27 +17,27 @@ import java.util.stream.Collectors;
 public class RegionService {
     private final RegionRepository regionRepository;
 
-    public List<RegionDto> getTopLevelRegions() {
+    public List<RegionResponse> getTopLevelRegions() {
         return regionRepository.findByParentCodeIsNullOrderByNameAsc()
             .stream()
-            .map(RegionDto::from)
+            .map(RegionResponse::from)
             .collect(Collectors.toList());
     }
 
-    public List<RegionDto> getChildRegions(String parentCode) {
+    public List<RegionResponse> getChildRegions(String parentCode) {
         return regionRepository.findByParentCodeOrderByNameAsc(parentCode)
             .stream()
-            .map(RegionDto::from)
+            .map(RegionResponse::from)
             .collect(Collectors.toList());
     }
 
-    public List<RegionDto> getRegionHierarchy(String code) {
+    public List<RegionResponse> getRegionHierarchy(String code) {
         Map<String, Region> regionMap = createRegionMap();
         Region region = findRegionInMap(code, regionMap);
         return buildHierarchyFromMap(region, regionMap);
     }
 
-    public List<RegionOptionDto> getRegionOptions() {
+    public List<RegionOptionResponse> getRegionOptions() {
         List<Region> leafRegions = findLeafRegions();
         if (leafRegions.isEmpty()) {
             return Collections.emptyList();
@@ -55,17 +55,17 @@ public class RegionService {
         return region;
     }
 
-    private List<RegionDto> buildHierarchyFromMap(Region region, Map<String, Region> regionMap) {
-        List<RegionDto> result = new ArrayList<>();
+    private List<RegionResponse> buildHierarchyFromMap(Region region, Map<String, Region> regionMap) {
+        List<RegionResponse> result = new ArrayList<>();
         collectHierarchyFromMap(region, regionMap, result);
         Collections.reverse(result);
         return result;
     }
 
-    private void collectHierarchyFromMap(Region region, Map<String, Region> regionMap, List<RegionDto> result) {
+    private void collectHierarchyFromMap(Region region, Map<String, Region> regionMap, List<RegionResponse> result) {
         Region current = region;
         while (current != null) {
-            result.add(RegionDto.from(current));
+            result.add(RegionResponse.from(current));
             current = getParentFromMap(current, regionMap);
         }
     }
@@ -85,16 +85,16 @@ public class RegionService {
             .collect(Collectors.toMap(Region::getCode, region -> region));
     }
 
-    private List<RegionOptionDto> createRegionOptions(List<Region> leafRegions, Map<String, Region> regionMap) {
+    private List<RegionOptionResponse> createRegionOptions(List<Region> leafRegions, Map<String, Region> regionMap) {
         return leafRegions.stream()
             .map(leaf -> createRegionOption(leaf, regionMap))
             .collect(Collectors.toList());
     }
 
-    private RegionOptionDto createRegionOption(Region leaf, Map<String, Region> regionMap) {
+    private RegionOptionResponse createRegionOption(Region leaf, Map<String, Region> regionMap) {
         List<String> hierarchyCodes = buildHierarchyPath(leaf, regionMap);
         String fullCode = String.join("-", hierarchyCodes);
-        return new RegionOptionDto(leaf.getCode(), fullCode);
+        return new RegionOptionResponse(leaf.getCode(), fullCode);
     }
 
     private List<String> buildHierarchyPath(Region leaf, Map<String, Region> regionMap) {

@@ -1,5 +1,6 @@
 package com.eventitta.festivals.dto;
 
+import com.eventitta.festivals.dto.request.NearbyFestivalRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

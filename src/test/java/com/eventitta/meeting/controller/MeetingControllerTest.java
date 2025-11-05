@@ -1,10 +1,10 @@
 package com.eventitta.meeting.controller;
 
 import com.eventitta.WithMockCustomUser;
-import com.eventitta.auth.jwt.config.SecurityConfig;
+import com.eventitta.auth.config.SecurityConfig;
 import com.eventitta.auth.jwt.service.UserInfoService;
-import com.eventitta.common.notification.resolver.AlertLevelResolver;
-import com.eventitta.common.notification.service.SlackNotificationService;
+import com.eventitta.notification.resolver.AlertLevelResolver;
+import com.eventitta.notification.service.SlackNotificationService;
 import com.eventitta.meeting.domain.MeetingStatus;
 import com.eventitta.meeting.domain.ParticipantStatus;
 import com.eventitta.meeting.dto.request.MeetingCreateRequest;

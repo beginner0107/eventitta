@@ -1,8 +1,8 @@
 package com.eventitta.festivals.controller;
 
 import com.eventitta.common.response.PageResponse;
-import com.eventitta.festivals.dto.FestivalResponseDto;
-import com.eventitta.festivals.dto.NearbyFestivalRequest;
+import com.eventitta.festivals.dto.response.FestivalNearbyResponse;
+import com.eventitta.festivals.dto.request.NearbyFestivalRequest;
 import com.eventitta.festivals.service.FestivalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,10 +26,10 @@ public class FestivalController {
     @Operation(summary = "반경 내 이벤트 조회"
         , description = "위도, 경도, 거리, 기간, 페이징 파라미터로 반경 내 이벤트를 조회합니다.")
     @GetMapping("/nearby")
-    public ResponseEntity<PageResponse<FestivalResponseDto>> getNearbyEvents(
+    public ResponseEntity<PageResponse<FestivalNearbyResponse>> getNearbyEvents(
         @ParameterObject @Valid @ModelAttribute NearbyFestivalRequest request
     ) {
-        PageResponse<FestivalResponseDto> page = festivalService.getNearbyFestival(request);
+        PageResponse<FestivalNearbyResponse> page = festivalService.getNearbyFestival(request);
         return ResponseEntity.ok(page);
     }
 }

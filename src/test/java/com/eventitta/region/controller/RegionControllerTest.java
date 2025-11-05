@@ -1,7 +1,7 @@
 package com.eventitta.region.controller;
 
 import com.eventitta.ControllerTestSupport;
-import com.eventitta.region.dto.RegionDto;
+import com.eventitta.region.dto.response.RegionResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
@@ -16,8 +16,8 @@ class RegionControllerTest extends ControllerTestSupport {
 
     @Test
     void getTopRegions_returnsList() throws Exception {
-        RegionDto r1 = new RegionDto("1100000000", "Seoul", 1);
-        RegionDto r2 = new RegionDto("2600000000", "Busan", 1);
+        RegionResponse r1 = new RegionResponse("1100000000", "Seoul", 1);
+        RegionResponse r2 = new RegionResponse("2600000000", "Busan", 1);
         when(regionService.getTopLevelRegions()).thenReturn(List.of(r1, r2));
 
         mockMvc.perform(get("/api/v1/regions").accept(MediaType.APPLICATION_JSON))
@@ -37,8 +37,8 @@ class RegionControllerTest extends ControllerTestSupport {
     @Test
     void getChildRegions_returnsList() throws Exception {
         String parent = "1100000000";
-        RegionDto c1 = new RegionDto("1100100000", "Jongno-gu", 2);
-        RegionDto c2 = new RegionDto("1100200000", "Jung-gu", 2);
+        RegionResponse c1 = new RegionResponse("1100100000", "Jongno-gu", 2);
+        RegionResponse c2 = new RegionResponse("1100200000", "Jung-gu", 2);
         when(regionService.getChildRegions(parent)).thenReturn(List.of(c1, c2));
 
         mockMvc.perform(get("/api/v1/regions/{parentCode}", parent).accept(MediaType.APPLICATION_JSON))

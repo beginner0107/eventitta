@@ -9,8 +9,8 @@ import com.eventitta.post.dto.PostFilter;
 import com.eventitta.post.dto.request.CreatePostRequest;
 import com.eventitta.post.dto.request.UpdatePostRequest;
 import com.eventitta.post.dto.response.CreatePostResponse;
-import com.eventitta.post.dto.response.PostDetailDto;
-import com.eventitta.post.dto.response.PostSummaryDto;
+import com.eventitta.post.dto.response.PostDetailResponse;
+import com.eventitta.post.dto.response.PostSummaryResponse;
 import com.eventitta.post.exception.PostErrorCode;
 import com.eventitta.post.exception.PostException;
 import com.eventitta.region.domain.Region;
@@ -231,7 +231,7 @@ class PostControllerTest extends ControllerTestSupport {
     @DisplayName("모든 사용자는 게시글 목록을 조회할 수 있다.")
     void givenAnyUser_whenGetPosts_thenOk() throws Exception {
         // given
-        PageResponse<PostSummaryDto> dummy = new PageResponse<>(
+        PageResponse<PostSummaryResponse> dummy = new PageResponse<>(
             List.of(),
             0,
             10,
@@ -295,7 +295,7 @@ class PostControllerTest extends ControllerTestSupport {
     void givenAnyUser_whenGetPost_thenOk() throws Exception {
         // given
         long postId = 1L;
-        PostDetailDto dummy = new PostDetailDto(
+        PostDetailResponse dummy = new PostDetailResponse(
             postId,
             "title",
             "content",

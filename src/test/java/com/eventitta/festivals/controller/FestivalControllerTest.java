@@ -1,11 +1,11 @@
 package com.eventitta.festivals.controller;
 
 import com.eventitta.auth.jwt.service.UserInfoService;
-import com.eventitta.common.notification.resolver.AlertLevelResolver;
-import com.eventitta.common.notification.service.SlackNotificationService;
+import com.eventitta.notification.resolver.AlertLevelResolver;
+import com.eventitta.notification.service.SlackNotificationService;
 import com.eventitta.common.response.PageResponse;
-import com.eventitta.festivals.dto.FestivalResponseDto;
-import com.eventitta.festivals.dto.NearbyFestivalRequest;
+import com.eventitta.festivals.dto.response.FestivalNearbyResponse;
+import com.eventitta.festivals.dto.request.NearbyFestivalRequest;
 import com.eventitta.festivals.service.FestivalService;
 import com.eventitta.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -55,7 +55,7 @@ class FestivalControllerTest {
     @DisplayName("근처 축제 찾기 - 위치와 거리만 입력하면 주변 축제 목록이 나타난다")
     void givenRequiredParameters_whenGetNearbyEvents_thenReturnsFestivals() throws Exception {
         // given
-        FestivalResponseDto festival = FestivalResponseDto.builder()
+        FestivalNearbyResponse festival = FestivalNearbyResponse.builder()
             .id(1L)
             .title("서울 음악 축제")
             .place("한강공원")
@@ -67,7 +67,7 @@ class FestivalControllerTest {
             .distance(2.5)
             .build();
 
-        PageResponse<FestivalResponseDto> pageResponse = PageResponse.of(
+        PageResponse<FestivalNearbyResponse> pageResponse = PageResponse.of(
             new PageImpl<>(List.of(festival))
         );
 
@@ -94,7 +94,7 @@ class FestivalControllerTest {
     @DisplayName("근처 축제 찾기 - 위치, 거리, 날짜, 페이지 정보를 모두 입력하면 조건에 맞는 축제 목록이 나타난다")
     void givenAllParameters_whenGetNearbyEvents_thenReturnsFestivals() throws Exception {
         // given
-        PageResponse<FestivalResponseDto> pageResponse = PageResponse.of(
+        PageResponse<FestivalNearbyResponse> pageResponse = PageResponse.of(
             new PageImpl<>(List.of())
         );
 
@@ -204,7 +204,7 @@ class FestivalControllerTest {
     @DisplayName("근처 축제 찾기 - 페이지 번호가 음수면 자동으로 첫 번째 페이지로 조정된다")
     void givenNegativePageNumber_whenGetNearbyEvents_thenSucceedsWithDefaultValue() throws Exception {
         // given
-        PageResponse<FestivalResponseDto> pageResponse = PageResponse.of(
+        PageResponse<FestivalNearbyResponse> pageResponse = PageResponse.of(
             new PageImpl<>(List.of())
         );
 

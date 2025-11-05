@@ -12,8 +12,8 @@ import com.eventitta.post.dto.PostFilter;
 import com.eventitta.post.dto.request.CreatePostRequest;
 import com.eventitta.post.dto.request.UpdatePostRequest;
 import com.eventitta.post.dto.response.CreatePostResponse;
-import com.eventitta.post.dto.response.PostDetailDto;
-import com.eventitta.post.dto.response.PostSummaryDto;
+import com.eventitta.post.dto.response.PostDetailResponse;
+import com.eventitta.post.dto.response.PostSummaryResponse;
 import com.eventitta.post.event.PostDeleteEventPublisher;
 import com.eventitta.post.event.PostDeletedEvent;
 import com.eventitta.post.exception.PostException;
@@ -114,9 +114,9 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<PostSummaryDto> getPosts(PostFilter filter) {
+    public PageResponse<PostSummaryResponse> getPosts(PostFilter filter) {
         Pageable pg = PageRequest.of(filter.page(), filter.size());
-        Page<PostSummaryDto> page = postRepository.findSummaries(filter, pg);
+        Page<PostSummaryResponse> page = postRepository.findSummaries(filter, pg);
 
         return new PageResponse<>(
             page.getContent(),
@@ -128,13 +128,13 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
-    public PostDetailDto getPost(Long postId) {
+    public PostDetailResponse getPost(Long postId) {
         Post post = postRepository.findDetailByIdAndDeletedFalse(postId)
             .orElseThrow(NOT_FOUND_POST_ID::defaultException);
 
         int commentCount = commentRepository.countByPostIdAndDeletedFalse(postId);
 
-        return PostDetailDto.from(post, commentCount);
+        return PostDetailResponse.from(post, commentCount);
     }
 
     @Transactional

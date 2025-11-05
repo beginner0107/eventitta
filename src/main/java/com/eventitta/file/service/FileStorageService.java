@@ -1,6 +1,6 @@
 package com.eventitta.file.service;
 
-import com.eventitta.file.dto.internal.FileDownloadResponse;
+import com.eventitta.file.dto.response.FileDownloadResponse;
 import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 

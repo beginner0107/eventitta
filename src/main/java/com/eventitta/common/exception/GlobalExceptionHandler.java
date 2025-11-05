@@ -1,9 +1,9 @@
 package com.eventitta.common.exception;
 
 import com.eventitta.auth.exception.AuthErrorCode;
-import com.eventitta.common.notification.domain.AlertLevel;
-import com.eventitta.common.notification.resolver.AlertLevelResolver;
-import com.eventitta.common.notification.service.SlackNotificationService;
+import com.eventitta.notification.domain.AlertLevel;
+import com.eventitta.notification.resolver.AlertLevelResolver;
+import com.eventitta.notification.service.SlackNotificationService;
 import com.eventitta.common.response.ApiErrorResponse;
 import com.eventitta.auth.jwt.service.UserInfoService;
 import jakarta.servlet.http.HttpServletRequest;

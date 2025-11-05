@@ -1,9 +1,9 @@
 package com.eventitta.comment.repository;
 
-import com.eventitta.comment.dto.query.CommentFlatDto;
+import com.eventitta.comment.dto.projection.CommentFlatProjection;
 
 import java.util.List;
 
 public interface CommentRepositoryCustom {
-    List<CommentFlatDto> findFlatByPost(Long postId);
+    List<CommentFlatProjection> findFlatByPost(Long postId);
 }

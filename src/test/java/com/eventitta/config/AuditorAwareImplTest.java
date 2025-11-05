@@ -1,6 +1,6 @@
 package com.eventitta.config;
 
-import com.eventitta.common.config.AuditorAwareImpl;
+import com.eventitta.common.config.jpa.AuditorAwareImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

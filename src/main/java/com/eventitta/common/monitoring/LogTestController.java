@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,7 +25,7 @@ import java.util.Map;
 @Profile({"local", "test"})
 public class LogTestController {
 
-    private final LogMonitor logMonitor;
+    private final ObjectProvider<LogMonitor> logMonitorProvider;
 
     @GetMapping("/all-levels")
     @Operation(summary = "모든 로그 레벨 테스트", description = "TRACE부터 ERROR까지 모든 로그 레벨을 출력합니다")
@@ -102,8 +102,8 @@ public class LogTestController {
     public ResponseEntity<Map<String, String>> getMonitorStatus() {
         String status = "LogMonitor 비활성화 (local 프로파일에서는 기본 비활성화)";
 
-        // LogMonitor가 활성화된 경우에만 상태 조회
         try {
+            LogMonitor logMonitor = logMonitorProvider.getIfAvailable();
             if (logMonitor != null) {
                 status = logMonitor.getLogStatus();
             }

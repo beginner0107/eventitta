@@ -1,6 +1,6 @@
 package com.eventitta.file.controller;
 
-import com.eventitta.file.dto.internal.FileDownloadResponse;
+import com.eventitta.file.dto.response.FileDownloadResponse;
 import com.eventitta.file.service.FileStorageService;
 import com.eventitta.file.service.FileValidationService;
 import io.swagger.v3.oas.annotations.Operation;

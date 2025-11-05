@@ -1,8 +1,8 @@
 package com.eventitta.festivals.service;
 
 import com.eventitta.common.response.PageResponse;
-import com.eventitta.festivals.dto.FestivalResponseDto;
-import com.eventitta.festivals.dto.NearbyFestivalRequest;
+import com.eventitta.festivals.dto.response.FestivalNearbyResponse;
+import com.eventitta.festivals.dto.request.NearbyFestivalRequest;
 import com.eventitta.festivals.exception.FestivalErrorCode;
 import com.eventitta.festivals.repository.FestivalRepository;
 import lombok.RequiredArgsConstructor;
@@ -40,7 +40,7 @@ public class FestivalService {
         log.info("서울시 축제 데이터 일별 동기화 완료 - 대상 날짜: {}", today);
     }
 
-    public PageResponse<FestivalResponseDto> getNearbyFestival(NearbyFestivalRequest req) {
+    public PageResponse<FestivalNearbyResponse> getNearbyFestival(NearbyFestivalRequest req) {
         // 유효성 검증
         validateNearbyFestivalRequest(req);
 
@@ -51,7 +51,7 @@ public class FestivalService {
         );
 
         // Projection을 DTO로 변환
-        var dtoPage = page.map(projection -> FestivalResponseDto.builder()
+        var dtoPage = page.map(projection -> FestivalNearbyResponse.builder()
             .id(projection.getId())
             .title(projection.getTitle())
             .place(projection.getPlace())

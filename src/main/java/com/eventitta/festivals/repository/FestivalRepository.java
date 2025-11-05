@@ -2,7 +2,7 @@ package com.eventitta.festivals.repository;
 
 import com.eventitta.festivals.domain.Festival;
 import com.eventitta.festivals.domain.DataSource;
-import com.eventitta.festivals.dto.FestivalProjection;
+import com.eventitta.festivals.dto.projection.FestivalProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

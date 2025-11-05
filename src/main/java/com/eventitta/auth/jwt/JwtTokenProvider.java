@@ -1,7 +1,7 @@
 package com.eventitta.auth.jwt;
 
 import com.eventitta.auth.exception.AuthErrorCode;
-import com.eventitta.auth.jwt.config.JwtProperties;
+import com.eventitta.auth.properties.JwtProperties;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.Getter;

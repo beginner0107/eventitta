@@ -1,8 +1,8 @@
 package com.eventitta.festivals.mapper;
 
 import com.eventitta.festivals.domain.Festival;
-import com.eventitta.festivals.dto.NationalFestivalItem;
-import com.eventitta.festivals.dto.SeoulFestivalRow;
+import com.eventitta.festivals.dto.external.national.NationalFestivalItem;
+import com.eventitta.festivals.dto.external.seoul.SeoulFestivalRow;
 import org.mapstruct.Mapper;
 import org.mapstruct.Named;
 import org.springframework.util.DigestUtils;

@@ -2,8 +2,8 @@ package com.eventitta.comment.service;
 
 import com.eventitta.auth.exception.AuthException;
 import com.eventitta.comment.domain.Comment;
-import com.eventitta.comment.dto.query.CommentFlatDto;
-import com.eventitta.comment.dto.response.CommentWithChildrenDto;
+import com.eventitta.comment.dto.projection.CommentFlatProjection;
+import com.eventitta.comment.dto.response.CommentWithChildrenResponse;
 import com.eventitta.comment.exception.CommentException;
 import com.eventitta.comment.repository.CommentRepository;
 import com.eventitta.gamification.domain.ActivityType;
@@ -62,16 +62,16 @@ public class CommentService {
     }
 
     @Transactional(readOnly = true)
-    public List<CommentWithChildrenDto> getCommentsByPost(Long postId) {
-        List<CommentFlatDto> flats = commentRepository.findFlatByPost(postId);
+    public List<CommentWithChildrenResponse> getCommentsByPost(Long postId) {
+        List<CommentFlatProjection> flats = commentRepository.findFlatByPost(postId);
 
-        Map<Long, List<CommentFlatDto>> parentToChildren = flats.stream()
+        Map<Long, List<CommentFlatProjection>> parentToChildren = flats.stream()
             .filter(dto -> dto.parentId() != null)
-            .collect(Collectors.groupingBy(CommentFlatDto::parentId));
+            .collect(Collectors.groupingBy(CommentFlatProjection::parentId));
 
         return flats.stream()
             .filter(dto -> dto.parentId() == null)
-            .map(parent -> CommentWithChildrenDto.from(parent, parentToChildren.get(parent.id())))
+            .map(parent -> CommentWithChildrenResponse.from(parent, parentToChildren.get(parent.id())))
             .toList();
     }
 

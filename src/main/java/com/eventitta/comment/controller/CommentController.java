@@ -1,9 +1,9 @@
 package com.eventitta.comment.controller;
 
 import com.eventitta.auth.annotation.CurrentUser;
-import com.eventitta.comment.dto.request.CommentRequestDto;
-import com.eventitta.comment.dto.request.CommentUpdateRequestDto;
-import com.eventitta.comment.dto.response.CommentWithChildrenDto;
+import com.eventitta.comment.dto.request.CreateCommentRequest;
+import com.eventitta.comment.dto.request.UpdateCommentRequest;
+import com.eventitta.comment.dto.response.CommentWithChildrenResponse;
 import com.eventitta.comment.service.CommentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,7 +28,7 @@ public class CommentController {
     public ResponseEntity<Void> writeComment(
         @PathVariable("postId") Long postId,
         @CurrentUser Long userId,
-        @RequestBody @Valid CommentRequestDto request
+        @RequestBody @Valid CreateCommentRequest request
     ) {
         commentService.writeComment(postId, userId, request.content(), request.parentCommentId());
         return ResponseEntity.status(HttpStatus.CREATED).build();
@@ -36,10 +36,10 @@ public class CommentController {
 
     @Operation(summary = "댓글 목록 조회")
     @GetMapping
-    public ResponseEntity<List<CommentWithChildrenDto>> getComments(
+    public ResponseEntity<List<CommentWithChildrenResponse>> getComments(
         @PathVariable("postId") Long postId
     ) {
-        List<CommentWithChildrenDto> comments = commentService.getCommentsByPost(postId);
+        List<CommentWithChildrenResponse> comments = commentService.getCommentsByPost(postId);
         return ResponseEntity.ok(comments);
     }
 
@@ -49,7 +49,7 @@ public class CommentController {
         @PathVariable("postId") Long postId,
         @PathVariable("commentId") Long commentId,
         @CurrentUser Long userId,
-        @RequestBody @Valid CommentUpdateRequestDto request
+        @RequestBody @Valid UpdateCommentRequest request
     ) {
         commentService.updateComment(commentId, userId, request.content());
         return ResponseEntity.noContent().build();

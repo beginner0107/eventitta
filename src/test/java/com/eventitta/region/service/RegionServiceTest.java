@@ -1,7 +1,7 @@
 package com.eventitta.region.service;
 
 import com.eventitta.region.domain.Region;
-import com.eventitta.region.dto.RegionDto;
+import com.eventitta.region.dto.response.RegionResponse;
 import com.eventitta.region.repository.RegionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,7 +31,7 @@ class RegionServiceTest {
         Region r2 = new Region("2600000000", "부산광역시", null, 1);
         when(regionRepository.findByParentCodeIsNullOrderByNameAsc()).thenReturn(List.of(r1, r2));
 
-        List<RegionDto> result = regionService.getTopLevelRegions();
+        List<RegionResponse> result = regionService.getTopLevelRegions();
 
         assertEquals(2, result.size());
         assertEquals("1100000000", result.get(0).code());
@@ -45,7 +45,7 @@ class RegionServiceTest {
     void getTopLevelRegions_emptyList() {
         when(regionRepository.findByParentCodeIsNullOrderByNameAsc()).thenReturn(List.of());
 
-        List<RegionDto> result = regionService.getTopLevelRegions();
+        List<RegionResponse> result = regionService.getTopLevelRegions();
 
         assertTrue(result.isEmpty());
     }
@@ -57,7 +57,7 @@ class RegionServiceTest {
         Region c2 = new Region("1100200000", "중구", parentCode, 2);
         when(regionRepository.findByParentCodeOrderByNameAsc(parentCode)).thenReturn(List.of(c1, c2));
 
-        List<RegionDto> result = regionService.getChildRegions(parentCode);
+        List<RegionResponse> result = regionService.getChildRegions(parentCode);
 
         assertEquals(2, result.size());
         assertEquals("1100100000", result.get(0).code());
@@ -72,7 +72,7 @@ class RegionServiceTest {
         String parentCode = "unknown";
         when(regionRepository.findByParentCodeOrderByNameAsc(parentCode)).thenReturn(List.of());
 
-        List<RegionDto> result = regionService.getChildRegions(parentCode);
+        List<RegionResponse> result = regionService.getChildRegions(parentCode);
 
         assertTrue(result.isEmpty());
     }

@@ -1,6 +1,6 @@
 package com.eventitta.meeting.domain;
 
-import com.eventitta.common.config.BaseEntity;
+import com.eventitta.common.domain.BaseEntity;
 import com.eventitta.meeting.dto.request.MeetingUpdateRequest;
 import com.eventitta.user.domain.User;
 import jakarta.persistence.*;

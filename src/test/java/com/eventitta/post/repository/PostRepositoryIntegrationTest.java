@@ -1,7 +1,7 @@
 package com.eventitta.post.repository;
 
 import com.eventitta.auth.repository.RefreshTokenRepository;
-import com.eventitta.common.config.QuerydslConfig;
+import com.eventitta.common.config.jpa.QuerydslConfig;
 import com.eventitta.post.domain.Post;
 import com.eventitta.post.dto.PostFilter;
 import com.eventitta.post.dto.SearchType;

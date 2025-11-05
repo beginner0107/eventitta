@@ -101,7 +101,7 @@ class UserActivityEventListenerTest {
         assertThat(listenerThread.get()).isNotNull();
         assertThat(listenerThread.get()).isNotEqualTo(mainThread);
         assertThat(listenerThread.get()).startsWith("ActivityEvent-");
-        assertThat(applicationContext.getBean(com.eventitta.common.config.AsyncConfig.class)).isNotNull();
+        assertThat(applicationContext.getBean(com.eventitta.common.config.async.AsyncConfig.class)).isNotNull();
     }
 
     @Test

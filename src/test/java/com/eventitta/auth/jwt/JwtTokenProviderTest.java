@@ -1,7 +1,7 @@
 package com.eventitta.auth.jwt;
 
 import com.eventitta.auth.exception.AuthException;
-import com.eventitta.auth.jwt.config.JwtProperties;
+import com.eventitta.auth.properties.JwtProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

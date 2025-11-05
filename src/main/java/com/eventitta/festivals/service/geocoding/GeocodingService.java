@@ -1,6 +1,6 @@
 package com.eventitta.festivals.service.geocoding;
 
-import com.eventitta.festivals.service.geocoding.dto.Coordinates;
+import com.eventitta.festivals.dto.external.geocoding.Coordinates;
 
 import java.util.Optional;
 

@@ -7,8 +7,8 @@ import com.eventitta.post.dto.PostFilter;
 import com.eventitta.post.dto.request.CreatePostRequest;
 import com.eventitta.post.dto.request.UpdatePostRequest;
 import com.eventitta.post.dto.response.CreatePostResponse;
-import com.eventitta.post.dto.response.PostDetailDto;
-import com.eventitta.post.dto.response.PostSummaryDto;
+import com.eventitta.post.dto.response.PostDetailResponse;
+import com.eventitta.post.dto.response.PostSummaryResponse;
 import com.eventitta.post.service.PostService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -53,10 +53,10 @@ public class PostController {
         @ApiResponse(responseCode = "200", description = "게시글 목록 조회 성공"),
     })
     @GetMapping
-    public ResponseEntity<PageResponse<PostSummaryDto>> getPosts(
+    public ResponseEntity<PageResponse<PostSummaryResponse>> getPosts(
         @Valid PostFilter filter
     ) {
-        PageResponse<PostSummaryDto> result = postService.getPosts(filter);
+        PageResponse<PostSummaryResponse> result = postService.getPosts(filter);
         return ResponseEntity.ok(result);
     }
 
@@ -65,10 +65,10 @@ public class PostController {
         @ApiResponse(responseCode = "200", description = "게시글 상세보기 조회 성공"),
     })
     @GetMapping("/{postId}")
-    public ResponseEntity<PostDetailDto> getPost(
+    public ResponseEntity<PostDetailResponse> getPost(
         @PathVariable("postId") Long postId
     ) {
-        PostDetailDto result = postService.getPost(postId);
+        PostDetailResponse result = postService.getPost(postId);
         return ResponseEntity.ok(result);
     }
 
@@ -115,10 +115,10 @@ public class PostController {
         @ApiResponse(responseCode = "200", description = "본인이 추천한 게시글 목록 조회 성공"),
     })
     @GetMapping("/liked")
-    public ResponseEntity<List<PostSummaryDto>> likedPosts(@CurrentUser Long userId) {
+    public ResponseEntity<List<PostSummaryResponse>> likedPosts(@CurrentUser Long userId) {
         List<Post> posts = postService.getLikedPosts(userId);
-        List<PostSummaryDto> dto = posts.stream()
-            .map(PostSummaryDto::from)
+        List<PostSummaryResponse> dto = posts.stream()
+            .map(PostSummaryResponse::from)
             .collect(Collectors.toList());
         return ResponseEntity.ok(dto);
     }

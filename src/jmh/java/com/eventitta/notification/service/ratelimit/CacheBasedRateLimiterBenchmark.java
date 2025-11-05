@@ -1,6 +1,6 @@
-package com.eventitta.common.notification.service;
+package com.eventitta.notification.service.ratelimit;
 
-import com.eventitta.common.notification.domain.AlertLevel;
+import com.eventitta.notification.domain.AlertLevel;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 

@@ -3,6 +3,7 @@ package com.eventitta.region.service;
 import com.eventitta.region.domain.Region;
 import com.eventitta.region.dto.response.RegionResponse;
 import com.eventitta.region.dto.response.RegionOptionResponse;
+import com.eventitta.region.exception.RegionErrorCode;
 import com.eventitta.region.repository.RegionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -48,11 +49,8 @@ public class RegionService {
     }
 
     private Region findRegionInMap(String code, Map<String, Region> regionMap) {
-        Region region = regionMap.get(code);
-        if (region == null) {
-            throw new jakarta.persistence.EntityNotFoundException("Region not found: " + code);
-        }
-        return region;
+        return Optional.ofNullable(regionMap.get(code))
+            .orElseThrow(RegionErrorCode.NOT_FOUND_REGION_CODE::defaultException);
     }
 
     private List<RegionResponse> buildHierarchyFromMap(Region region, Map<String, Region> regionMap) {

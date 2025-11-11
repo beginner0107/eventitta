@@ -1910,7 +1910,7 @@ VALUES
 -- DROP TABLE IF EXISTS regions_old;
 
 -- 원자적 교체: regions → regions_old, regions_new → regions
-RENAME TABLE 
+RENAME TABLE
     regions TO regions_old,
     regions_new TO regions;
 

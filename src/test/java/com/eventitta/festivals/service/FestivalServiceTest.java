@@ -1,9 +1,9 @@
 package com.eventitta.festivals.service;
 
 import com.eventitta.common.response.PageResponse;
-import com.eventitta.festivals.dto.FestivalResponseDto;
-import com.eventitta.festivals.dto.FestivalProjection;
-import com.eventitta.festivals.dto.NearbyFestivalRequest;
+import com.eventitta.festivals.dto.response.FestivalNearbyResponse;
+import com.eventitta.festivals.dto.projection.FestivalProjection;
+import com.eventitta.festivals.dto.request.NearbyFestivalRequest;
 import com.eventitta.festivals.repository.FestivalRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -160,7 +160,7 @@ class FestivalServiceTest {
         )).willReturn(mockPage);
 
         // when
-        PageResponse<FestivalResponseDto> result = festivalService.getNearbyFestival(request);
+        PageResponse<FestivalNearbyResponse> result = festivalService.getNearbyFestival(request);
 
         // then
         assertThat(result).isNotNull();
@@ -200,7 +200,7 @@ class FestivalServiceTest {
         )).willReturn(mockPage);
 
         // when
-        PageResponse<FestivalResponseDto> result = festivalService.getNearbyFestival(request);
+        PageResponse<FestivalNearbyResponse> result = festivalService.getNearbyFestival(request);
 
         // then
         assertThat(result).isNotNull();
@@ -241,7 +241,7 @@ class FestivalServiceTest {
         )).willReturn(mockPage);
 
         // when
-        PageResponse<FestivalResponseDto> result = festivalService.getNearbyFestival(request);
+        PageResponse<FestivalNearbyResponse> result = festivalService.getNearbyFestival(request);
 
         // then
         assertThat(result).isNotNull();

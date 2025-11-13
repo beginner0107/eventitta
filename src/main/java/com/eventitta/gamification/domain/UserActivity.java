@@ -1,6 +1,6 @@
 package com.eventitta.gamification.domain;
 
-import com.eventitta.common.config.BaseTimeEntity;
+import com.eventitta.common.domain.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

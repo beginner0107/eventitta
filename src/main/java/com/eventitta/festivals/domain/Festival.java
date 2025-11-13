@@ -1,12 +1,12 @@
 package com.eventitta.festivals.domain;
 
-import com.eventitta.common.config.BaseTimeEntity;
+import com.eventitta.common.domain.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import com.eventitta.common.config.BaseEntity;
+import com.eventitta.common.domain.BaseEntity;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

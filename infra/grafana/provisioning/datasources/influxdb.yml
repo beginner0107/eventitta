@@ -1,0 +1,15 @@
+apiVersion: 1
+
+datasources:
+  - name: InfluxDB
+    type: influxdb
+    access: proxy
+    url: http://influxdb:8086
+    database: k6
+    uid: influxdb
+    isDefault: true
+    editable: true
+    jsonData:
+      timeInterval: "5s"
+      httpMode: GET
+    version: 1

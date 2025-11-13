@@ -1,10 +1,10 @@
 package com.eventitta.festivals.service.loader;
 
 import com.eventitta.festivals.api.SeoulFestivalApi;
-import com.eventitta.festivals.config.SeoulFestivalProperties;
+import com.eventitta.festivals.properties.SeoulFestivalProperties;
 import com.eventitta.festivals.domain.Festival;
-import com.eventitta.festivals.dto.SeoulFestivalResponse;
-import com.eventitta.festivals.dto.SeoulFestivalRow;
+import com.eventitta.festivals.dto.external.seoul.SeoulFestivalResponse;
+import com.eventitta.festivals.dto.external.seoul.SeoulFestivalRow;
 import com.eventitta.festivals.exception.FestivalErrorCode;
 import com.eventitta.festivals.mapper.FestivalMapper;
 import lombok.RequiredArgsConstructor;

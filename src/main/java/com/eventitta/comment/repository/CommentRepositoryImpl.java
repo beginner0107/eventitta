@@ -1,7 +1,7 @@
 package com.eventitta.comment.repository;
 
 import com.eventitta.comment.domain.QComment;
-import com.eventitta.comment.dto.query.CommentFlatDto;
+import com.eventitta.comment.dto.projection.CommentFlatProjection;
 import com.eventitta.user.domain.QUser;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -18,13 +18,13 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<CommentFlatDto> findFlatByPost(Long postId) {
+    public List<CommentFlatProjection> findFlatByPost(Long postId) {
         QComment comment = QComment.comment;
         QUser commentUser = new QUser("commentUser");
 
         String deletedMessage = "[삭제된 댓글입니다]";
         return queryFactory
-            .select(constructor(CommentFlatDto.class,
+            .select(constructor(CommentFlatProjection.class,
                 comment.id,
                 cases()
                     .when(comment.deleted.isTrue()).then(deletedMessage)

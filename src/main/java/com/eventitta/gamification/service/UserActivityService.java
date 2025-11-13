@@ -2,7 +2,7 @@ package com.eventitta.gamification.service;
 
 import com.eventitta.gamification.domain.ActivityType;
 import com.eventitta.gamification.domain.UserActivity;
-import com.eventitta.gamification.dto.query.ActivitySummary;
+import com.eventitta.gamification.dto.projection.ActivitySummaryProjection;
 import com.eventitta.gamification.repository.UserActivityRepository;
 import com.eventitta.user.domain.User;
 import com.eventitta.user.repository.UserRepository;
@@ -56,7 +56,7 @@ public class UserActivityService {
     }
 
     @Transactional(readOnly = true)
-    public List<ActivitySummary> getActivitySummary(Long userId) {
+    public List<ActivitySummaryProjection> getActivitySummaryProjection(Long userId) {
         return userActivityRepository.countActivitiesByUser(userId);
     }
 

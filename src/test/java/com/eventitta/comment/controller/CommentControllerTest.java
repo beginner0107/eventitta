@@ -2,9 +2,9 @@ package com.eventitta.comment.controller;
 
 import com.eventitta.ControllerTestSupport;
 import com.eventitta.WithMockCustomUser;
-import com.eventitta.comment.dto.request.CommentRequestDto;
-import com.eventitta.comment.dto.request.CommentUpdateRequestDto;
-import com.eventitta.comment.dto.response.CommentWithChildrenDto;
+import com.eventitta.comment.dto.request.CreateCommentRequest;
+import com.eventitta.comment.dto.request.UpdateCommentRequest;
+import com.eventitta.comment.dto.response.CommentWithChildrenResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -29,7 +29,7 @@ class CommentControllerTest extends ControllerTestSupport {
     @DisplayName("댓글을 정상적으로 등록할 수 있다")
     void createComment_withValidInput_returnsCreated() throws Exception {
         // given
-        CommentRequestDto request = new CommentRequestDto("댓글 내용입니다.", null);
+        CreateCommentRequest request = new CreateCommentRequest("댓글 내용입니다.", null);
         doNothing().when(commentService).writeComment(postId, userId, request.content(), request.parentCommentId());
 
         // when & then
@@ -46,7 +46,7 @@ class CommentControllerTest extends ControllerTestSupport {
     @DisplayName("댓글 내용이 비어 있으면 400 에러가 발생한다")
     void createComment_withBlankContent_returnsBadRequest() throws Exception {
         // given
-        CommentRequestDto request = new CommentRequestDto(" ", null);
+        CreateCommentRequest request = new CreateCommentRequest(" ", null);
 
         // when & then
         mockMvc.perform(post("/api/v1/posts/{postId}/comments", postId)
@@ -60,7 +60,7 @@ class CommentControllerTest extends ControllerTestSupport {
     @DisplayName("댓글 목록을 조회하면 200과 함께 댓글 리스트를 반환한다")
     void getComments_withValidPostId_returnsList() throws Exception {
         // given
-        List<CommentWithChildrenDto> comments = List.of();
+        List<CommentWithChildrenResponse> comments = List.of();
         given(commentService.getCommentsByPost(postId)).willReturn(comments);
 
         // when & then
@@ -76,7 +76,7 @@ class CommentControllerTest extends ControllerTestSupport {
     @DisplayName("댓글을 정상적으로 수정할 수 있다")
     void updateComment_withValidInput_returnsNoContent() throws Exception {
         // given
-        CommentUpdateRequestDto request = new CommentUpdateRequestDto("수정된 댓글입니다.");
+        UpdateCommentRequest request = new UpdateCommentRequest("수정된 댓글입니다.");
         doNothing().when(commentService).updateComment(commentId, userId, request.content());
 
         // when & then
@@ -93,7 +93,7 @@ class CommentControllerTest extends ControllerTestSupport {
     @DisplayName("댓글 수정 시 내용이 비어 있으면 400 에러가 발생한다")
     void updateComment_withBlankContent_returnsBadRequest() throws Exception {
         // given
-        CommentUpdateRequestDto request = new CommentUpdateRequestDto(" ");
+        UpdateCommentRequest request = new UpdateCommentRequest(" ");
 
         // when & then
         mockMvc.perform(put("/api/v1/posts/{postId}/comments/{commentId}", postId, commentId)

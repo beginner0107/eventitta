@@ -1,6 +1,6 @@
 package com.eventitta.post.domain;
 
-import com.eventitta.common.config.BaseEntity;
+import com.eventitta.common.domain.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 

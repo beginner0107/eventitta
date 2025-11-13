@@ -1,6 +1,6 @@
 package com.eventitta.user.domain;
 
-import com.eventitta.common.config.BaseEntity;
+import com.eventitta.common.domain.BaseEntity;
 import com.eventitta.user.exception.UserErrorCode;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;

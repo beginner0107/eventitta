@@ -1,7 +1,7 @@
 package com.eventitta.file.controller;
 
 import com.eventitta.ControllerTestSupport;
-import com.eventitta.file.dto.internal.FileDownloadResponse;
+import com.eventitta.file.dto.response.FileDownloadResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;

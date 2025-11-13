@@ -1,10 +1,10 @@
 package com.eventitta.festivals.service.loader;
 
 import com.eventitta.festivals.api.NationalFestivalApi;
-import com.eventitta.festivals.config.NationalFestivalProperties;
+import com.eventitta.festivals.properties.NationalFestivalProperties;
 import com.eventitta.festivals.domain.Festival;
-import com.eventitta.festivals.dto.NationalFestivalItem;
-import com.eventitta.festivals.dto.NationalFestivalResponse;
+import com.eventitta.festivals.dto.external.national.NationalFestivalItem;
+import com.eventitta.festivals.dto.external.national.NationalFestivalResponse;
 import com.eventitta.festivals.exception.FestivalErrorCode;
 import com.eventitta.festivals.mapper.FestivalMapper;
 import lombok.RequiredArgsConstructor;

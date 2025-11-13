@@ -1,6 +1,6 @@
 package com.eventitta.file.service;
 
-import com.eventitta.file.dto.internal.FileDownloadResponse;
+import com.eventitta.file.dto.response.FileDownloadResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

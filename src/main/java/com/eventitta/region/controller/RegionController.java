@@ -1,7 +1,7 @@
 package com.eventitta.region.controller;
 
-import com.eventitta.region.dto.RegionDto;
-import com.eventitta.region.dto.RegionOptionDto;
+import com.eventitta.region.dto.response.RegionResponse;
+import com.eventitta.region.dto.response.RegionOptionResponse;
 import com.eventitta.region.service.RegionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -23,33 +23,33 @@ public class RegionController {
 
     @Operation(summary = "최상위 지역 목록 조회")
     @GetMapping
-    public ResponseEntity<List<RegionDto>> getTopRegions() {
-        List<RegionDto> regions = regionService.getTopLevelRegions();
+    public ResponseEntity<List<RegionResponse>> getTopRegions() {
+        List<RegionResponse> regions = regionService.getTopLevelRegions();
         return ResponseEntity.ok(regions);
     }
 
     @Operation(summary = "하위 지역 목록 조회")
     @GetMapping("/{parentCode}")
-    public ResponseEntity<List<RegionDto>> getChildRegions(
+    public ResponseEntity<List<RegionResponse>> getChildRegions(
         @PathVariable String parentCode
     ) {
-        List<RegionDto> regions = regionService.getChildRegions(parentCode);
+        List<RegionResponse> regions = regionService.getChildRegions(parentCode);
         return ResponseEntity.ok(regions);
     }
 
     @Operation(summary = "지역 계층 조회", description = "특정 지역 코드로부터 최상위까지의 계층 구조를 조회합니다")
     @GetMapping("/{code}/hierarchy")
-    public ResponseEntity<List<RegionDto>> getRegionHierarchy(
+    public ResponseEntity<List<RegionResponse>> getRegionHierarchy(
         @PathVariable String code
     ) {
-        List<RegionDto> hierarchy = regionService.getRegionHierarchy(code);
+        List<RegionResponse> hierarchy = regionService.getRegionHierarchy(code);
         return ResponseEntity.ok(hierarchy);
     }
 
     @Operation(summary = "전체 지역 옵션 목록 조회")
     @GetMapping("/options")
-    public ResponseEntity<List<RegionOptionDto>> getRegionOptions() {
-        List<RegionOptionDto> options = regionService.getRegionOptions();
+    public ResponseEntity<List<RegionOptionResponse>> getRegionOptions() {
+        List<RegionOptionResponse> options = regionService.getRegionOptions();
         return ResponseEntity.ok(options);
     }
 }

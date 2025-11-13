@@ -25,14 +25,14 @@ public class RegionService {
      *
      * <p>캐싱된 Map에서 필터링 </p>
      *
-     * @return 시/도 목록 (이름 기준 오름차순)
+     * @return 시/도 목록 (코드 기준 오름차순)
      */
     public List<RegionResponse> getTopLevelRegions() {
         Map<String, Region> regionMap = cacheService.getAllRegionsAsMap();
 
         return regionMap.values().stream()
             .filter(region -> region.getParentCode() == null)
-            .sorted(Comparator.comparing(Region::getName))
+            .sorted(Comparator.comparing(Region::getCode))
             .map(RegionResponse::from)
             .toList();
     }
@@ -43,14 +43,14 @@ public class RegionService {
      * <p>캐싱된 Map에서 필터링 </p>
      *
      * @param parentCode 상위 지역 코드
-     * @return 하위 지역 목록 (이름 기준 오름차순)
+     * @return 하위 지역 목록 (코드 기준 오름차순)
      */
     public List<RegionResponse> getChildRegions(String parentCode) {
         Map<String, Region> regionMap = cacheService.getAllRegionsAsMap();
 
         return regionMap.values().stream()
             .filter(region -> parentCode.equals(region.getParentCode()))
-            .sorted(Comparator.comparing(Region::getName))
+            .sorted(Comparator.comparing(Region::getCode))
             .map(RegionResponse::from)
             .toList();
     }

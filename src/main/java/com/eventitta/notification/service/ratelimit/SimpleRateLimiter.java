@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import java.time.Clock;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
@@ -30,14 +31,21 @@ public class SimpleRateLimiter implements RateLimiter {
 
         cleanupExpiredRecords(now);
 
-        AlertRecord record = alerts.get(key);
-        if (record == null) {
-            alerts.put(key, new AlertRecord(now));
-            return true;
-        }
+        final int maxAlerts = getMaxAlertsPerPeriod(level);
+        AtomicBoolean allowed = new AtomicBoolean(false);
 
-        int maxAlerts = getMaxAlertsPerPeriod(level);
-        return record.incrementAndGet() <= maxAlerts;
+        alerts.compute(key, (k, record) -> {
+            if (record == null) {
+                // 첫 요청: 레코드 생성 및 허용
+                allowed.set(true);
+                return new AlertRecord(now);
+            }
+            int newCount = record.incrementAndGet();
+            allowed.set(newCount <= maxAlerts);
+            return record;
+        });
+
+        return allowed.get();
     }
 
     @Override

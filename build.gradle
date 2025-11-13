@@ -57,6 +57,7 @@ dependencies {
     implementation 'org.springframework:spring-aspects'
     runtimeOnly 'p6spy:p6spy:3.9.1'
     implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
 
     // Flyway 의존성
     implementation 'org.flywaydb:flyway-core'

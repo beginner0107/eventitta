@@ -1,0 +1,13 @@
+# 임시 파일
+*.tmp
+*.log
+*.pyc
+__pycache__/
+
+# 테스트 출력
+output/
+test_*.sql
+
+# Python 가상환경
+venv/
+.venv/

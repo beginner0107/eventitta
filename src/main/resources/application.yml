@@ -8,6 +8,13 @@ spring:
     init:
       mode: never
       schema-locations: classpath:schema.sql
+  cache:
+    type: caffeine
+
+cache:
+  caffeine:
+    maximum-size: 20
+    ttl-days: 30
 
 logging:
   level:

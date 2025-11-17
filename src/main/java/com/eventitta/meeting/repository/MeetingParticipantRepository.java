@@ -28,4 +28,6 @@ public interface MeetingParticipantRepository extends JpaRepository<MeetingParti
      */
     @Query("SELECT p FROM MeetingParticipant p JOIN FETCH p.meeting WHERE p.id = :participantId")
     Optional<MeetingParticipant> findByIdWithMeeting(@Param("participantId") Long participantId);
+
+    int countByMeetingId(Long id);
 }

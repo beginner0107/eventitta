@@ -30,4 +30,6 @@ public interface MeetingParticipantRepository extends JpaRepository<MeetingParti
     Optional<MeetingParticipant> findByIdWithMeeting(@Param("participantId") Long participantId);
 
     int countByMeetingId(Long id);
+
+    int countByMeetingIdAndStatus(Long id, ParticipantStatus participantStatus);
 }

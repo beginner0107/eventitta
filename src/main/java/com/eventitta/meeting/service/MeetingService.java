@@ -127,9 +127,6 @@ public class MeetingService {
         if (existingParticipant.isPresent()) {
             throw ALREADY_JOINED_MEETING.defaultException();
         }
-        if (meeting.getCurrentMembers() >= meeting.getMaxMembers()) {
-            throw MEETING_MAX_MEMBERS_REACHED.defaultException();
-        }
 
         MeetingParticipant participant = MeetingParticipant.builder()
             .meeting(meeting)

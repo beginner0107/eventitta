@@ -148,16 +148,10 @@ public class MeetingService {
 
     @Transactional
     public ParticipantResponse approveParticipant(Long userId, Long meetingId, Long participantId) {
-        findUserById(userId);
-        Meeting meeting = findMeetingById(meetingId);
-        if (meeting.isDeleted()) {
-            throw ALREADY_DELETED_MEETING.defaultException();
-        }
-        validateMeetingLeader(meeting, userId);
+        validateParticipantManagement(userId, meetingId, participantId);
 
+        Meeting meeting = findMeetingById(meetingId);
         MeetingParticipant participant = findParticipantById(participantId);
-        validateParticipantBelongsToMeeting(participant, meetingId);
-        validateParticipantStatus(participant, ParticipantStatus.PENDING);
 
         if (meeting.getCurrentMembers() >= meeting.getMaxMembers()) {
             throw MEETING_MAX_MEMBERS_REACHED.defaultException();
@@ -173,16 +167,9 @@ public class MeetingService {
 
     @Transactional
     public ParticipantResponse rejectParticipant(Long userId, Long meetingId, Long participantId) {
-        findUserById(userId);
-        Meeting meeting = findMeetingById(meetingId);
-        if (meeting.isDeleted()) {
-            throw ALREADY_DELETED_MEETING.defaultException();
-        }
-        validateMeetingLeader(meeting, userId);
+        validateParticipantManagement(userId, meetingId, participantId);
 
         MeetingParticipant participant = findParticipantById(participantId);
-        validateParticipantBelongsToMeeting(participant, meetingId);
-        validateParticipantStatus(participant, ParticipantStatus.PENDING);
 
         participant.reject();
 
@@ -253,6 +240,20 @@ public class MeetingService {
         if (participant.getStatus() != expectedStatus) {
             throw INVALID_PARTICIPANT_STATUS.defaultException();
         }
+    }
+
+    private void validateParticipantManagement(Long userId, Long meetingId, Long participantId) {
+        findUserById(userId);
+        Meeting meeting = findMeetingById(meetingId);
+
+        if (meeting.isDeleted()) {
+            throw ALREADY_DELETED_MEETING.defaultException();
+        }
+        validateMeetingLeader(meeting, userId);
+
+        MeetingParticipant participant = findParticipantById(participantId);
+        validateParticipantBelongsToMeeting(participant, meetingId);
+        validateParticipantStatus(participant, ParticipantStatus.PENDING);
     }
 
     @Transactional

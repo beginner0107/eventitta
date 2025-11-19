@@ -210,7 +210,7 @@ class MeetingServiceTest {
         org.springframework.test.util.ReflectionTestUtils.setField(participant, "id", participantId);
 
         given(userRepository.findById(leaderId)).willReturn(Optional.of(leader));
-        given(meetingRepository.findById(meetingId)).willReturn(Optional.of(meeting));
+        given(meetingRepository.findByIdForUpdate(meetingId)).willReturn(Optional.of(meeting));
         given(participantRepository.findByIdWithMeeting(participantId)).willReturn(Optional.of(participant));
         given(meetingMapper.toParticipantResponse(any(), any())).willReturn(
             new ParticipantResponse(participantId, userId, "nick", null, ParticipantStatus.APPROVED)

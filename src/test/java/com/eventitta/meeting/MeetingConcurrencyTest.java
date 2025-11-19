@@ -14,13 +14,11 @@ import com.eventitta.user.domain.User;
 import com.eventitta.user.repository.UserRepository;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -71,7 +69,6 @@ public class MeetingConcurrencyTest {
         "10,5,20",
         "100,10,200"
     })
-    @Disabled("동시성 버그 수정 중 현재는 실패하는 테스트")
     void givenMultiplePendingParticipants_whenConcurrentApproval_thenShouldNotExceedMaxMembers(int maxMembers, int currentApproved, int pendingUsers) throws Exception {
         MeetingSetup setup = prepareMeeting(maxMembers, currentApproved, pendingUsers);
 
@@ -145,6 +142,7 @@ public class MeetingConcurrencyTest {
             .startTime(LocalDateTime.now().plusDays(1))
             .endTime(LocalDateTime.now().plusDays(1).plusHours(2))
             .maxMembers(maxMembers)
+            .currentMembers(currentApproved)  // 리더 포함한 현재 승인된 인원 수 설정
             .address("서울")
             .status(MeetingStatus.RECRUITING)
             .leader(leader)
@@ -174,7 +172,6 @@ public class MeetingConcurrencyTest {
                 .status(ParticipantStatus.APPROVED)
                 .build();
             participantRepository.save(approvedP);
-            meeting.incrementCurrentMembers();
         }
 
         List<Long> pendingIds = new ArrayList<>();

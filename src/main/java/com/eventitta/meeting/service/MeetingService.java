@@ -148,10 +148,19 @@ public class MeetingService {
 
     @Transactional
     public ParticipantResponse approveParticipant(Long userId, Long meetingId, Long participantId) {
-        validateParticipantManagement(userId, meetingId, participantId);
+        findUserById(userId);
 
-        Meeting meeting = findMeetingById(meetingId);
+        Meeting meeting = meetingRepository.findByIdForUpdate(meetingId)
+            .orElseThrow(MEETING_NOT_FOUND::defaultException);
+
+        if (meeting.isDeleted()) {
+            throw ALREADY_DELETED_MEETING.defaultException();
+        }
+        validateMeetingLeader(meeting, userId);
+
         MeetingParticipant participant = findParticipantById(participantId);
+        validateParticipantBelongsToMeeting(participant, meetingId);
+        validateParticipantStatus(participant, ParticipantStatus.PENDING);
 
         if (meeting.getCurrentMembers() >= meeting.getMaxMembers()) {
             throw MEETING_MAX_MEMBERS_REACHED.defaultException();

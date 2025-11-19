@@ -9,6 +9,7 @@ import com.eventitta.auth.jwt.service.UserInfoService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -96,6 +97,11 @@ public class GlobalExceptionHandler {
                 CommonErrorCode.INTERNAL_ERROR.defaultMessage());
         }
         return toResponse(CommonErrorCode.INTERNAL_ERROR);
+    }
+
+    @ExceptionHandler(PessimisticLockingFailureException.class)
+    public ResponseEntity<ApiErrorResponse> handleLockTimeout(PessimisticLockingFailureException ex) {
+        return toResponse(CommonErrorCode.LOCK_TIMEOUT);
     }
 
     private ResponseEntity<ApiErrorResponse> toResponse(ErrorCode code) {

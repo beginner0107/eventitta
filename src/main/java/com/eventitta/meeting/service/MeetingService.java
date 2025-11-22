@@ -157,18 +157,11 @@ public class MeetingService {
         Meeting meeting = meetingRepository.findByIdForUpdate(meetingId)
             .orElseThrow(MEETING_NOT_FOUND::defaultException);
 
-        if (meeting.isDeleted()) {
-            throw ALREADY_DELETED_MEETING.defaultException();
-        }
-        validateMeetingLeader(meeting, userId);
+        MeetingParticipant participant = validateAndGetPendingParticipant(
+            meeting, userId, participantId
+        );
 
-        MeetingParticipant participant = findParticipantById(participantId);
-        validateParticipantBelongsToMeeting(participant, meetingId);
-        validateParticipantStatus(participant);
-
-        if (meeting.getCurrentMembers() >= meeting.getMaxMembers()) {
-            throw MEETING_FULL.defaultException();
-        }
+        validateMeetingCapacity(meeting);
 
         participant.approve();
         meeting.incrementCurrentMembers();
@@ -180,7 +173,13 @@ public class MeetingService {
 
     @Transactional
     public ParticipantResponse rejectParticipant(Long userId, Long meetingId, Long participantId) {
-        MeetingParticipant participant = validateParticipantManagement(userId, meetingId, participantId);
+        findUserById(userId);
+
+        Meeting meeting = findMeetingById(meetingId);
+
+        MeetingParticipant participant = validateAndGetPendingParticipant(
+            meeting, userId, participantId
+        );
 
         participant.reject();
 
@@ -253,9 +252,8 @@ public class MeetingService {
         }
     }
 
-    private MeetingParticipant validateParticipantManagement(Long userId, Long meetingId, Long participantId) {
-        findUserById(userId);
-        Meeting meeting = findMeetingById(meetingId);
+    private MeetingParticipant validateAndGetPendingParticipant(
+        Meeting meeting, Long userId, Long participantId) {
 
         if (meeting.isDeleted()) {
             throw ALREADY_DELETED_MEETING.defaultException();
@@ -263,9 +261,16 @@ public class MeetingService {
         validateMeetingLeader(meeting, userId);
 
         MeetingParticipant participant = findParticipantById(participantId);
-        validateParticipantBelongsToMeeting(participant, meetingId);
+        validateParticipantBelongsToMeeting(participant, meeting.getId());
         validateParticipantStatus(participant);
+
         return participant;
+    }
+
+    private void validateMeetingCapacity(Meeting meeting) {
+        if (meeting.getCurrentMembers() >= meeting.getMaxMembers()) {
+            throw MEETING_FULL.defaultException();
+        }
     }
 
     @Transactional

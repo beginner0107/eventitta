@@ -123,7 +123,7 @@ public class MeetingService {
             throw MEETING_NOT_RECRUITING.defaultException();
         }
 
-        int approvedCount = participantRepository.findByMeetingAndStatus(meeting, ParticipantStatus.APPROVED).size();
+        int approvedCount = participantRepository.countByMeetingIdAndStatus(meetingId, ParticipantStatus.APPROVED);
         if (approvedCount >= meeting.getMaxMembers()) {
             throw MEETING_FULL.defaultException();
         }

@@ -123,6 +123,11 @@ public class MeetingService {
             throw MEETING_NOT_RECRUITING.defaultException();
         }
 
+        int approvedCount = participantRepository.findByMeetingAndStatus(meeting, ParticipantStatus.APPROVED).size();
+        if (approvedCount >= meeting.getMaxMembers()) {
+            throw MEETING_FULL.defaultException();
+        }
+
         Optional<MeetingParticipant> existingParticipant = participantRepository.findByMeetingIdAndUser_Id(meetingId, userId);
 
         if (existingParticipant.isPresent()) {
@@ -162,7 +167,7 @@ public class MeetingService {
         validateParticipantStatus(participant);
 
         if (meeting.getCurrentMembers() >= meeting.getMaxMembers()) {
-            throw MEETING_MAX_MEMBERS_REACHED.defaultException();
+            throw MEETING_FULL.defaultException();
         }
 
         participant.approve();

@@ -18,7 +18,7 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long>, Meeting
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @QueryHints({
-        @QueryHint(name = "javax.persistence.lock.timeout", value = "3000")
+        @QueryHint(name = "jakarta.persistence.lock.timeout", value = "3000")
     })
     @Query("SELECT m FROM Meeting m WHERE m.id = :id")
     Optional<Meeting> findByIdForUpdate(@Param("id") Long id);

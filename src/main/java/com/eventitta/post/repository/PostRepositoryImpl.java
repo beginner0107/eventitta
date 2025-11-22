@@ -3,6 +3,8 @@ package com.eventitta.post.repository;
 import com.eventitta.post.domain.Post;
 import com.eventitta.post.dto.PostFilter;
 import com.eventitta.post.dto.response.PostSummaryResponse;
+import com.eventitta.region.domain.QRegion;
+import com.eventitta.user.domain.QUser;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Path;
 import com.querydsl.core.types.Projections;
@@ -32,8 +34,8 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
     public Page<Post> findAllByFilter(PostFilter filter, Pageable pageable) {
         BooleanBuilder predicate = buildFilter(filter);
 
-        com.eventitta.user.domain.QUser postUser = new com.eventitta.user.domain.QUser("postUser");
-        com.eventitta.region.domain.QRegion postRegion = new com.eventitta.region.domain.QRegion("postRegion");
+        QUser postUser = new QUser("postUser");
+        QRegion postRegion = new QRegion("postRegion");
 
         List<Post> content = queryFactory
             .selectFrom(post)
@@ -58,7 +60,7 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
     @Override
     public Page<PostSummaryResponse> findSummaries(PostFilter filter, Pageable pageable) {
         BooleanBuilder predicate = buildFilter(filter);
-        com.eventitta.user.domain.QUser postUser = new com.eventitta.user.domain.QUser("postUser");
+        QUser postUser = new QUser("postUser");
 
         List<PostSummaryResponse> content = queryFactory
             .select(Projections.constructor(

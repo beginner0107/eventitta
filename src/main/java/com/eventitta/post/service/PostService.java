@@ -158,10 +158,9 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
-    public List<Post> getLikedPosts(Long userId) {
-        return postLikeRepository.findAllByUserId(userId)
-            .stream()
-            .map(PostLike::getPost)
-            .collect(Collectors.toList());
+    public PageResponse<PostSummaryResponse> getLikedPosts(Long userId, PostFilter filter) {
+        Pageable pg = PageRequest.of(filter.page(), filter.size());
+        Page<PostSummaryResponse> page = postLikeRepository.findLikedSummaries(userId, pg);
+        return PageResponse.of(page);
     }
 }

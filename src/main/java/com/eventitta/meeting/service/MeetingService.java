@@ -2,6 +2,7 @@ package com.eventitta.meeting.service;
 
 import com.eventitta.common.response.PageResponse;
 import com.eventitta.gamification.event.ActivityEventPublisher;
+import com.eventitta.meeting.constants.MeetingConstants;
 import com.eventitta.meeting.domain.Meeting;
 import com.eventitta.meeting.domain.MeetingParticipant;
 import com.eventitta.meeting.domain.MeetingStatus;
@@ -136,13 +137,11 @@ public class MeetingService {
 
         MeetingParticipant savedParticipant = participantRepository.save(participant);
 
-        String message = "모임 참가 신청이 완료되었습니다. 승인을 기다려주세요.";
-
         return new JoinMeetingResponse(
             savedParticipant.getId(),
             meetingId,
             savedParticipant.getStatus(),
-            message
+            MeetingConstants.JOIN_MEETING_PENDING_MESSAGE
         );
     }
 
@@ -160,7 +159,7 @@ public class MeetingService {
 
         MeetingParticipant participant = findParticipantById(participantId);
         validateParticipantBelongsToMeeting(participant, meetingId);
-        validateParticipantStatus(participant, ParticipantStatus.PENDING);
+        validateParticipantStatus(participant);
 
         if (meeting.getCurrentMembers() >= meeting.getMaxMembers()) {
             throw MEETING_MAX_MEMBERS_REACHED.defaultException();
@@ -176,9 +175,7 @@ public class MeetingService {
 
     @Transactional
     public ParticipantResponse rejectParticipant(Long userId, Long meetingId, Long participantId) {
-        validateParticipantManagement(userId, meetingId, participantId);
-
-        MeetingParticipant participant = findParticipantById(participantId);
+        MeetingParticipant participant = validateParticipantManagement(userId, meetingId, participantId);
 
         participant.reject();
 
@@ -245,13 +242,13 @@ public class MeetingService {
         }
     }
 
-    private void validateParticipantStatus(MeetingParticipant participant, ParticipantStatus expectedStatus) {
-        if (participant.getStatus() != expectedStatus) {
+    private void validateParticipantStatus(MeetingParticipant participant) {
+        if (participant.getStatus() != ParticipantStatus.PENDING) {
             throw INVALID_PARTICIPANT_STATUS.defaultException();
         }
     }
 
-    private void validateParticipantManagement(Long userId, Long meetingId, Long participantId) {
+    private MeetingParticipant validateParticipantManagement(Long userId, Long meetingId, Long participantId) {
         findUserById(userId);
         Meeting meeting = findMeetingById(meetingId);
 
@@ -262,7 +259,8 @@ public class MeetingService {
 
         MeetingParticipant participant = findParticipantById(participantId);
         validateParticipantBelongsToMeeting(participant, meetingId);
-        validateParticipantStatus(participant, ParticipantStatus.PENDING);
+        validateParticipantStatus(participant);
+        return participant;
     }
 
     @Transactional

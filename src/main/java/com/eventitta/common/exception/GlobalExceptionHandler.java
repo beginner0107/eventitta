@@ -88,6 +88,11 @@ public class GlobalExceptionHandler {
         return toResponse(CommonErrorCode.METHOD_NOT_ALLOWED);
     }
 
+    @ExceptionHandler(PessimisticLockingFailureException.class)
+    public ResponseEntity<ApiErrorResponse> handleLockTimeout(PessimisticLockingFailureException ex) {
+        return toResponse(CommonErrorCode.LOCK_TIMEOUT);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleUnknown(Exception ex) {
         AlertLevel level = alertLevelResolver.resolveLevel(ex);
@@ -97,11 +102,6 @@ public class GlobalExceptionHandler {
                 CommonErrorCode.INTERNAL_ERROR.defaultMessage());
         }
         return toResponse(CommonErrorCode.INTERNAL_ERROR);
-    }
-
-    @ExceptionHandler(PessimisticLockingFailureException.class)
-    public ResponseEntity<ApiErrorResponse> handleLockTimeout(PessimisticLockingFailureException ex) {
-        return toResponse(CommonErrorCode.LOCK_TIMEOUT);
     }
 
     private ResponseEntity<ApiErrorResponse> toResponse(ErrorCode code) {

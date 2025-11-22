@@ -160,7 +160,7 @@ public class PostService {
     @Transactional(readOnly = true)
     public PageResponse<PostSummaryResponse> getLikedPosts(Long userId, PostFilter filter) {
         Pageable pg = PageRequest.of(filter.page(), filter.size());
-        Page<PostSummaryResponse> page = postLikeRepository.findLikedSummaries(userId, pg);
+        Page<PostSummaryResponse> page = postLikeRepository.findLikedSummaries(userId, filter, pg);
         return PageResponse.of(page);
     }
 }

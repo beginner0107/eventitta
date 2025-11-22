@@ -28,4 +28,14 @@ public interface MeetingParticipantRepository extends JpaRepository<MeetingParti
      */
     @Query("SELECT p FROM MeetingParticipant p JOIN FETCH p.meeting WHERE p.id = :participantId")
     Optional<MeetingParticipant> findByIdWithMeeting(@Param("participantId") Long participantId);
+
+    /**
+     * 특정 모임의 전체 참가자 수를 조회합니다.
+     */
+    int countByMeetingId(Long id);
+
+    /**
+     * 특정 모임의 특정 상태를 가진 참가자 수를 조회합니다.
+     */
+    int countByMeetingIdAndStatus(Long id, ParticipantStatus participantStatus);
 }

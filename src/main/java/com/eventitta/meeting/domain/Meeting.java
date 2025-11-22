@@ -15,8 +15,8 @@ import java.util.Objects;
 @Table(name = "meetings")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 @Builder
+@AllArgsConstructor
 public class Meeting extends BaseEntity {
 
     @Id
@@ -28,8 +28,10 @@ public class Meeting extends BaseEntity {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private int maxMembers;
+
     @Builder.Default
     private int currentMembers = 1;
+
     private String address;
     private Double latitude;
     private Double longitude;
@@ -41,27 +43,12 @@ public class Meeting extends BaseEntity {
     @JoinColumn(name = "leader_id")
     private User leader;
 
+    @Builder.Default
     private boolean deleted = false;
 
     @OneToMany(mappedBy = "meeting", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<MeetingParticipant> participants = new ArrayList<>();
-
-    @Builder
-    public Meeting(String title, String description, LocalDateTime startTime, LocalDateTime endTime,
-                   int maxMembers, String address, Double latitude, Double longitude,
-                   MeetingStatus status, User leader) {
-        this.title = title;
-        this.description = description;
-        this.startTime = startTime;
-        this.endTime = endTime;
-        this.maxMembers = maxMembers;
-        this.address = address;
-        this.latitude = latitude;
-        this.longitude = longitude;
-        this.status = status;
-        this.leader = leader;
-    }
 
     public boolean isLeader(Long userId) {
         return leader != null && Objects.equals(leader.getId(), userId);

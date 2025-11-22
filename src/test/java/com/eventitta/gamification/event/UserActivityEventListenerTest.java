@@ -78,11 +78,13 @@ class UserActivityEventListenerTest {
 
     @Test
     @DisplayName("이벤트 리스너가 별도의 스레드에서 동작한다")
-    void givenEvent_whenHandled_thenRunsInDifferentThread() {
+    void givenEvent_whenHandled_thenRunsInDifferentThread() throws InterruptedException {
         // given
         AtomicReference<String> listenerThread = new AtomicReference<>();
+        CountDownLatch latch = new CountDownLatch(1);
         doAnswer(invocation -> {
             listenerThread.set(Thread.currentThread().getName());
+            latch.countDown();
             return null;
         }).when(userActivityService).recordActivity(anyLong(), any(ActivityType.class), anyLong());
 
@@ -97,6 +99,9 @@ class UserActivityEventListenerTest {
         // then
         verify(userActivityService, timeout(2000).times(1))
             .recordActivity(3L, CREATE_POST, 30L);
+
+        // 비동기 실행 완료 대기 (최대 2초)
+        assertTrue(latch.await(2, TimeUnit.SECONDS), "비동기 리스너 실행이 완료되지 않았습니다");
 
         assertThat(listenerThread.get()).isNotNull();
         assertThat(listenerThread.get()).isNotEqualTo(mainThread);

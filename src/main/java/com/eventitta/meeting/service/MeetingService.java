@@ -2,6 +2,7 @@ package com.eventitta.meeting.service;
 
 import com.eventitta.common.response.PageResponse;
 import com.eventitta.gamification.event.ActivityEventPublisher;
+import com.eventitta.meeting.constants.MeetingConstants;
 import com.eventitta.meeting.domain.Meeting;
 import com.eventitta.meeting.domain.MeetingParticipant;
 import com.eventitta.meeting.domain.MeetingStatus;
@@ -122,13 +123,15 @@ public class MeetingService {
             throw MEETING_NOT_RECRUITING.defaultException();
         }
 
+        int approvedCount = participantRepository.countByMeetingIdAndStatus(meetingId, ParticipantStatus.APPROVED);
+        if (approvedCount >= meeting.getMaxMembers()) {
+            throw MEETING_FULL.defaultException();
+        }
+
         Optional<MeetingParticipant> existingParticipant = participantRepository.findByMeetingIdAndUser_Id(meetingId, userId);
 
         if (existingParticipant.isPresent()) {
             throw ALREADY_JOINED_MEETING.defaultException();
-        }
-        if (meeting.getCurrentMembers() >= meeting.getMaxMembers()) {
-            throw MEETING_MAX_MEMBERS_REACHED.defaultException();
         }
 
         MeetingParticipant participant = MeetingParticipant.builder()
@@ -139,32 +142,26 @@ public class MeetingService {
 
         MeetingParticipant savedParticipant = participantRepository.save(participant);
 
-        String message = "모임 참가 신청이 완료되었습니다. 승인을 기다려주세요.";
-
         return new JoinMeetingResponse(
             savedParticipant.getId(),
             meetingId,
             savedParticipant.getStatus(),
-            message
+            MeetingConstants.JOIN_MEETING_PENDING_MESSAGE
         );
     }
 
     @Transactional
     public ParticipantResponse approveParticipant(Long userId, Long meetingId, Long participantId) {
         findUserById(userId);
-        Meeting meeting = findMeetingById(meetingId);
-        if (meeting.isDeleted()) {
-            throw ALREADY_DELETED_MEETING.defaultException();
-        }
-        validateMeetingLeader(meeting, userId);
 
-        MeetingParticipant participant = findParticipantById(participantId);
-        validateParticipantBelongsToMeeting(participant, meetingId);
-        validateParticipantStatus(participant, ParticipantStatus.PENDING);
+        Meeting meeting = meetingRepository.findByIdForUpdate(meetingId)
+            .orElseThrow(MEETING_NOT_FOUND::defaultException);
 
-        if (meeting.getCurrentMembers() >= meeting.getMaxMembers()) {
-            throw MEETING_MAX_MEMBERS_REACHED.defaultException();
-        }
+        MeetingParticipant participant = validateAndGetPendingParticipant(
+            meeting, userId, participantId
+        );
+
+        validateMeetingCapacity(meeting);
 
         participant.approve();
         meeting.incrementCurrentMembers();
@@ -177,15 +174,12 @@ public class MeetingService {
     @Transactional
     public ParticipantResponse rejectParticipant(Long userId, Long meetingId, Long participantId) {
         findUserById(userId);
-        Meeting meeting = findMeetingById(meetingId);
-        if (meeting.isDeleted()) {
-            throw ALREADY_DELETED_MEETING.defaultException();
-        }
-        validateMeetingLeader(meeting, userId);
 
-        MeetingParticipant participant = findParticipantById(participantId);
-        validateParticipantBelongsToMeeting(participant, meetingId);
-        validateParticipantStatus(participant, ParticipantStatus.PENDING);
+        Meeting meeting = findMeetingById(meetingId);
+
+        MeetingParticipant participant = validateAndGetPendingParticipant(
+            meeting, userId, participantId
+        );
 
         participant.reject();
 
@@ -252,9 +246,30 @@ public class MeetingService {
         }
     }
 
-    private void validateParticipantStatus(MeetingParticipant participant, ParticipantStatus expectedStatus) {
-        if (participant.getStatus() != expectedStatus) {
+    private void validateParticipantStatus(MeetingParticipant participant) {
+        if (participant.getStatus() != ParticipantStatus.PENDING) {
             throw INVALID_PARTICIPANT_STATUS.defaultException();
+        }
+    }
+
+    private MeetingParticipant validateAndGetPendingParticipant(
+        Meeting meeting, Long userId, Long participantId) {
+
+        if (meeting.isDeleted()) {
+            throw ALREADY_DELETED_MEETING.defaultException();
+        }
+        validateMeetingLeader(meeting, userId);
+
+        MeetingParticipant participant = findParticipantById(participantId);
+        validateParticipantBelongsToMeeting(participant, meeting.getId());
+        validateParticipantStatus(participant);
+
+        return participant;
+    }
+
+    private void validateMeetingCapacity(Meeting meeting) {
+        if (meeting.getCurrentMembers() >= meeting.getMaxMembers()) {
+            throw MEETING_FULL.defaultException();
         }
     }
 

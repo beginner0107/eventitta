@@ -8,7 +8,6 @@ import com.eventitta.meeting.domain.ParticipantStatus;
 import com.eventitta.meeting.dto.request.MeetingCreateRequest;
 import com.eventitta.meeting.dto.request.MeetingUpdateRequest;
 import com.eventitta.meeting.dto.response.ParticipantResponse;
-import com.eventitta.meeting.exception.MeetingErrorCode;
 import com.eventitta.meeting.exception.MeetingException;
 import com.eventitta.meeting.mapper.MeetingMapper;
 import com.eventitta.meeting.repository.MeetingParticipantRepository;
@@ -23,11 +22,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static com.eventitta.gamification.domain.ActivityType.JOIN_MEETING;
+import static com.eventitta.meeting.exception.MeetingErrorCode.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
@@ -171,7 +172,7 @@ class MeetingServiceTest {
             .user(user)
             .status(ParticipantStatus.PENDING)
             .build();
-        org.springframework.test.util.ReflectionTestUtils.setField(saved, "id", 1L);
+        ReflectionTestUtils.setField(saved, "id", 1L);
         given(participantRepository.save(any(MeetingParticipant.class))).willReturn(saved);
 
         // when
@@ -207,10 +208,10 @@ class MeetingServiceTest {
             .user(user)
             .status(ParticipantStatus.PENDING)
             .build();
-        org.springframework.test.util.ReflectionTestUtils.setField(participant, "id", participantId);
+        ReflectionTestUtils.setField(participant, "id", participantId);
 
         given(userRepository.findById(leaderId)).willReturn(Optional.of(leader));
-        given(meetingRepository.findById(meetingId)).willReturn(Optional.of(meeting));
+        given(meetingRepository.findByIdForUpdate(meetingId)).willReturn(Optional.of(meeting));
         given(participantRepository.findByIdWithMeeting(participantId)).willReturn(Optional.of(participant));
         given(meetingMapper.toParticipantResponse(any(), any())).willReturn(
             new ParticipantResponse(participantId, userId, "nick", null, ParticipantStatus.APPROVED)
@@ -251,7 +252,7 @@ class MeetingServiceTest {
             .user(user)
             .status(ParticipantStatus.PENDING)
             .build();
-        org.springframework.test.util.ReflectionTestUtils.setField(participant, "id", participantId);
+        ReflectionTestUtils.setField(participant, "id", participantId);
 
         given(userRepository.findById(leaderId)).willReturn(Optional.of(leader));
         given(meetingRepository.findById(meetingId)).willReturn(Optional.of(meeting));
@@ -329,17 +330,17 @@ class MeetingServiceTest {
             .user(user)
             .status(ParticipantStatus.PENDING)
             .build();
-        org.springframework.test.util.ReflectionTestUtils.setField(participant, "id", participantId);
+        ReflectionTestUtils.setField(participant, "id", participantId);
 
         given(userRepository.findById(leaderId)).willReturn(Optional.of(leader));
-        given(meetingRepository.findById(meetingId)).willReturn(Optional.of(meeting));
+        given(meetingRepository.findByIdForUpdate(meetingId)).willReturn(Optional.of(meeting));
         given(participantRepository.findByIdWithMeeting(participantId)).willReturn(Optional.of(participant));
 
         // when & then
         assertThatThrownBy(() -> meetingService.approveParticipant(leaderId, meetingId, participantId))
             .isInstanceOf(MeetingException.class)
             .extracting("errorCode")
-            .isEqualTo(MeetingErrorCode.MEETING_MAX_MEMBERS_REACHED);
+            .isEqualTo(MEETING_FULL);
     }
 
     @Test
@@ -375,7 +376,7 @@ class MeetingServiceTest {
         assertThatThrownBy(() -> meetingService.joinMeeting(userId, meetingId))
             .isInstanceOf(MeetingException.class)
             .extracting("errorCode")
-            .isEqualTo(MeetingErrorCode.ALREADY_JOINED_MEETING);
+            .isEqualTo(ALREADY_JOINED_MEETING);
     }
 
     @Test
@@ -404,7 +405,7 @@ class MeetingServiceTest {
         assertThatThrownBy(() -> meetingService.joinMeeting(userId, meetingId))
             .isInstanceOf(MeetingException.class)
             .extracting("errorCode")
-            .isEqualTo(MeetingErrorCode.MEETING_NOT_RECRUITING);
+            .isEqualTo(MEETING_NOT_RECRUITING);
     }
 
     @Test
@@ -439,7 +440,7 @@ class MeetingServiceTest {
         assertThatThrownBy(() -> meetingService.updateMeeting(leaderId, meeting.getId(), req))
             .isInstanceOf(MeetingException.class)
             .extracting("errorCode")
-            .isEqualTo(MeetingErrorCode.ALREADY_DELETED_MEETING);
+            .isEqualTo(ALREADY_DELETED_MEETING);
     }
 
     @Test
@@ -466,7 +467,7 @@ class MeetingServiceTest {
         assertThatThrownBy(() -> meetingService.deleteMeeting(leaderId, meeting.getId()))
             .isInstanceOf(MeetingException.class)
             .extracting("errorCode")
-            .isEqualTo(MeetingErrorCode.ALREADY_DELETED_MEETING);
+            .isEqualTo(ALREADY_DELETED_MEETING);
     }
 
     @Test
@@ -496,7 +497,7 @@ class MeetingServiceTest {
         assertThatThrownBy(() -> meetingService.joinMeeting(userId, meetingId))
             .isInstanceOf(MeetingException.class)
             .extracting("errorCode")
-            .isEqualTo(MeetingErrorCode.ALREADY_DELETED_MEETING);
+            .isEqualTo(ALREADY_DELETED_MEETING);
     }
 
     @Test
@@ -567,6 +568,6 @@ class MeetingServiceTest {
         assertThatThrownBy(() -> meetingService.cancelJoin(userId, meetingId))
             .isInstanceOf(MeetingException.class)
             .extracting("errorCode")
-            .isEqualTo(MeetingErrorCode.INVALID_PARTICIPANT_STATUS);
+            .isEqualTo(INVALID_PARTICIPANT_STATUS);
     }
 }

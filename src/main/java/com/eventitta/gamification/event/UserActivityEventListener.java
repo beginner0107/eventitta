@@ -23,7 +23,7 @@ public class UserActivityEventListener {
             userActivityService.recordActivity(event.userId(), event.activityType(), event.targetId());
         } catch (Exception e) {
             log.error("[활동 기록 실패] userId={}, activityCode={}, targetId={}",
-                event.userId(), event.activityType().getDisplayName(), event.targetId(), e);
+                event.userId(), event.activityType(), event.targetId(), e);
         }
     }
 

@@ -1,4 +1,4 @@
-package com.eventitta.gamification.constant;
+package com.eventitta.gamification.constants;
 
 public final class GamificationSlackConstants {
 

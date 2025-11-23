@@ -1,5 +1,6 @@
 package com.eventitta.gamification.event;
 
+import com.eventitta.gamification.domain.OperationType;
 import com.eventitta.gamification.service.UserActivityService;
 import com.eventitta.gamification.service.FailedEventRecoveryService;
 import com.eventitta.notification.domain.AlertLevel;
@@ -57,6 +58,7 @@ public class UserActivityEventListener {
             failedEventRecoveryService.saveFailedEvent(
                 event.userId(),
                 event.activityType(),
+                OperationType.RECORD,
                 event.targetId(),
                 e.getMessage()
             );
@@ -103,6 +105,19 @@ public class UserActivityEventListener {
     public void recoverUserActivityRevoke(Exception e, UserActivityRevokeRequestedEvent event) {
         log.error("[활동 취소 최종 실패] userId={}, activityType={}, targetId={}",
             event.userId(), event.activityType(), event.targetId(), e);
+
+        try {
+            failedEventRecoveryService.saveFailedEvent(
+                event.userId(),
+                event.activityType(),
+                OperationType.REVOKE,
+                event.targetId(),
+                e.getMessage()
+            );
+        } catch (Exception persistEx) {
+            log.error("[실패 이벤트 저장 중 오류] userId={}, activityType={}, targetId={}",
+                event.userId(), event.activityType(), event.targetId(), persistEx);
+        }
 
         String message = String.format(
             ACTIVITY_REVOKE_FAILED_MESSAGE_FORMAT,

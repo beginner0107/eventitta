@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 import static com.eventitta.gamification.constants.GamificationRetryConstants.*;
+import static org.springframework.transaction.annotation.Propagation.NEVER;
 
 @Slf4j
 @Component
@@ -23,9 +24,9 @@ public class FailedActivityEventRetryScheduler {
     private final FailedActivityEventRepository failedActivityEventRepository;
     private final FailedEventRecoveryService failedEventRecoveryService;
 
-    @Scheduled(fixedDelayString = "" + FAILED_EVENT_RETRY_FIXED_DELAY_MS)
+    @Scheduled(fixedDelay = FAILED_EVENT_RETRY_FIXED_DELAY_MS)
     @SchedulerLock(name = "retryFailedActivityEvents", lockAtMostFor = "55s", lockAtLeastFor = "5s")
-    @Transactional
+    @Transactional(propagation = NEVER)
     public void retryFailedEvents() {
         List<FailedActivityEvent> pendingEvents = failedActivityEventRepository
             .findByStatusAndRetryCountLessThan(EventStatus.PENDING, FAILED_EVENT_MAX_RETRY_COUNT);
@@ -33,8 +34,8 @@ public class FailedActivityEventRetryScheduler {
         if (pendingEvents.isEmpty()) {
             return;
         }
-        
-        log.info("[실패 이벤트 재처리 시작] 대상 건수={}", pendingEvents.size());
+
+        log.debug("[실패 이벤트 재처리 시작] 대상 건수={}", pendingEvents.size());
 
         pendingEvents.stream()
             .limit(FAILED_EVENT_RETRY_BATCH_SIZE)

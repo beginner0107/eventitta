@@ -28,30 +28,47 @@ public class UserActivityService {
 
     @Transactional
     public void recordActivity(Long userId, ActivityType activityType, Long targetId) {
-        User user = findUserById(userId);
-
-        // USER_LOGIN의 경우 일일 중복 방지
-        if (activityType == ActivityType.USER_LOGIN && isAlreadyRecordedToday(userId, activityType)) {
-            log.debug("User {} already logged in today, skipping duplicate login activity", userId);
+        if (activityType == ActivityType.USER_LOGIN
+            && isAlreadyRecordedToday(userId, activityType)) {
+            log.debug("[UserActivity] Skipping login activity: " +
+                    "already recorded today. userId={}, activityType={}",
+                userId, activityType);
             return;
         }
 
         UserActivity userActivity = createUserActivity(userId, activityType, targetId);
         userActivityRepository.save(userActivity);
 
-        user.earnPoints(activityType.getDefaultPoint());
+        int points = activityType.getDefaultPoint();
+        if (points > 0) {
+            int updated = userRepository.incrementPoints(userId, points);
+            if (updated == 0) {
+                log.error("[UserActivity] Failed to increment points. " +
+                        "reason=user_not_found, userId={}, deltaPoint={}",
+                    userId, points);
+                throw NOT_FOUND_USER_ID.defaultException();
+            }
+        }
+
+        User user = findUserById(userId);
         badgeService.checkAndAwardBadges(user);
     }
 
     @Transactional
     public void revokeActivity(Long userId, ActivityType activityType, Long targetId) {
-        User user = findUserById(userId);
-
         long deletedCount = userActivityRepository
             .deleteByUserIdAndActivityTypeAndTargetId(userId, activityType, targetId);
 
         if (deletedCount > 0) {
-            user.deductPoints(activityType.getDefaultPoint());
+            int points = activityType.getDefaultPoint();
+            if (points > 0) {
+                int updated = userRepository.decrementPoints(userId, points);
+                if (updated == 0) {
+                    log.warn("[UserActivity] Failed to decrement points. reason" +
+                            "=user_not_found_or_insufficient_points, userId={}, deltaPoint={}",
+                        userId, points);
+                }
+            }
         }
     }
 

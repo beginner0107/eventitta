@@ -13,7 +13,9 @@ import java.util.List;
 public interface UserActivityRepository extends JpaRepository<UserActivity, Long> {
     long countByUserIdAndActivityType(Long userId, ActivityType activityTypeId);
 
-    @Query("SELECT ua.activityType AS activityType, COUNT(ua) AS count " +
+    @Query("SELECT ua.activityType AS activityType, " +
+        "COUNT(ua) AS count, " +
+        "SUM(ua.pointsEarned) AS totalPoints " +
         "FROM UserActivity ua " +
         "WHERE ua.userId = :userId " +
         "GROUP BY ua.activityType")
@@ -21,7 +23,6 @@ public interface UserActivityRepository extends JpaRepository<UserActivity, Long
 
     long deleteByUserIdAndActivityTypeAndTargetId(Long userId, ActivityType activityTypeId, Long targetId);
 
-    // 오늘 특정 활동이 이미 기록되었는지 확인
     @Query("SELECT COUNT(ua) > 0 FROM UserActivity ua " +
         "WHERE ua.userId = :userId " +
         "AND ua.activityType = :activityType " +

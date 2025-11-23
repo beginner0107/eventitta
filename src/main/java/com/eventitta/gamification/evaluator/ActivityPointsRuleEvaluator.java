@@ -9,16 +9,16 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 
 @Component
-public class ActivityCountRuleEvaluator implements BadgeRuleEvaluator {
+public class ActivityPointsRuleEvaluator implements BadgeRuleEvaluator {
 
     @Override
     public boolean supports(BadgeRule rule) {
-        return rule.getActivityType() != null && rule.getEvaluationType() == EvaluationType.COUNT;
+        return rule.getActivityType() != null && rule.getEvaluationType() == EvaluationType.POINTS;
     }
 
     @Override
     public boolean isSatisfied(User user, BadgeRule rule, Map<ActivityType, Long> activityCountMap, Map<ActivityType, Long> activityPointsMap) {
-        long count = activityCountMap.getOrDefault(rule.getActivityType(), 0L);
-        return count >= rule.getThreshold();
+        long totalPoints = activityPointsMap.getOrDefault(rule.getActivityType(), 0L);
+        return totalPoints >= rule.getThreshold();
     }
 }

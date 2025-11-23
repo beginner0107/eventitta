@@ -6,4 +6,6 @@ public interface ActivitySummaryProjection {
     ActivityType getActivityType();
 
     long getCount();
+
+    long getTotalPoints();
 }

@@ -1,6 +1,7 @@
 package com.eventitta.gamification.event;
 
 import com.eventitta.gamification.service.UserActivityService;
+import com.eventitta.gamification.service.FailedEventRecoveryService;
 import com.eventitta.notification.domain.AlertLevel;
 import com.eventitta.notification.service.SlackNotificationService;
 import lombok.RequiredArgsConstructor;
@@ -12,9 +13,9 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
 
-import static com.eventitta.gamification.constant.GamificationErrorCodes.ACTIVITY_RECORD_FAILED;
-import static com.eventitta.gamification.constant.GamificationErrorCodes.ACTIVITY_REVOKE_FAILED;
-import static com.eventitta.gamification.constant.GamificationSlackConstants.*;
+import static com.eventitta.gamification.constants.GamificationErrorCodes.ACTIVITY_RECORD_FAILED;
+import static com.eventitta.gamification.constants.GamificationErrorCodes.ACTIVITY_REVOKE_FAILED;
+import static com.eventitta.gamification.constants.GamificationSlackConstants.*;
 import static org.springframework.transaction.event.TransactionPhase.AFTER_COMMIT;
 
 @Slf4j
@@ -24,6 +25,7 @@ public class UserActivityEventListener {
 
     private final UserActivityService userActivityService;
     private final SlackNotificationService slackNotificationService;
+    private final FailedEventRecoveryService failedEventRecoveryService;
 
     @Async
     @TransactionalEventListener(phase = AFTER_COMMIT)
@@ -50,6 +52,18 @@ public class UserActivityEventListener {
     public void recoverUserActivity(Exception e, UserActivityLogRequestedEvent event) {
         log.error("[활동 기록 최종 실패] userId={}, activityType={}, targetId={}",
             event.userId(), event.activityType(), event.targetId(), e);
+
+        try {
+            failedEventRecoveryService.saveFailedEvent(
+                event.userId(),
+                event.activityType(),
+                event.targetId(),
+                e.getMessage()
+            );
+        } catch (Exception persistEx) {
+            log.error("[실패 이벤트 저장 중 오류] userId={}, activityType={}, targetId={}",
+                event.userId(), event.activityType(), event.targetId(), persistEx);
+        }
 
         String message = String.format(
             ACTIVITY_RECORD_FAILED_MESSAGE_FORMAT,

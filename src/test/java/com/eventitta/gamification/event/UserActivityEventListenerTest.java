@@ -1,7 +1,13 @@
 package com.eventitta.gamification.event;
 
 import com.eventitta.gamification.domain.ActivityType;
+import com.eventitta.gamification.domain.FailedActivityEvent;
+import com.eventitta.gamification.domain.OperationType;
+import com.eventitta.gamification.repository.FailedActivityEventRepository;
+import com.eventitta.gamification.service.FailedEventRecoveryService;
 import com.eventitta.gamification.service.UserActivityService;
+import com.eventitta.notification.domain.AlertLevel;
+import com.eventitta.notification.service.SlackNotificationService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +22,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.eventitta.gamification.domain.ActivityType.*;
@@ -39,8 +46,14 @@ class UserActivityEventListenerTest {
     @MockitoBean
     private UserActivityService userActivityService;
 
+    @MockitoBean
+    private SlackNotificationService slackNotificationService;
+
     @Autowired
     private ApplicationContext applicationContext;
+
+    @Autowired
+    private FailedActivityEventRepository failedActivityEventRepository;
 
     @Test
     @DisplayName("게시글 작성 시 활동 내역이 기록된다")
@@ -202,5 +215,219 @@ class UserActivityEventListenerTest {
 
         // 예외가 발생했지만 시스템은 정상 동작함을 확인
         assertThat(exceptionOccurred.get()).isTrue();
+    }
+
+    @Test
+    @DisplayName("활동 기록 실패 시 재시도가 수행된다")
+    void givenTemporaryFailure_whenRecordActivity_thenRetrySucceeds() throws InterruptedException {
+        // given
+        AtomicInteger callCount = new AtomicInteger(0);
+        CountDownLatch latch = new CountDownLatch(3); // 3번 호출 예상
+
+        doAnswer(invocation -> {
+            int count = callCount.incrementAndGet();
+            latch.countDown();
+            if (count < 3) {
+                throw new RuntimeException("일시적 실패 " + count);
+            }
+            return null; // 3번째 호출에서 성공
+        }).when(userActivityService).recordActivity(anyLong(), any(ActivityType.class), anyLong());
+
+        // when
+        transactionTemplate.execute(status -> {
+            eventPublisher.publishEvent(new UserActivityLogRequestedEvent(8L, CREATE_POST, 80L));
+            return null;
+        });
+
+        // then
+        assertTrue(latch.await(10, TimeUnit.SECONDS), "재시도가 완료되지 않았습니다");
+
+        verify(userActivityService, timeout(10000).times(3))
+            .recordActivity(8L, CREATE_POST, 80L);
+
+        assertThat(callCount.get()).isEqualTo(3);
+
+        // Slack 알림은 발송되지 않아야 함 (성공했으므로)
+        verify(slackNotificationService, never()).sendAlert(
+            any(AlertLevel.class), anyString(), anyString(), anyString(), anyString(), any(Throwable.class)
+        );
+    }
+
+    @Test
+    @DisplayName("활동 기록이 모든 재시도 후에도 실패하면 Slack 알림이 발송된다")
+    void givenPersistentFailure_whenAllRetriesFail_thenSlackAlertSent() throws InterruptedException {
+        // given
+        AtomicInteger callCount = new AtomicInteger(0);
+        CountDownLatch serviceLatch = new CountDownLatch(3); // 3번 재시도
+        CountDownLatch slackLatch = new CountDownLatch(1);   // Slack 호출 1번
+
+        doAnswer(invocation -> {
+            callCount.incrementAndGet();
+            serviceLatch.countDown();
+            throw new RuntimeException("지속적 실패");
+        }).when(userActivityService).recordActivity(anyLong(), any(ActivityType.class), anyLong());
+
+        doAnswer(invocation -> {
+            slackLatch.countDown();
+            return null;
+        }).when(slackNotificationService).sendAlert(
+            any(AlertLevel.class), anyString(), anyString(), anyString(), anyString(), any(Throwable.class)
+        );
+
+        // when
+        transactionTemplate.execute(status -> {
+            eventPublisher.publishEvent(new UserActivityLogRequestedEvent(9L, CREATE_COMMENT, 90L));
+            return null;
+        });
+
+        // then - 재시도 및 Slack 알림 완료까지 대기
+        assertTrue(serviceLatch.await(10, TimeUnit.SECONDS), "재시도가 완료되지 않았습니다");
+        assertTrue(slackLatch.await(5, TimeUnit.SECONDS), "Slack 알림이 발송되지 않았습니다");
+
+        verify(userActivityService, timeout(10000).times(3))
+            .recordActivity(9L, CREATE_COMMENT, 90L);
+
+        verify(slackNotificationService, timeout(5000).times(1))
+            .sendAlert(
+                eq(AlertLevel.HIGH),
+                eq("ACTIVITY_RECORD_FAILED"),
+                contains("포인트 기록 실패"),
+                eq("EventListener"),
+                contains("userId=9"),
+                any(Throwable.class)
+            );
+
+        // 실패 이벤트가 최소 1건 이상 저장되었는지만 검증
+        var all = failedActivityEventRepository.findAll();
+        assertThat(all).hasSize(1);
+        FailedActivityEvent saved = all.get(0);
+        assertThat(saved.getUserId()).isEqualTo(9L);
+        assertThat(saved.getActivityType()).isEqualTo(CREATE_COMMENT);
+        assertThat(saved.getOperationType()).isEqualTo(OperationType.RECORD);
+        assertThat(saved.getTargetId()).isEqualTo(90L);
+    }
+
+    @Test
+    @DisplayName("활동 취소 실패 시 재시도가 수행된다")
+    void givenRevokeFailure_whenRetry_thenSucceeds() throws InterruptedException {
+        // given
+        AtomicInteger callCount = new AtomicInteger(0);
+        CountDownLatch latch = new CountDownLatch(2); // 2번 호출 (1번 실패, 2번째 성공)
+
+        doAnswer(invocation -> {
+            int count = callCount.incrementAndGet();
+            latch.countDown();
+            if (count == 1) {
+                throw new RuntimeException("첫 번째 시도 실패");
+            }
+            return null;
+        }).when(userActivityService).revokeActivity(anyLong(), any(ActivityType.class), anyLong());
+
+        // when
+        transactionTemplate.execute(status -> {
+            eventPublisher.publishEvent(new UserActivityRevokeRequestedEvent(10L, LIKE_POST_CANCEL, 100L));
+            return null;
+        });
+
+        // then
+        assertTrue(latch.await(10, TimeUnit.SECONDS), "재시도가 완료되지 않았습니다");
+
+        verify(userActivityService, timeout(10000).times(2))
+            .revokeActivity(10L, LIKE_POST_CANCEL, 100L);
+
+        // Slack 알림은 발송되지 않아야 함 (성공했으므로)
+        verify(slackNotificationService, never()).sendAlert(
+            any(AlertLevel.class), anyString(), anyString(), anyString(), anyString(), any(Throwable.class)
+        );
+    }
+
+    @Test
+    @DisplayName("재시도 간격이 지수 백오프로 증가한다")
+    void givenRetryWithBackoff_whenFails_thenDelayIncreases() throws InterruptedException {
+        // given
+        AtomicInteger callCount = new AtomicInteger(0);
+        CountDownLatch latch = new CountDownLatch(3);
+        long[] timestamps = new long[3];
+
+        doAnswer(invocation -> {
+            int count = callCount.getAndIncrement();
+            timestamps[count] = System.currentTimeMillis();
+            latch.countDown();
+            throw new RuntimeException("실패 " + count);
+        }).when(userActivityService).recordActivity(anyLong(), any(ActivityType.class), anyLong());
+
+        // when
+        transactionTemplate.execute(status -> {
+            eventPublisher.publishEvent(new UserActivityLogRequestedEvent(11L, CREATE_POST, 110L));
+            return null;
+        });
+
+        // then
+        assertTrue(latch.await(15, TimeUnit.SECONDS), "재시도가 완료되지 않았습니다");
+
+        // 첫 번째와 두 번째 호출 간격 (약 1초)
+        long firstDelay = timestamps[1] - timestamps[0];
+        assertThat(firstDelay).isBetween(800L, 1500L);
+
+        // 두 번째와 세 번째 호출 간격 (약 2초)
+        long secondDelay = timestamps[2] - timestamps[1];
+        assertThat(secondDelay).isBetween(1800L, 2500L);
+
+        // 지수 백오프 확인 (두 번째 딜레이가 첫 번째보다 길어야 함)
+        assertThat(secondDelay).isGreaterThan(firstDelay);
+    }
+
+    @Test
+    @DisplayName("활동 취소가 모든 재시도 후에도 실패하면 REVOKE 타입으로 실패 이벤트가 저장된다")
+    void givenRevokeFailure_whenAllRetriesFail_thenRevokeFailedEventSaved() throws InterruptedException {
+        // given
+        AtomicInteger callCount = new AtomicInteger(0);
+        CountDownLatch serviceLatch = new CountDownLatch(3); // 3번 재시도
+        CountDownLatch slackLatch = new CountDownLatch(1);   // Slack 호출 1번
+
+        doAnswer(invocation -> {
+            callCount.incrementAndGet();
+            serviceLatch.countDown();
+            throw new RuntimeException("취소 실패");
+        }).when(userActivityService).revokeActivity(anyLong(), any(ActivityType.class), anyLong());
+
+        doAnswer(invocation -> {
+            slackLatch.countDown();
+            return null;
+        }).when(slackNotificationService).sendAlert(
+            any(AlertLevel.class), anyString(), anyString(), anyString(), anyString(), any(Throwable.class)
+        );
+
+        // when
+        transactionTemplate.execute(status -> {
+            eventPublisher.publishEvent(new UserActivityRevokeRequestedEvent(12L, LIKE_POST_CANCEL, 120L));
+            return null;
+        });
+
+        // then - 재시도 및 Slack 알림 완료까지 대기
+        assertTrue(serviceLatch.await(10, TimeUnit.SECONDS), "재시도가 완료되지 않았습니다");
+        assertTrue(slackLatch.await(5, TimeUnit.SECONDS), "Slack 알림이 발송되지 않았습니다");
+
+        verify(userActivityService, timeout(10000).times(3))
+            .revokeActivity(12L, LIKE_POST_CANCEL, 120L);
+
+        verify(slackNotificationService, timeout(5000).times(1))
+            .sendAlert(
+                eq(AlertLevel.HIGH),
+                eq("ACTIVITY_REVOKE_FAILED"),
+                contains("포인트 취소 실패"),
+                eq("EventListener"),
+                contains("userId=12"),
+                any(Throwable.class)
+            );
+
+        // REVOKE 타입으로 실패 이벤트가 저장되었는지 검증
+        var all = failedActivityEventRepository.findAll();
+        assertThat(all).hasSize(1);
+        FailedActivityEvent saved = all.get(0);
+        assertThat(saved.getUserId()).isEqualTo(12L);
+        assertThat(saved.getActivityType()).isEqualTo(LIKE_POST_CANCEL);
+        assertThat(saved.getOperationType()).isEqualTo(OperationType.REVOKE);
+        assertThat(saved.getTargetId()).isEqualTo(120L);
     }
 }

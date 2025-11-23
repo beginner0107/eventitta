@@ -37,7 +37,7 @@ public class RegionCacheService {
     public void evictAllCaches() {
         log.info("지역 캐시 무효화 완료 - 다음 호출 시 DB에서 재로드됩니다");
     }
-    
+
     @EventListener(ApplicationReadyEvent.class)
     public void warmUpCache() {
         log.info("지역 캐시 워밍업 시작...");

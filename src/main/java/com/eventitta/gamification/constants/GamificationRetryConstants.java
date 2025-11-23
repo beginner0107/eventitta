@@ -1,0 +1,20 @@
+package com.eventitta.gamification.constants;
+
+public final class GamificationRetryConstants {
+
+    private GamificationRetryConstants() {
+    }
+
+    // 실패 이벤트 관련 재시도 최대 횟수
+    public static final int FAILED_EVENT_MAX_RETRY_COUNT = 5;
+
+    // 실패 이벤트 관련 에러 메시지 최대 길이
+    public static final int FAILED_EVENT_MAX_ERROR_MESSAGE_LENGTH = 1000;
+
+    // 실패 이벤트 재처리 배치 크기
+    public static final int FAILED_EVENT_RETRY_BATCH_SIZE = 100;
+
+    // 실패 이벤트 재처리 스케줄 주기 (ms 단위)
+    public static final long FAILED_EVENT_RETRY_FIXED_DELAY_MS = 60_000L;
+}
+

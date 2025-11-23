@@ -55,17 +55,20 @@ class UserActivityServiceTest {
         Long userId = 1L;
         Long targetId = 10L;
         User user = createTestUser();
+        int pointsToAdd = USER_LOGIN.getDefaultPoint();
 
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(userActivityRepository.save(any(UserActivity.class)))
             .thenAnswer(invocation -> invocation.getArgument(0));
+        when(userRepository.incrementPoints(userId, pointsToAdd))
+            .thenReturn(1); // 성공적으로 업데이트됨
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
         // when
         userActivityService.recordActivity(userId, USER_LOGIN, targetId);
 
         // then
-        assertThat(user.getPoints()).isEqualTo(5);
         verify(userActivityRepository).save(any(UserActivity.class));
+        verify(userRepository).incrementPoints(userId, pointsToAdd);
         verify(badgeService).checkAndAwardBadges(user);
     }
 
@@ -75,21 +78,21 @@ class UserActivityServiceTest {
         // given
         Long userId = 1L;
         Long targetId = 10L;
-        User user = createTestUser();
-        user.earnPoints(20); // 초기 포인트 설정
         ActivityType type = ActivityType.DELETE_COMMENT;
+        int pointsToDeduct = type.getDefaultPoint();
 
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(userActivityRepository.deleteByUserIdAndActivityTypeAndTargetId(userId, type, targetId))
             .thenReturn(1L);
+        when(userRepository.decrementPoints(userId, pointsToDeduct))
+            .thenReturn(1); // 성공적으로 차감됨
 
         // when
         userActivityService.revokeActivity(userId, type, targetId);
 
         // then
-        assertThat(user.getPoints()).isEqualTo(15);
         verify(userActivityRepository)
             .deleteByUserIdAndActivityTypeAndTargetId(userId, type, targetId);
+        verify(userRepository).decrementPoints(userId, pointsToDeduct);
     }
 
     @Test
@@ -98,8 +101,12 @@ class UserActivityServiceTest {
         // given
         Long userId = 999L;
         Long targetId = 10L;
+        int pointsToAdd = CREATE_POST.getDefaultPoint();
 
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+        when(userActivityRepository.save(any(UserActivity.class)))
+            .thenAnswer(invocation -> invocation.getArgument(0));
+        when(userRepository.incrementPoints(userId, pointsToAdd))
+            .thenReturn(0); // 사용자가 없어서 업데이트 실패
 
         // when & then
         assertThatThrownBy(() -> userActivityService.recordActivity(userId, CREATE_POST, targetId))

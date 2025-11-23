@@ -2,6 +2,7 @@ package com.eventitta.gamification.event;
 
 import com.eventitta.gamification.domain.ActivityType;
 import com.eventitta.gamification.domain.FailedActivityEvent;
+import com.eventitta.gamification.domain.OperationType;
 import com.eventitta.gamification.repository.FailedActivityEventRepository;
 import com.eventitta.gamification.service.FailedEventRecoveryService;
 import com.eventitta.gamification.service.UserActivityService;
@@ -302,6 +303,7 @@ class UserActivityEventListenerTest {
         FailedActivityEvent saved = all.get(0);
         assertThat(saved.getUserId()).isEqualTo(9L);
         assertThat(saved.getActivityType()).isEqualTo(CREATE_COMMENT);
+        assertThat(saved.getOperationType()).isEqualTo(OperationType.RECORD);
         assertThat(saved.getTargetId()).isEqualTo(90L);
     }
 
@@ -373,5 +375,59 @@ class UserActivityEventListenerTest {
 
         // 지수 백오프 확인 (두 번째 딜레이가 첫 번째보다 길어야 함)
         assertThat(secondDelay).isGreaterThan(firstDelay);
+    }
+
+    @Test
+    @DisplayName("활동 취소가 모든 재시도 후에도 실패하면 REVOKE 타입으로 실패 이벤트가 저장된다")
+    void givenRevokeFailure_whenAllRetriesFail_thenRevokeFailedEventSaved() throws InterruptedException {
+        // given
+        AtomicInteger callCount = new AtomicInteger(0);
+        CountDownLatch serviceLatch = new CountDownLatch(3); // 3번 재시도
+        CountDownLatch slackLatch = new CountDownLatch(1);   // Slack 호출 1번
+
+        doAnswer(invocation -> {
+            callCount.incrementAndGet();
+            serviceLatch.countDown();
+            throw new RuntimeException("취소 실패");
+        }).when(userActivityService).revokeActivity(anyLong(), any(ActivityType.class), anyLong());
+
+        doAnswer(invocation -> {
+            slackLatch.countDown();
+            return null;
+        }).when(slackNotificationService).sendAlert(
+            any(AlertLevel.class), anyString(), anyString(), anyString(), anyString(), any(Throwable.class)
+        );
+
+        // when
+        transactionTemplate.execute(status -> {
+            eventPublisher.publishEvent(new UserActivityRevokeRequestedEvent(12L, LIKE_POST_CANCEL, 120L));
+            return null;
+        });
+
+        // then - 재시도 및 Slack 알림 완료까지 대기
+        assertTrue(serviceLatch.await(10, TimeUnit.SECONDS), "재시도가 완료되지 않았습니다");
+        assertTrue(slackLatch.await(5, TimeUnit.SECONDS), "Slack 알림이 발송되지 않았습니다");
+
+        verify(userActivityService, timeout(10000).times(3))
+            .revokeActivity(12L, LIKE_POST_CANCEL, 120L);
+
+        verify(slackNotificationService, timeout(5000).times(1))
+            .sendAlert(
+                eq(AlertLevel.HIGH),
+                eq("ACTIVITY_REVOKE_FAILED"),
+                contains("포인트 취소 실패"),
+                eq("EventListener"),
+                contains("userId=12"),
+                any(Throwable.class)
+            );
+
+        // REVOKE 타입으로 실패 이벤트가 저장되었는지 검증
+        var all = failedActivityEventRepository.findAll();
+        assertThat(all).hasSize(1);
+        FailedActivityEvent saved = all.get(0);
+        assertThat(saved.getUserId()).isEqualTo(12L);
+        assertThat(saved.getActivityType()).isEqualTo(LIKE_POST_CANCEL);
+        assertThat(saved.getOperationType()).isEqualTo(OperationType.REVOKE);
+        assertThat(saved.getTargetId()).isEqualTo(120L);
     }
 }

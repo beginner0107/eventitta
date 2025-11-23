@@ -8,7 +8,7 @@ CREATE TABLE failed_activity_events (
           failed_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) COMMENT '실패가 기록된 시각',
           retry_count INT NOT NULL DEFAULT 0 COMMENT '재시도 횟수',
           error_message VARCHAR(1000) COMMENT '실패 사유 및 에러 메시지',
-          status VARCHAR(50) NOT NULL DEFAULT 'PENDING' COMMENT '처리 상태(PENDING: 대기, RETRYING: 재시도 중, PROCESSED: 처리 완료, FAILED: 영구 실패)',
+          status VARCHAR(50) NOT NULL DEFAULT 'PENDING' COMMENT '처리 상태(PENDING: 대기, PROCESSING: 처리 중, PROCESSED: 처리 완료, FAILED: 영구 실패)',
           processed_at DATETIME(6) COMMENT '처리 완료 시각(성공 또는 영구 실패 시점)',
 
           created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) COMMENT '레코드 생성 시각',

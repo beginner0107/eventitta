@@ -30,6 +30,10 @@ public class FailedActivityEvent extends BaseTimeEntity {
     @Column(name = "activity_type", nullable = false)
     private ActivityType activityType;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "operation_type", nullable = false)
+    private OperationType operationType;
+
     @Column(name = "target_id")
     private Long targetId;
 
@@ -50,14 +54,15 @@ public class FailedActivityEvent extends BaseTimeEntity {
     private LocalDateTime processedAt;
 
     @Builder
-    public FailedActivityEvent(Long userId, ActivityType activityType, Long targetId, String errorMessage) {
+    public FailedActivityEvent(Long userId, ActivityType activityType, OperationType operationType,
+                               Long targetId, String errorMessage) {
         this.userId = userId;
         this.activityType = activityType;
+        this.operationType = operationType;
         this.targetId = targetId;
         this.failedAt = LocalDateTime.now();
         this.errorMessage = errorMessage;
         this.retryCount = 0;
-        this.status = EventStatus.PENDING;
     }
 
     public void incrementRetryCount() {

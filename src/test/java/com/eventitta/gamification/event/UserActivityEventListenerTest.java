@@ -1,6 +1,9 @@
 package com.eventitta.gamification.event;
 
 import com.eventitta.gamification.domain.ActivityType;
+import com.eventitta.gamification.domain.FailedActivityEvent;
+import com.eventitta.gamification.repository.FailedActivityEventRepository;
+import com.eventitta.gamification.service.FailedEventRecoveryService;
 import com.eventitta.gamification.service.UserActivityService;
 import com.eventitta.notification.domain.AlertLevel;
 import com.eventitta.notification.service.SlackNotificationService;
@@ -47,6 +50,9 @@ class UserActivityEventListenerTest {
 
     @Autowired
     private ApplicationContext applicationContext;
+
+    @Autowired
+    private FailedActivityEventRepository failedActivityEventRepository;
 
     @Test
     @DisplayName("게시글 작성 시 활동 내역이 기록된다")
@@ -252,7 +258,7 @@ class UserActivityEventListenerTest {
         // given
         AtomicInteger callCount = new AtomicInteger(0);
         CountDownLatch serviceLatch = new CountDownLatch(3); // 3번 재시도
-        CountDownLatch slackLatch = new CountDownLatch(1); // Slack 호출 1번
+        CountDownLatch slackLatch = new CountDownLatch(1);   // Slack 호출 1번
 
         doAnswer(invocation -> {
             callCount.incrementAndGet();
@@ -273,15 +279,13 @@ class UserActivityEventListenerTest {
             return null;
         });
 
-        // then
+        // then - 재시도 및 Slack 알림 완료까지 대기
         assertTrue(serviceLatch.await(10, TimeUnit.SECONDS), "재시도가 완료되지 않았습니다");
         assertTrue(slackLatch.await(5, TimeUnit.SECONDS), "Slack 알림이 발송되지 않았습니다");
 
-        // 3번 재시도 확인
         verify(userActivityService, timeout(10000).times(3))
             .recordActivity(9L, CREATE_COMMENT, 90L);
 
-        // Slack 알림 발송 확인 (한 번의 호출로 통합)
         verify(slackNotificationService, timeout(5000).times(1))
             .sendAlert(
                 eq(AlertLevel.HIGH),
@@ -291,6 +295,14 @@ class UserActivityEventListenerTest {
                 contains("userId=9"),
                 any(Throwable.class)
             );
+
+        // 실패 이벤트가 최소 1건 이상 저장되었는지만 검증
+        var all = failedActivityEventRepository.findAll();
+        assertThat(all).hasSize(1);
+        FailedActivityEvent saved = all.get(0);
+        assertThat(saved.getUserId()).isEqualTo(9L);
+        assertThat(saved.getActivityType()).isEqualTo(CREATE_COMMENT);
+        assertThat(saved.getTargetId()).isEqualTo(90L);
     }
 
     @Test

@@ -7,8 +7,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import static com.eventitta.gamification.domain.ResourceType.*;
-
 @Getter
 @Builder
 @NoArgsConstructor
@@ -18,7 +16,6 @@ import static com.eventitta.gamification.domain.ResourceType.*;
 public class UserActivity extends BaseTimeEntity {
 
     private static final Long SYSTEM_TARGET_ID = 0L;
-    private static final Long UNKNOWN_TARGET_ID = 0L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -51,53 +48,7 @@ public class UserActivity extends BaseTimeEntity {
             .build();
     }
 
-    public static UserActivity forPost(Long userId, ActivityType activityType, Long postId) {
-        return UserActivity.builder()
-            .userId(userId)
-            .activityType(activityType)
-            .resourceType(POST)
-            .targetId(postId)
-            .pointsEarned(activityType.getDefaultPoint())
-            .build();
-    }
-
-    public static UserActivity forComment(Long userId, ActivityType activityType, Long commentId) {
-        return UserActivity.builder()
-            .userId(userId)
-            .activityType(activityType)
-            .resourceType(COMMENT)
-            .targetId(commentId)
-            .pointsEarned(activityType.getDefaultPoint())
-            .build();
-    }
-
-    public static UserActivity forMeeting(Long userId, ActivityType activityType, Long meetingId) {
-        return UserActivity.builder()
-            .userId(userId)
-            .activityType(activityType)
-            .resourceType(MEETING)
-            .targetId(meetingId)
-            .pointsEarned(activityType.getDefaultPoint())
-            .build();
-    }
-
     public static UserActivity forSystem(Long userId, ActivityType activityType) {
-        return UserActivity.builder()
-            .userId(userId)
-            .activityType(activityType)
-            .resourceType(SYSTEM)
-            .targetId(SYSTEM_TARGET_ID)
-            .pointsEarned(activityType.getDefaultPoint())
-            .build();
-    }
-
-    public static UserActivity forUnknown(Long userId, ActivityType activityType) {
-        return UserActivity.builder()
-            .userId(userId)
-            .activityType(activityType)
-            .resourceType(UNKNOWN)
-            .targetId(UNKNOWN_TARGET_ID)
-            .pointsEarned(0)
-            .build();
+        return of(userId, activityType, SYSTEM_TARGET_ID);
     }
 }

@@ -5,7 +5,6 @@ import com.eventitta.gamification.domain.Badge;
 import com.eventitta.gamification.domain.BadgeRule;
 import com.eventitta.gamification.domain.EvaluationType;
 import com.eventitta.gamification.domain.UserBadge;
-import com.eventitta.gamification.dto.projection.ActivitySummaryProjection;
 import com.eventitta.gamification.evaluator.BadgeRuleEvaluator;
 import com.eventitta.gamification.repository.BadgeRuleRepository;
 import com.eventitta.gamification.repository.UserActivityRepository;
@@ -18,7 +17,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 
 import static com.eventitta.gamification.domain.ActivityType.CREATE_COMMENT;
 import static com.eventitta.gamification.domain.ActivityType.CREATE_POST;

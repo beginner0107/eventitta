@@ -12,6 +12,9 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
 
+import static com.eventitta.gamification.constant.GamificationErrorCodes.ACTIVITY_RECORD_FAILED;
+import static com.eventitta.gamification.constant.GamificationErrorCodes.ACTIVITY_REVOKE_FAILED;
+import static com.eventitta.gamification.constant.GamificationSlackConstants.*;
 import static org.springframework.transaction.event.TransactionPhase.AFTER_COMMIT;
 
 @Slf4j
@@ -48,27 +51,17 @@ public class UserActivityEventListener {
         log.error("[활동 기록 최종 실패] userId={}, activityType={}, targetId={}",
             event.userId(), event.activityType(), event.targetId(), e);
 
-        // Slack 알림 발송
-        String errorCode = "ACTIVITY_RECORD_FAILED";
         String message = String.format(
-            "포인트 기록 실패 - userId: %d, activity: %s, targetId: %d",
+            ACTIVITY_RECORD_FAILED_MESSAGE_FORMAT,
             event.userId(), event.activityType(), event.targetId()
         );
-        String requestUri = "EventListener";
-        String userInfo = String.format("userId=%d", event.userId());
 
-        try {
-            slackNotificationService.sendAlert(
-                AlertLevel.HIGH,
-                errorCode,
-                message,
-                requestUri,
-                userInfo,
-                e
-            );
-        } catch (Exception slackException) {
-            log.error("[Slack 알림 발송 실패]", slackException);
-        }
+        sendSlackAlertSafely(
+            ACTIVITY_RECORD_FAILED,
+            message,
+            event.userId(),
+            e
+        );
     }
 
     @Async
@@ -97,20 +90,28 @@ public class UserActivityEventListener {
         log.error("[활동 취소 최종 실패] userId={}, activityType={}, targetId={}",
             event.userId(), event.activityType(), event.targetId(), e);
 
-        String errorCode = "ACTIVITY_REVOKE_FAILED";
         String message = String.format(
-            "포인트 취소 실패 - userId: %d, activity: %s, targetId: %d",
+            ACTIVITY_REVOKE_FAILED_MESSAGE_FORMAT,
             event.userId(), event.activityType(), event.targetId()
         );
-        String requestUri = "EventListener";
-        String userInfo = String.format("userId=%d", event.userId());
+
+        sendSlackAlertSafely(
+            ACTIVITY_REVOKE_FAILED,
+            message,
+            event.userId(),
+            e
+        );
+    }
+
+    private void sendSlackAlertSafely(String errorCode, String message, Long userId, Exception e) {
+        String userInfo = String.format(USER_INFO_FORMAT, userId);
 
         try {
             slackNotificationService.sendAlert(
                 AlertLevel.HIGH,
                 errorCode,
                 message,
-                requestUri,
+                REQUEST_URI,
                 userInfo,
                 e
             );

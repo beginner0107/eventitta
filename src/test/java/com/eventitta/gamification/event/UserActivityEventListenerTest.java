@@ -2,6 +2,8 @@ package com.eventitta.gamification.event;
 
 import com.eventitta.gamification.domain.ActivityType;
 import com.eventitta.gamification.service.UserActivityService;
+import com.eventitta.notification.domain.AlertLevel;
+import com.eventitta.notification.service.SlackNotificationService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +18,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.eventitta.gamification.domain.ActivityType.*;
@@ -38,6 +41,9 @@ class UserActivityEventListenerTest {
 
     @MockitoBean
     private UserActivityService userActivityService;
+
+    @MockitoBean
+    private SlackNotificationService slackNotificationService;
 
     @Autowired
     private ApplicationContext applicationContext;
@@ -202,5 +208,158 @@ class UserActivityEventListenerTest {
 
         // 예외가 발생했지만 시스템은 정상 동작함을 확인
         assertThat(exceptionOccurred.get()).isTrue();
+    }
+
+    @Test
+    @DisplayName("활동 기록 실패 시 재시도가 수행된다")
+    void givenTemporaryFailure_whenRecordActivity_thenRetrySucceeds() throws InterruptedException {
+        // given
+        AtomicInteger callCount = new AtomicInteger(0);
+        CountDownLatch latch = new CountDownLatch(3); // 3번 호출 예상
+
+        doAnswer(invocation -> {
+            int count = callCount.incrementAndGet();
+            latch.countDown();
+            if (count < 3) {
+                throw new RuntimeException("일시적 실패 " + count);
+            }
+            return null; // 3번째 호출에서 성공
+        }).when(userActivityService).recordActivity(anyLong(), any(ActivityType.class), anyLong());
+
+        // when
+        transactionTemplate.execute(status -> {
+            eventPublisher.publishEvent(new UserActivityLogRequestedEvent(8L, CREATE_POST, 80L));
+            return null;
+        });
+
+        // then
+        assertTrue(latch.await(10, TimeUnit.SECONDS), "재시도가 완료되지 않았습니다");
+
+        verify(userActivityService, timeout(10000).times(3))
+            .recordActivity(8L, CREATE_POST, 80L);
+
+        assertThat(callCount.get()).isEqualTo(3);
+
+        // Slack 알림은 발송되지 않아야 함 (성공했으므로)
+        verify(slackNotificationService, never()).sendAlert(
+            any(AlertLevel.class), anyString(), anyString(), anyString(), anyString(), any(Throwable.class)
+        );
+    }
+
+    @Test
+    @DisplayName("활동 기록이 모든 재시도 후에도 실패하면 Slack 알림이 발송된다")
+    void givenPersistentFailure_whenAllRetriesFail_thenSlackAlertSent() throws InterruptedException {
+        // given
+        AtomicInteger callCount = new AtomicInteger(0);
+        CountDownLatch serviceLatch = new CountDownLatch(3); // 3번 재시도
+        CountDownLatch slackLatch = new CountDownLatch(1); // Slack 호출 1번
+
+        doAnswer(invocation -> {
+            callCount.incrementAndGet();
+            serviceLatch.countDown();
+            throw new RuntimeException("지속적 실패");
+        }).when(userActivityService).recordActivity(anyLong(), any(ActivityType.class), anyLong());
+
+        doAnswer(invocation -> {
+            slackLatch.countDown();
+            return null;
+        }).when(slackNotificationService).sendAlert(
+            any(AlertLevel.class), anyString(), anyString(), anyString(), anyString(), any(Throwable.class)
+        );
+
+        // when
+        transactionTemplate.execute(status -> {
+            eventPublisher.publishEvent(new UserActivityLogRequestedEvent(9L, CREATE_COMMENT, 90L));
+            return null;
+        });
+
+        // then
+        assertTrue(serviceLatch.await(10, TimeUnit.SECONDS), "재시도가 완료되지 않았습니다");
+        assertTrue(slackLatch.await(5, TimeUnit.SECONDS), "Slack 알림이 발송되지 않았습니다");
+
+        // 3번 재시도 확인
+        verify(userActivityService, timeout(10000).times(3))
+            .recordActivity(9L, CREATE_COMMENT, 90L);
+
+        // Slack 알림 발송 확인 (한 번의 호출로 통합)
+        verify(slackNotificationService, timeout(5000).times(1))
+            .sendAlert(
+                eq(AlertLevel.HIGH),
+                eq("ACTIVITY_RECORD_FAILED"),
+                contains("포인트 기록 실패"),
+                eq("EventListener"),
+                contains("userId=9"),
+                any(Throwable.class)
+            );
+    }
+
+    @Test
+    @DisplayName("활동 취소 실패 시 재시도가 수행된다")
+    void givenRevokeFailure_whenRetry_thenSucceeds() throws InterruptedException {
+        // given
+        AtomicInteger callCount = new AtomicInteger(0);
+        CountDownLatch latch = new CountDownLatch(2); // 2번 호출 (1번 실패, 2번째 성공)
+
+        doAnswer(invocation -> {
+            int count = callCount.incrementAndGet();
+            latch.countDown();
+            if (count == 1) {
+                throw new RuntimeException("첫 번째 시도 실패");
+            }
+            return null;
+        }).when(userActivityService).revokeActivity(anyLong(), any(ActivityType.class), anyLong());
+
+        // when
+        transactionTemplate.execute(status -> {
+            eventPublisher.publishEvent(new UserActivityRevokeRequestedEvent(10L, LIKE_POST_CANCEL, 100L));
+            return null;
+        });
+
+        // then
+        assertTrue(latch.await(10, TimeUnit.SECONDS), "재시도가 완료되지 않았습니다");
+
+        verify(userActivityService, timeout(10000).times(2))
+            .revokeActivity(10L, LIKE_POST_CANCEL, 100L);
+
+        // Slack 알림은 발송되지 않아야 함 (성공했으므로)
+        verify(slackNotificationService, never()).sendAlert(
+            any(AlertLevel.class), anyString(), anyString(), anyString(), anyString(), any(Throwable.class)
+        );
+    }
+
+    @Test
+    @DisplayName("재시도 간격이 지수 백오프로 증가한다")
+    void givenRetryWithBackoff_whenFails_thenDelayIncreases() throws InterruptedException {
+        // given
+        AtomicInteger callCount = new AtomicInteger(0);
+        CountDownLatch latch = new CountDownLatch(3);
+        long[] timestamps = new long[3];
+
+        doAnswer(invocation -> {
+            int count = callCount.getAndIncrement();
+            timestamps[count] = System.currentTimeMillis();
+            latch.countDown();
+            throw new RuntimeException("실패 " + count);
+        }).when(userActivityService).recordActivity(anyLong(), any(ActivityType.class), anyLong());
+
+        // when
+        transactionTemplate.execute(status -> {
+            eventPublisher.publishEvent(new UserActivityLogRequestedEvent(11L, CREATE_POST, 110L));
+            return null;
+        });
+
+        // then
+        assertTrue(latch.await(15, TimeUnit.SECONDS), "재시도가 완료되지 않았습니다");
+
+        // 첫 번째와 두 번째 호출 간격 (약 1초)
+        long firstDelay = timestamps[1] - timestamps[0];
+        assertThat(firstDelay).isBetween(800L, 1500L);
+
+        // 두 번째와 세 번째 호출 간격 (약 2초)
+        long secondDelay = timestamps[2] - timestamps[1];
+        assertThat(secondDelay).isBetween(1800L, 2500L);
+
+        // 지수 백오프 확인 (두 번째 딜레이가 첫 번째보다 길어야 함)
+        assertThat(secondDelay).isGreaterThan(firstDelay);
     }
 }

@@ -72,6 +72,8 @@ class FestivalServiceTest {
     void givenToday_whenSyncDailySeoulFestivalData_thenTodayDataIsSynced() {
         // given
         LocalDate today = LocalDate.now();
+        given(seoulFestivalInitializer.loadDataForDate(any(LocalDate.class)))
+            .willReturn(new com.eventitta.festivals.service.processor.FestivalProcessor.ProcessingMetrics());
 
         // when
         festivalService.syncDailySeoulFestivalData();

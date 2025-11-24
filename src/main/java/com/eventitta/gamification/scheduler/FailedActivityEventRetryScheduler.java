@@ -35,10 +35,18 @@ public class FailedActivityEventRetryScheduler {
             return;
         }
 
-        log.debug("[실패 이벤트 재처리 시작] 대상 건수={}", pendingEvents.size());
+        log.info("[Scheduler] 실패 이벤트 재처리 시작 - 대상 건수: {}, 배치 크기: {}",
+            pendingEvents.size(), FAILED_EVENT_RETRY_BATCH_SIZE);
 
-        pendingEvents.stream()
-            .limit(FAILED_EVENT_RETRY_BATCH_SIZE)
-            .forEach(failedEventRecoveryService::recoverFailedEvent);
+        try {
+            long processedCount = pendingEvents.stream()
+                .limit(FAILED_EVENT_RETRY_BATCH_SIZE)
+                .peek(event -> failedEventRecoveryService.recoverFailedEvent(event))
+                .count();
+
+            log.info("[Scheduler] 실패 이벤트 재처리 완료 - 처리 건수: {}", processedCount);
+        } catch (Exception e) {
+            log.error("[Scheduler] 실패 이벤트 재처리 중 오류 - error={}", e.getMessage(), e);
+        }
     }
 }

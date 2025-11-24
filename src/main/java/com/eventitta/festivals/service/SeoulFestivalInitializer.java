@@ -39,7 +39,7 @@ public class SeoulFestivalInitializer {
     /**
      * 특정 날짜의 서울시 축제 데이터만 로드 (일별 동기화용)
      */
-    public void loadDataForDate(LocalDate targetDate) {
+    public FestivalProcessor.ProcessingMetrics loadDataForDate(LocalDate targetDate) {
         try {
             LocalDate cutoff = calculateCutoffDate();
             var metrics = processEventsForDate(targetDate, cutoff);
@@ -48,7 +48,7 @@ public class SeoulFestivalInitializer {
                 metrics.getUpdateCount(),
                 metrics.getSkipCount(),
                 metrics.getOutdatedCount());
-            log.info("서울시 축제 데이터 날짜별 로드 완료 - 대상 날짜: {}", targetDate);
+            return metrics;
         } catch (Exception e) {
             log.error("서울시 축제 데이터 날짜별 로딩 중 오류 발생 - 대상 날짜: {}", targetDate, e);
             throw FestivalErrorCode.DATA_SYNC_ERROR.defaultException(e);

@@ -32,12 +32,15 @@ public class FestivalService {
 
     /**
      * 서울시 축제 데이터 일별 동기화 (오늘 날짜만)
+     * @return 처리 결과 (INSERT/UPDATE/SKIP/OUTDATED 건수)
      */
-    public void syncDailySeoulFestivalData() {
+    public int syncDailySeoulFestivalData() {
         LocalDate today = LocalDate.now();
         log.info("서울시 축제 데이터 일별 동기화 시작 - 대상 날짜: {}", today);
-        seoulFestivalInitializer.loadDataForDate(today);
-        log.info("서울시 축제 데이터 일별 동기화 완료 - 대상 날짜: {}", today);
+        var metrics = seoulFestivalInitializer.loadDataForDate(today);
+        int totalProcessed = metrics.getInsertCount() + metrics.getUpdateCount();
+        log.info("서울시 축제 데이터 일별 동기화 완료 - 대상 날짜: {}, 처리 건수: {}", today, totalProcessed);
+        return totalProcessed;
     }
 
     public PageResponse<FestivalNearbyResponse> getNearbyFestival(NearbyFestivalRequest req) {

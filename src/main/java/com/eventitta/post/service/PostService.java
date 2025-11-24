@@ -1,7 +1,5 @@
 package com.eventitta.post.service;
 
-import com.eventitta.auth.exception.AuthErrorCode;
-import com.eventitta.auth.exception.AuthException;
 import com.eventitta.comment.repository.CommentRepository;
 import com.eventitta.common.response.PageResponse;
 import com.eventitta.gamification.event.ActivityEventPublisher;
@@ -16,7 +14,6 @@ import com.eventitta.post.dto.response.PostDetailResponse;
 import com.eventitta.post.dto.response.PostSummaryResponse;
 import com.eventitta.post.event.PostDeleteEventPublisher;
 import com.eventitta.post.event.PostDeletedEvent;
-import com.eventitta.post.exception.PostException;
 import com.eventitta.post.repository.PostLikeRepository;
 import com.eventitta.post.repository.PostRepository;
 import com.eventitta.region.domain.Region;
@@ -159,9 +156,9 @@ public class PostService {
     @Transactional
     public void toggleLike(Long postId, Long userId) {
         User user = userRepository.findById(userId)
-            .orElseThrow(() -> new AuthException(AuthErrorCode.NOT_FOUND_USER_ID));
+            .orElseThrow(NOT_FOUND_USER_ID::defaultException);
         Post post = postRepository.findById(postId)
-            .orElseThrow(() -> new PostException(NOT_FOUND_POST_ID));
+            .orElseThrow(NOT_FOUND_POST_ID::defaultException);
 
         Optional<PostLike> existing = postLikeRepository.findByPostIdAndUserId(postId, userId);
         if (existing.isPresent()) {

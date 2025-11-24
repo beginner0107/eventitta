@@ -21,11 +21,13 @@ public class RefreshTokenCleanupTask {
     @SchedulerLock(name = "removeExpiredRefreshTokens", lockAtMostFor = "PT30M", lockAtLeastFor = "PT2M")
     @Transactional
     public void removeExpiredRefreshTokens() {
+        log.info("[Scheduler] 만료된 리프레시 토큰 정리 시작");
+
         try {
             long deleted = refreshTokenRepository.deleteByExpiresAtBefore(LocalDateTime.now());
-            log.info("만료된 토큰을 삭제: {}", deleted);
+            log.info("[Scheduler] 만료된 리프레시 토큰 정리 완료 - 삭제 건수: {}", deleted);
         } catch (Exception e) {
-            log.error("만료된 토큰 삭제 중 오류 발생", e);
+            log.error("[Scheduler] 만료된 리프레시 토큰 정리 실패 - error={}", e.getMessage(), e);
         }
     }
 }

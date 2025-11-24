@@ -22,19 +22,30 @@ public class PostImageFileScheduler {
     @Scheduled(cron = "0 0 3 * * SUN")
     @SchedulerLock(name = "deleteUnusedImageFiles", lockAtMostFor = "PT30M", lockAtLeastFor = "PT5M")
     public void deleteUnusedImageFiles() {
-        List<PostImage> images = postImageRepository.findAll();
-        List<String> imageUrls = images.stream()
-            .map(PostImage::getImageUrl)
-            .map(this::extractFilenameFromUrl)
-            .toList();
+        log.info("[Scheduler] 미사용 이미지 파일 정리 시작");
 
-        List<String> filesInStorage = fileStorageService.listAllFiles();
-        List<String> removeFiles = filesInStorage.stream()
-            .filter(file -> !imageUrls.contains(file))
-            .toList();
+        try {
+            List<PostImage> images = postImageRepository.findAll();
+            List<String> imageUrls = images.stream()
+                .map(PostImage::getImageUrl)
+                .map(this::extractFilenameFromUrl)
+                .toList();
 
-        for (String file : removeFiles) {
-            fileStorageService.delete(file);
+            List<String> filesInStorage = fileStorageService.listAllFiles();
+            List<String> removeFiles = filesInStorage.stream()
+                .filter(file -> !imageUrls.contains(file))
+                .toList();
+
+            int deletedCount = 0;
+            for (String file : removeFiles) {
+                fileStorageService.delete(file);
+                deletedCount++;
+            }
+
+            log.info("[Scheduler] 미사용 이미지 파일 정리 완료 - 삭제 건수: {}, 전체 파일: {}, DB 이미지: {}",
+                deletedCount, filesInStorage.size(), imageUrls.size());
+        } catch (Exception e) {
+            log.error("[Scheduler] 미사용 이미지 파일 정리 실패 - error={}", e.getMessage(), e);
         }
     }
 

@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.eventitta.gamification.constants.GamificationRetryConstants.*;
 import static org.springframework.transaction.annotation.Propagation.NEVER;
@@ -35,10 +36,19 @@ public class FailedActivityEventRetryScheduler {
             return;
         }
 
-        log.debug("[실패 이벤트 재처리 시작] 대상 건수={}", pendingEvents.size());
+        log.info("[Scheduler] 실패 이벤트 재처리 시작 - 대상 건수: {}, 배치 크기: {}",
+            pendingEvents.size(), FAILED_EVENT_RETRY_BATCH_SIZE);
 
-        pendingEvents.stream()
-            .limit(FAILED_EVENT_RETRY_BATCH_SIZE)
-            .forEach(failedEventRecoveryService::recoverFailedEvent);
+        try {
+            List<FailedActivityEvent> eventsToProcess = pendingEvents.stream()
+                .limit(FAILED_EVENT_RETRY_BATCH_SIZE)
+                .collect(Collectors.toList());
+
+            eventsToProcess.forEach(failedEventRecoveryService::recoverFailedEvent);
+
+            log.info("[Scheduler] 실패 이벤트 재처리 완료 - 처리 건수: {}", eventsToProcess.size());
+        } catch (Exception e) {
+            log.error("[Scheduler] 실패 이벤트 재처리 중 오류 - error={}", e.getMessage(), e);
+        }
     }
 }

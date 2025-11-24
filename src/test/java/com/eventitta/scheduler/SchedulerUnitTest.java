@@ -72,7 +72,7 @@ class SchedulerUnitTest {
     @DisplayName("서울 축제 데이터 가져오기가 성공적으로 완료되는지 테스트")
     void syncSeoulFestivalData_Success() {
         // given
-        doNothing().when(festivalService).syncDailySeoulFestivalData();
+        when(festivalService.syncDailySeoulFestivalData()).thenReturn(10);
 
         // when
         festivalScheduler.syncSeoulFestivalData();

@@ -51,9 +51,10 @@ public class SlackNotificationService {
             SlackMessage slackMessage = createSlackMessage(level, errorCode, message,
                 requestUri, userInfo, exception);
             sendToSlack(slackMessage);
-            log.info("Slack 알림 전송 완료: {} - {}", level, errorCode);
+            log.info("[Slack 알림 전송 완료] level={}, errorCode={}", level, errorCode);
         } catch (Exception e) {
-            log.error("Slack 알림 전송 중 오류 발생: {}", e.getClass().getSimpleName());
+            log.error("[Slack 알림 전송 실패] errorType={}, message={}",
+                e.getClass().getSimpleName(), e.getMessage());
         }
     }
 

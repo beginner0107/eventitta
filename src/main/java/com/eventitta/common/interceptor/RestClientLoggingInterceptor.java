@@ -19,14 +19,26 @@ public class RestClientLoggingInterceptor implements ClientHttpRequestIntercepto
         HttpRequest request, byte[] body, ClientHttpRequestExecution execution
     ) throws IOException {
 
-        log.info("➡ [{}] {}", request.getMethod(), request.getURI());
-        log.debug("➡ 요청 바디: {}", new String(body, StandardCharsets.UTF_8));
+        long startTime = System.currentTimeMillis();
 
         ClientHttpResponse response = execution.execute(request, body);
         ClientHttpResponse buffered = new CustomBufferingClientHttpResponseWrapper(response);
 
-        log.info("⬅ 응답 상태: {}", buffered.getStatusCode());
-        log.debug("⬅ 응답 바디: {}", new String(buffered.getBody().readAllBytes(), StandardCharsets.UTF_8));
+        long duration = System.currentTimeMillis() - startTime;
+
+        // INFO: 외부 API 호출 요약 (1줄)
+        log.info("[External API] {} {} - {} ({}ms)",
+            request.getMethod(),
+            request.getURI(),
+            buffered.getStatusCode(),
+            duration);
+
+        // DEBUG: 요청/응답 상세 (local에서만 출력)
+        if (log.isDebugEnabled()) {
+            log.debug("➡ Request Body: {}", new String(body, StandardCharsets.UTF_8));
+            log.debug("⬅ Response Body: {}",
+                new String(buffered.getBody().readAllBytes(), StandardCharsets.UTF_8));
+        }
 
         return buffered;
     }

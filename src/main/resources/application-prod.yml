@@ -98,6 +98,8 @@ logging:
     root: WARN
     com.eventitta: INFO
     com.eventitta.festivals.scheduler: WARN
+    com.eventitta.festivals.service.geocoding: WARN
+    com.eventitta.common.interceptor: WARN
     org.springframework: ERROR
     org.springframework.web: ERROR
     org.springframework.security: ERROR
@@ -136,7 +138,7 @@ notification:
 monitoring:
   log:
     enabled: true
-    error-threshold: 10
+    error-threshold: 20
     time-window-minutes: 5
-    size-threshold-mb: 800
+    size-threshold-mb: 900
     alert-cooldown-minutes: 30

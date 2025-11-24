@@ -32,7 +32,7 @@ public class FestivalService {
 
     /**
      * 서울시 축제 데이터 일별 동기화 (오늘 날짜만)
-     * @return 처리 결과 (INSERT/UPDATE/SKIP/OUTDATED 건수)
+     * @return 처리 결과 (INSERT + UPDATE 건수)
      */
     public int syncDailySeoulFestivalData() {
         LocalDate today = LocalDate.now();

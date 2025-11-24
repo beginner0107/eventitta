@@ -31,33 +31,51 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
 
     public User signUp(SignUpRequest signUpRequest) {
-        return signUpService.register(signUpRequest);
+        log.info("[회원가입 시작] email={}, nickname={}", signUpRequest.email(), signUpRequest.nickname());
+
+        User user = signUpService.register(signUpRequest);
+
+        log.info("[회원가입 완료] userId={}, email={}", user.getId(), user.getEmail());
+        return user;
     }
 
     public void login(SignInRequest request, HttpServletResponse response) {
+        log.info("[로그인 시도] email={}", request.email());
+
         try {
             Long userId = loginService.authenticate(request.email(), request.password());
             TokenResponse tokens = tokenService.issueTokens(userId);
             CookieUtil.addTokenCookies(response, tokens, jwtTokenProvider);
+
+            log.info("[로그인 성공] userId={}, email={}", userId, request.email());
         } catch (AuthenticationException e) {
+            log.warn("[로그인 실패] email={}, reason={}", request.email(), "잘못된 인증 정보");
             throw INVALID_CREDENTIALS.defaultException(e);
         }
     }
 
     public void refresh(String accessToken, String refreshToken, HttpServletResponse resp) {
+        log.info("[토큰 갱신 시작]");
+
         TokenResponse tokens = refreshService.refresh(accessToken, refreshToken);
         CookieUtil.addTokenCookies(resp, tokens, jwtTokenProvider);
+
+        log.info("[토큰 갱신 완료]");
     }
 
     public void logout(String accessToken, HttpServletResponse response) {
+        log.info("[로그아웃 시작]");
+
         if (StringUtils.hasText(accessToken)) {
             try {
                 refreshService.invalidateByAccessToken(accessToken);
             } catch (AuthException e) {
-                log.debug("로그아웃: 토큰 검증 오류 무시", e);
+                log.debug("[로그아웃] 토큰 검증 오류 무시", e);
             }
         }
         CookieUtil.deleteCookie(response, ACCESS_TOKEN);
         CookieUtil.deleteCookie(response, REFRESH_TOKEN);
+
+        log.info("[로그아웃 완료]");
     }
 }

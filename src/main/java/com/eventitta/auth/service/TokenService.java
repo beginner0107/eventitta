@@ -13,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 
+import static com.eventitta.user.exception.UserErrorCode.NOT_FOUND_USER_ID;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -24,7 +26,7 @@ public class TokenService {
 
     public TokenResponse issueTokens(Long userId) {
         User user = userRepository.findById(userId)
-            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+            .orElseThrow(NOT_FOUND_USER_ID::defaultException);
 
         String at = tokenProvider.createAccessToken(userId, user.getEmail(), user.getRole().name());
         String rt = tokenProvider.createRefreshToken();

@@ -1,15 +1,11 @@
 package com.eventitta.comment.service;
 
-import com.eventitta.auth.exception.AuthException;
 import com.eventitta.comment.domain.Comment;
 import com.eventitta.comment.dto.projection.CommentFlatProjection;
 import com.eventitta.comment.dto.response.CommentWithChildrenResponse;
-import com.eventitta.comment.exception.CommentException;
 import com.eventitta.comment.repository.CommentRepository;
-import com.eventitta.gamification.domain.ActivityType;
 import com.eventitta.gamification.event.ActivityEventPublisher;
 import com.eventitta.post.domain.Post;
-import com.eventitta.post.exception.PostException;
 import com.eventitta.post.repository.PostRepository;
 import com.eventitta.user.domain.User;
 import com.eventitta.user.repository.UserRepository;
@@ -44,14 +40,14 @@ public class CommentService {
             userId, postId, parentCommentId);
 
         Post post = postRepository.findById(postId)
-            .orElseThrow(() -> new PostException(NOT_FOUND_POST_ID));
+            .orElseThrow(NOT_FOUND_POST_ID::defaultException);
         User user = userRepository.findById(userId)
-            .orElseThrow(() -> new AuthException(NOT_FOUND_USER_ID));
+            .orElseThrow(NOT_FOUND_USER_ID::defaultException);
 
         Comment parent = null;
         if (parentCommentId != null) {
             parent = commentRepository.findById(parentCommentId)
-                .orElseThrow(() -> new CommentException(NOT_FOUND_COMMENT_ID));
+                .orElseThrow(NOT_FOUND_COMMENT_ID::defaultException);
         }
 
         Comment comment = Comment.builder()
@@ -87,12 +83,12 @@ public class CommentService {
         log.info("[댓글 수정 시작] userId={}, commentId={}", userId, commentId);
 
         Comment comment = commentRepository.findById(commentId)
-            .orElseThrow(() -> new CommentException(NOT_FOUND_COMMENT_ID));
+            .orElseThrow(NOT_FOUND_COMMENT_ID::defaultException);
 
         if (!comment.getUser().getId().equals(userId)) {
             log.warn("[댓글 수정 권한 없음] userId={}, commentId={}, ownerId={}",
                 userId, commentId, comment.getUser().getId());
-            throw new CommentException(NO_AUTHORITY_TO_MODIFY_COMMENT);
+            throw NO_AUTHORITY_TO_MODIFY_COMMENT.defaultException();
         }
 
         comment.updateContent(content);
@@ -104,12 +100,12 @@ public class CommentService {
         log.info("[댓글 삭제 시작] userId={}, commentId={}", userId, commentId);
 
         Comment comment = commentRepository.findById(commentId)
-            .orElseThrow(() -> new CommentException(NOT_FOUND_COMMENT_ID));
+            .orElseThrow(NOT_FOUND_COMMENT_ID::defaultException);
 
         if (!comment.getUser().getId().equals(userId)) {
             log.warn("[댓글 삭제 권한 없음] userId={}, commentId={}, ownerId={}",
                 userId, commentId, comment.getUser().getId());
-            throw new CommentException(NO_AUTHORITY_TO_MODIFY_COMMENT);
+            throw NO_AUTHORITY_TO_MODIFY_COMMENT.defaultException();
         }
         comment.softDelete();
         activityEventPublisher.publishRevoke(DELETE_COMMENT, userId, commentId);

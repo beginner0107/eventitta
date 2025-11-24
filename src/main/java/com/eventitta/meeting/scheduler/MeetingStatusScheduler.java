@@ -25,9 +25,13 @@ public class MeetingStatusScheduler {
         try {
             LocalDateTime now = LocalDateTime.now();
             int updated = meetingRepository.updateStatusToFinished(MeetingStatus.FINISHED, now);
-            log.info("종료된 모임 자동 업데이트: {}건", updated);
+            if (updated > 0) {
+                log.info("[Scheduler] 종료된 미팅 상태 업데이트 완료 - 처리 건수: {}", updated);
+            } else {
+                log.debug("[Scheduler] 종료된 미팅 상태 변경 없음");
+            }
         } catch (Exception e) {
-            log.error("종료된 모임 자동 업데이트 중 오류 발생", e);
+            log.error("[Scheduler] 종료된 미팅 상태 업데이트 실패 - error={}", e.getMessage(), e);
         }
     }
 }

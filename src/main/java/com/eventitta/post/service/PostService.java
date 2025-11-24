@@ -1,7 +1,5 @@
 package com.eventitta.post.service;
 
-import com.eventitta.auth.exception.AuthErrorCode;
-import com.eventitta.auth.exception.AuthException;
 import com.eventitta.comment.repository.CommentRepository;
 import com.eventitta.common.response.PageResponse;
 import com.eventitta.gamification.event.ActivityEventPublisher;
@@ -16,7 +14,6 @@ import com.eventitta.post.dto.response.PostDetailResponse;
 import com.eventitta.post.dto.response.PostSummaryResponse;
 import com.eventitta.post.event.PostDeleteEventPublisher;
 import com.eventitta.post.event.PostDeletedEvent;
-import com.eventitta.post.exception.PostException;
 import com.eventitta.post.repository.PostLikeRepository;
 import com.eventitta.post.repository.PostRepository;
 import com.eventitta.region.domain.Region;
@@ -56,6 +53,8 @@ public class PostService {
     private final PostDeleteEventPublisher postDeleteEventPublisher;
 
     public CreatePostResponse create(Long userId, CreatePostRequest dto) {
+        log.info("[게시글 생성 시작] userId={}, title={}", userId, dto.title());
+
         User user = userRepository.findById(userId)
             .orElseThrow(NOT_FOUND_USER_ID::defaultException);
         Region region = regionRepository.findById(dto.regionCode())
@@ -71,13 +70,20 @@ public class PostService {
 
         activityEventPublisher.publish(CREATE_POST, userId, savedPost.getId());
 
+        log.info("[게시글 생성 완료] userId={}, postId={}, imageCount={}",
+            userId, savedPost.getId(), dto.imageUrls() != null ? dto.imageUrls().size() : 0);
+
         return new CreatePostResponse(savedPost.getId());
     }
 
     public void update(Long postId, Long userId, UpdatePostRequest dto) {
+        log.info("[게시글 수정 시작] userId={}, postId={}", userId, postId);
+
         Post post = postRepository.findWithUserByIdAndDeletedFalse(postId)
             .orElseThrow(NOT_FOUND_POST_ID::defaultException);
         if (!post.getUser().getId().equals(userId)) {
+            log.warn("[게시글 수정 권한 없음] userId={}, postId={}, ownerId={}",
+                userId, postId, post.getUser().getId());
             throw ACCESS_DENIED.defaultException();
         }
 
@@ -93,12 +99,19 @@ public class PostService {
                 post.addImage(img);
             }
         }
+
+        log.info("[게시글 수정 완료] userId={}, postId={}, imageCount={}",
+            userId, postId, dto.imageUrls() != null ? dto.imageUrls().size() : 0);
     }
 
     public void delete(Long postId, Long userId) {
+        log.info("[게시글 삭제 시작] userId={}, postId={}", userId, postId);
+
         Post post = postRepository.findWithUserByIdAndDeletedFalse(postId)
             .orElseThrow(NOT_FOUND_POST_ID::defaultException);
         if (!post.getUser().getId().equals(userId)) {
+            log.warn("[게시글 삭제 권한 없음] userId={}, postId={}, ownerId={}",
+                userId, postId, post.getUser().getId());
             throw ACCESS_DENIED.defaultException();
         }
 
@@ -111,6 +124,9 @@ public class PostService {
 
         activityEventPublisher.publishRevoke(DELETE_POST, userId, postId);
         postDeleteEventPublisher.publish(new PostDeletedEvent(imageUrls));
+
+        log.info("[게시글 삭제 완료] userId={}, postId={}, imageCount={}",
+            userId, postId, imageUrls.size());
     }
 
     @Transactional(readOnly = true)
@@ -140,28 +156,29 @@ public class PostService {
     @Transactional
     public void toggleLike(Long postId, Long userId) {
         User user = userRepository.findById(userId)
-            .orElseThrow(() -> new AuthException(AuthErrorCode.NOT_FOUND_USER_ID));
+            .orElseThrow(NOT_FOUND_USER_ID::defaultException);
         Post post = postRepository.findById(postId)
-            .orElseThrow(() -> new PostException(NOT_FOUND_POST_ID));
+            .orElseThrow(NOT_FOUND_POST_ID::defaultException);
 
         Optional<PostLike> existing = postLikeRepository.findByPostIdAndUserId(postId, userId);
         if (existing.isPresent()) {
             postLikeRepository.delete(existing.get());
             post.decrementLikeCount();
             activityEventPublisher.publishRevoke(LIKE_POST_CANCEL, userId, postId);
+            log.info("[게시글 좋아요 취소] userId={}, postId={}", userId, postId);
         } else {
             PostLike like = new PostLike(post, user);
             postLikeRepository.save(like);
             post.incrementLikeCount();
             activityEventPublisher.publish(LIKE_POST, userId, postId);
+            log.info("[게시글 좋아요] userId={}, postId={}", userId, postId);
         }
     }
 
     @Transactional(readOnly = true)
-    public List<Post> getLikedPosts(Long userId) {
-        return postLikeRepository.findAllByUserId(userId)
-            .stream()
-            .map(PostLike::getPost)
-            .collect(Collectors.toList());
+    public PageResponse<PostSummaryResponse> getLikedPosts(Long userId, PostFilter filter) {
+        Pageable pg = PageRequest.of(filter.page(), filter.size());
+        Page<PostSummaryResponse> page = postLikeRepository.findLikedSummaries(userId, filter, pg);
+        return PageResponse.of(page);
     }
 }

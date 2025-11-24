@@ -25,6 +25,10 @@ public class BadgeRule extends BaseTimeEntity {
     @Column(name = "activity_type", nullable = false, length = 50)
     private ActivityType activityType;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "evaluation_type", nullable = false, length = 20)
+    private EvaluationType evaluationType;
+
     @Column(nullable = false)
     private int threshold;
 
@@ -32,10 +36,11 @@ public class BadgeRule extends BaseTimeEntity {
     private boolean enabled;
 
     @Builder
-    public BadgeRule(Long id, Badge badge, ActivityType activityType, int threshold, boolean enabled) {
+    public BadgeRule(Long id, Badge badge, ActivityType activityType, EvaluationType evaluationType, int threshold, boolean enabled) {
         this.id = id;
         this.badge = badge;
         this.activityType = activityType;
+        this.evaluationType = evaluationType;
         this.threshold = threshold;
         this.enabled = enabled;
     }

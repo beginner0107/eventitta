@@ -1,29 +1,24 @@
 package com.eventitta.gamification.evaluator;
 
+import com.eventitta.gamification.domain.ActivityType;
 import com.eventitta.gamification.domain.BadgeRule;
-import com.eventitta.gamification.repository.UserActivityRepository;
+import com.eventitta.gamification.domain.EvaluationType;
 import com.eventitta.user.domain.User;
 import org.springframework.stereotype.Component;
+
+import java.util.Map;
 
 @Component
 public class ActivityCountRuleEvaluator implements BadgeRuleEvaluator {
 
-    private final UserActivityRepository userActivityRepository;
-
-    public ActivityCountRuleEvaluator(UserActivityRepository repo) {
-        this.userActivityRepository = repo;
-    }
-
     @Override
     public boolean supports(BadgeRule rule) {
-        return rule.getActivityType() != null;
+        return rule.getActivityType() != null && rule.getEvaluationType() == EvaluationType.COUNT;
     }
 
     @Override
-    public boolean isSatisfied(User user, BadgeRule rule) {
-        long count = userActivityRepository.countByUserIdAndActivityType(
-            user.getId(), rule.getActivityType()
-        );
+    public boolean isSatisfied(User user, BadgeRule rule, Map<ActivityType, Long> activityCountMap, Map<ActivityType, Long> activityPointsMap) {
+        long count = activityCountMap.getOrDefault(rule.getActivityType(), 0L);
         return count >= rule.getThreshold();
     }
 }

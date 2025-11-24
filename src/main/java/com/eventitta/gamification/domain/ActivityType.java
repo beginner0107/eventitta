@@ -26,12 +26,9 @@ public enum ActivityType {
     private final ResourceType resourceType;
 
     public UserActivity createActivity(Long userId, Long targetId) {
-        return switch (this.resourceType) {
-            case POST -> UserActivity.forPost(userId, this, targetId);
-            case COMMENT -> UserActivity.forComment(userId, this, targetId);
-            case MEETING -> UserActivity.forMeeting(userId, this, targetId);
-            case SYSTEM -> UserActivity.forSystem(userId, this);
-            case UNKNOWN -> UserActivity.forUnknown(userId, this);
-        };
+        if (this.resourceType == SYSTEM) {
+            return UserActivity.forSystem(userId, this);
+        }
+        return UserActivity.of(userId, this, targetId);
     }
 }

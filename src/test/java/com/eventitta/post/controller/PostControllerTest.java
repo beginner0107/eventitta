@@ -343,19 +343,21 @@ class PostControllerTest extends ControllerTestSupport {
 
     @Test
     @WithMockCustomUser(userId = 42L)
-    @DisplayName("본인이 추천한 게시글 목록 조회를 할 수 있다.")
-    void getLikedPosts_shouldReturnList() throws Exception {
+    @DisplayName("본인이 추천한 게시글 목록을 페이지로 조회할 수 있다.")
+    void getLikedPosts_shouldReturnPagedList() throws Exception {
         // given
-        List<Post> likedPosts = List.of(
-            Post.builder().id(1L).title("첫 글").content("내용").user(mock(User.class)).region(mock(Region.class)).build(),
-            Post.builder().id(2L).title("두 번째 글").content("내용2").user(mock(User.class)).region(mock(Region.class)).build()
-        );
-        given(postService.getLikedPosts(42L)).willReturn(likedPosts);
+        PostSummaryResponse s1 = new PostSummaryResponse(1L, "첫 글", "nick1", "1100110100", 3, LocalDateTime.now());
+        PostSummaryResponse s2 = new PostSummaryResponse(2L, "두 번째 글", "nick2", "1100110100", 5, LocalDateTime.now());
+        PageResponse<PostSummaryResponse> page = new PageResponse<>(List.of(s1, s2), 0, 10, 2, 1);
+        given(postService.getLikedPosts(eq(42L), any(PostFilter.class))).willReturn(page);
 
         // when
         mockMvc.perform(
-                get("/api/v1/posts/liked"))
+                get("/api/v1/posts/liked")
+                    .param("page", "0")
+                    .param("size", "10")
+            )
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.length()").value(2));
+            .andExpect(jsonPath("$.content.length()").value(2));
     }
 }

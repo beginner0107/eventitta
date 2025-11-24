@@ -115,11 +115,11 @@ public class PostController {
         @ApiResponse(responseCode = "200", description = "본인이 추천한 게시글 목록 조회 성공"),
     })
     @GetMapping("/liked")
-    public ResponseEntity<List<PostSummaryResponse>> likedPosts(@CurrentUser Long userId) {
-        List<Post> posts = postService.getLikedPosts(userId);
-        List<PostSummaryResponse> dto = posts.stream()
-            .map(PostSummaryResponse::from)
-            .collect(Collectors.toList());
-        return ResponseEntity.ok(dto);
+    public ResponseEntity<PageResponse<PostSummaryResponse>> likedPosts(
+        @CurrentUser Long userId,
+        @Valid PostFilter filter
+    ) {
+        PageResponse<PostSummaryResponse> result = postService.getLikedPosts(userId, filter);
+        return ResponseEntity.ok(result);
     }
 }

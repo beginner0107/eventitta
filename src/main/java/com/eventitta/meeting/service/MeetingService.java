@@ -2,6 +2,7 @@ package com.eventitta.meeting.service;
 
 import com.eventitta.common.response.PageResponse;
 import com.eventitta.gamification.event.ActivityEventPublisher;
+import com.eventitta.meeting.constants.MeetingConstants;
 import com.eventitta.meeting.domain.Meeting;
 import com.eventitta.meeting.domain.MeetingParticipant;
 import com.eventitta.meeting.domain.MeetingStatus;
@@ -19,6 +20,7 @@ import com.eventitta.meeting.repository.MeetingRepository;
 import com.eventitta.user.domain.User;
 import com.eventitta.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -34,6 +36,7 @@ import static com.eventitta.gamification.domain.ActivityType.JOIN_MEETING;
 import static com.eventitta.meeting.exception.MeetingErrorCode.*;
 import static com.eventitta.user.exception.UserErrorCode.NOT_FOUND_USER_ID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -46,6 +49,8 @@ public class MeetingService {
 
     @Transactional
     public Long createMeeting(Long userId, MeetingCreateRequest request) {
+        log.info("[미팅 생성 시작] userId={}, title={}", userId, request.title());
+
         User leader = findUserById(userId);
         validateMeetingTime(request);
 
@@ -53,11 +58,15 @@ public class MeetingService {
         Meeting savedMeeting = meetingRepository.save(meeting);
 
         addLeaderAsParticipant(savedMeeting, leader);
+
+        log.info("[미팅 생성 완료] userId={}, meetingId={}", userId, savedMeeting.getId());
         return savedMeeting.getId();
     }
 
     @Transactional
     public void updateMeeting(Long userId, Long meetingId, MeetingUpdateRequest request) {
+        log.info("[미팅 수정 시작] userId={}, meetingId={}", userId, meetingId);
+
         findUserById(userId);
 
         Meeting meeting = findMeetingById(meetingId);
@@ -70,10 +79,14 @@ public class MeetingService {
         validateMaxMembersForUpdate(request, meeting);
 
         meeting.update(request);
+
+        log.info("[미팅 수정 완료] userId={}, meetingId={}", userId, meetingId);
     }
 
     @Transactional
     public void deleteMeeting(Long userId, Long meetingId) {
+        log.info("[미팅 삭제 시작] userId={}, meetingId={}", userId, meetingId);
+
         findUserById(userId);
 
         Meeting meeting = findMeetingById(meetingId);
@@ -85,6 +98,8 @@ public class MeetingService {
         validateMeetingLeader(meeting, userId);
 
         meeting.delete();
+
+        log.info("[미팅 삭제 완료] userId={}, meetingId={}", userId, meetingId);
     }
 
     public MeetingDetailResponse getMeetingDetail(Long meetingId) {
@@ -112,6 +127,8 @@ public class MeetingService {
 
     @Transactional
     public JoinMeetingResponse joinMeeting(Long userId, Long meetingId) {
+        log.info("[미팅 참가 요청] userId={}, meetingId={}", userId, meetingId);
+
         User user = findUserById(userId);
         Meeting meeting = findMeetingById(meetingId);
 
@@ -122,13 +139,18 @@ public class MeetingService {
             throw MEETING_NOT_RECRUITING.defaultException();
         }
 
+        int approvedCount = participantRepository.countByMeetingIdAndStatus(meetingId, ParticipantStatus.APPROVED);
+        if (approvedCount >= meeting.getMaxMembers()) {
+            log.warn("[미팅 정원 초과] userId={}, meetingId={}, currentMembers={}, maxMembers={}",
+                userId, meetingId, approvedCount, meeting.getMaxMembers());
+            throw MEETING_FULL.defaultException();
+        }
+
         Optional<MeetingParticipant> existingParticipant = participantRepository.findByMeetingIdAndUser_Id(meetingId, userId);
 
         if (existingParticipant.isPresent()) {
+            log.warn("[중복 참가 시도] userId={}, meetingId={}", userId, meetingId);
             throw ALREADY_JOINED_MEETING.defaultException();
-        }
-        if (meeting.getCurrentMembers() >= meeting.getMaxMembers()) {
-            throw MEETING_MAX_MEMBERS_REACHED.defaultException();
         }
 
         MeetingParticipant participant = MeetingParticipant.builder()
@@ -139,55 +161,61 @@ public class MeetingService {
 
         MeetingParticipant savedParticipant = participantRepository.save(participant);
 
-        String message = "모임 참가 신청이 완료되었습니다. 승인을 기다려주세요.";
+        log.info("[미팅 참가 요청 완료] userId={}, meetingId={}, participantId={}, status={}",
+            userId, meetingId, savedParticipant.getId(), savedParticipant.getStatus());
 
         return new JoinMeetingResponse(
             savedParticipant.getId(),
             meetingId,
             savedParticipant.getStatus(),
-            message
+            MeetingConstants.JOIN_MEETING_PENDING_MESSAGE
         );
     }
 
     @Transactional
     public ParticipantResponse approveParticipant(Long userId, Long meetingId, Long participantId) {
+        log.info("[미팅 참가 승인 시작] leaderId={}, meetingId={}, participantId={}",
+            userId, meetingId, participantId);
+
         findUserById(userId);
-        Meeting meeting = findMeetingById(meetingId);
-        if (meeting.isDeleted()) {
-            throw ALREADY_DELETED_MEETING.defaultException();
-        }
-        validateMeetingLeader(meeting, userId);
 
-        MeetingParticipant participant = findParticipantById(participantId);
-        validateParticipantBelongsToMeeting(participant, meetingId);
-        validateParticipantStatus(participant, ParticipantStatus.PENDING);
+        Meeting meeting = meetingRepository.findByIdForUpdate(meetingId)
+            .orElseThrow(MEETING_NOT_FOUND::defaultException);
 
-        if (meeting.getCurrentMembers() >= meeting.getMaxMembers()) {
-            throw MEETING_MAX_MEMBERS_REACHED.defaultException();
-        }
+        MeetingParticipant participant = validateAndGetPendingParticipant(
+            meeting, userId, participantId
+        );
+
+        validateMeetingCapacity(meeting);
 
         participant.approve();
         meeting.incrementCurrentMembers();
 
         activityEventPublisher.publish(JOIN_MEETING, participant.getUser().getId(), meetingId);
 
+        log.info("[미팅 참가 승인 완료] leaderId={}, meetingId={}, participantId={}, participantUserId={}",
+            userId, meetingId, participantId, participant.getUser().getId());
+
         return meetingMapper.toParticipantResponse(participant, participant.getUser());
     }
 
     @Transactional
     public ParticipantResponse rejectParticipant(Long userId, Long meetingId, Long participantId) {
-        findUserById(userId);
-        Meeting meeting = findMeetingById(meetingId);
-        if (meeting.isDeleted()) {
-            throw ALREADY_DELETED_MEETING.defaultException();
-        }
-        validateMeetingLeader(meeting, userId);
+        log.info("[미팅 참가 거부 시작] leaderId={}, meetingId={}, participantId={}",
+            userId, meetingId, participantId);
 
-        MeetingParticipant participant = findParticipantById(participantId);
-        validateParticipantBelongsToMeeting(participant, meetingId);
-        validateParticipantStatus(participant, ParticipantStatus.PENDING);
+        findUserById(userId);
+
+        Meeting meeting = findMeetingById(meetingId);
+
+        MeetingParticipant participant = validateAndGetPendingParticipant(
+            meeting, userId, participantId
+        );
 
         participant.reject();
+
+        log.info("[미팅 참가 거부 완료] leaderId={}, meetingId={}, participantId={}, participantUserId={}",
+            userId, meetingId, participantId, participant.getUser().getId());
 
         return meetingMapper.toParticipantResponse(participant, participant.getUser());
     }
@@ -252,14 +280,37 @@ public class MeetingService {
         }
     }
 
-    private void validateParticipantStatus(MeetingParticipant participant, ParticipantStatus expectedStatus) {
-        if (participant.getStatus() != expectedStatus) {
+    private void validateParticipantStatus(MeetingParticipant participant) {
+        if (participant.getStatus() != ParticipantStatus.PENDING) {
             throw INVALID_PARTICIPANT_STATUS.defaultException();
+        }
+    }
+
+    private MeetingParticipant validateAndGetPendingParticipant(
+        Meeting meeting, Long userId, Long participantId) {
+
+        if (meeting.isDeleted()) {
+            throw ALREADY_DELETED_MEETING.defaultException();
+        }
+        validateMeetingLeader(meeting, userId);
+
+        MeetingParticipant participant = findParticipantById(participantId);
+        validateParticipantBelongsToMeeting(participant, meeting.getId());
+        validateParticipantStatus(participant);
+
+        return participant;
+    }
+
+    private void validateMeetingCapacity(Meeting meeting) {
+        if (meeting.getCurrentMembers() >= meeting.getMaxMembers()) {
+            throw MEETING_FULL.defaultException();
         }
     }
 
     @Transactional
     public void cancelJoin(Long userId, Long meetingId) {
+        log.info("[미팅 참가 취소 시작] userId={}, meetingId={}", userId, meetingId);
+
         findUserById(userId);
 
         Meeting meeting = findMeetingById(meetingId);
@@ -280,10 +331,13 @@ public class MeetingService {
 
         if (wasApproved) {
             meeting.decrementCurrentMembers();
-
             activityEventPublisher.publishRevoke(JOIN_MEETING, userId, meetingId);
         }
+
         participantRepository.delete(participant);
+
+        log.info("[미팅 참가 취소 완료] userId={}, meetingId={}, wasApproved={}",
+            userId, meetingId, wasApproved);
     }
 
 }

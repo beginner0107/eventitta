@@ -76,9 +76,13 @@ api:
 logging:
   level:
     root: INFO
-    com.eventitta: DEBUG  # 로컬에서는 DEBUG
-    org.hibernate.SQL: WARN
-    p6spy: DEBUG
+    com.eventitta: DEBUG                    # 애플리케이션 전체 상세 로그
+    com.eventitta.festivals: DEBUG          # 축제 도메인 디버깅
+    com.eventitta.common.interceptor: DEBUG # RestClient 요청/응답 상세
+    org.springframework.web: INFO
+    org.springframework.security: INFO
+    org.hibernate.SQL: DEBUG                # SQL 쿼리 확인
+    p6spy: INFO                             # 쿼리 파라미터 바인딩 확인
   file: # 로컬에서도 파일 로깅 활성화 (테스트용)
     path: ./logs
     name: ./logs/eventitta.log

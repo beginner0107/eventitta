@@ -14,6 +14,233 @@
 
 ---
 
+## 목차
+
+- [프로젝트 개요](#프로젝트-개요)
+- [ERD (Entity Relationship Diagram)](#erd-entity-relationship-diagram)
+- [배포 아키텍처](#배포-아키텍처)
+- [핵심 기능](#핵심-기능)
+- [기술적 하이라이트](#기술적-하이라이트)
+- [시스템 아키텍처](#시스템-아키텍처)
+- [품질 & 안정성](#품질--안정성)
+- [빠른 시작](#빠른-시작)
+- [문서](#문서)
+
+---
+
+## 프로젝트 개요
+
+실제 운영 환경을 고려하여 설계한 지역 기반 커뮤니티 플랫폼입니다. 동시성 문제 해결, 이벤트 기반 아키텍처, 외부 API 연동 등 실무에서 직면하는 기술적 문제들을 직접 해결하며 구현했습니다.
+
+| 구분 | 내용 |
+|------|------|
+| **개발 기간** | 2024.10 - 2025.01 (3개월) |
+| **기술 스택** | Java 17, Spring Boot 3.4.5, JPA, QueryDSL 5.0.0 |
+| **데이터베이스** | MySQL 8.0 (운영), H2 (테스트) |
+| **테스트** | 단위/통합/동시성 테스트 446개 |
+| **인프라** | Docker, GitHub Actions, AWS RDS, Nginx |
+| **주요 해결 과제** | 동시성 제어, 이벤트 신뢰성, N+1 문제, 분산 스케줄러 |
+
+---
+
+## ERD (Entity Relationship Diagram)
+
+### 커뮤니티 핵심 엔티티
+
+```mermaid
+erDiagram
+    users ||--o{ posts : "작성"
+    users ||--o{ comments : "작성"
+    users ||--o{ post_likes : "좋아요"
+    users ||--o{ refresh_tokens : "인증"
+
+    posts ||--o{ post_images : "포함"
+    posts ||--o{ post_likes : "받음"
+    posts ||--o{ comments : "달림"
+    posts }o--|| regions : "속함"
+
+    comments }o--o| comments : "parent(계층)"
+
+    regions }o--o| regions : "parent(계층)"
+
+    users {
+        bigint id PK
+        varchar email UK
+        varchar password
+        varchar nickname
+        int points
+        enum role
+        enum provider
+        datetime created_at
+    }
+
+    posts {
+        bigint id PK
+        bigint user_id FK
+        varchar region_code FK
+        varchar title
+        text content
+        int like_count
+        boolean deleted
+        datetime created_at
+    }
+
+    comments {
+        bigint id PK
+        bigint post_id FK
+        bigint user_id FK
+        bigint parent_comment_id FK
+        varchar content
+        boolean deleted
+        datetime created_at
+    }
+
+    post_images {
+        bigint id PK
+        bigint post_id FK
+        varchar file_path
+        int display_order
+    }
+
+    post_likes {
+        bigint id PK
+        bigint post_id FK
+        bigint user_id FK
+        datetime created_at
+    }
+
+    regions {
+        varchar code PK
+        varchar name
+        varchar parent_code FK
+        int level
+    }
+
+    refresh_tokens {
+        bigint id PK
+        bigint user_id FK
+        varchar token_hash
+        datetime expires_at
+    }
+```
+
+### 모임 & 게임화 시스템
+
+```mermaid
+erDiagram
+    users ||--o{ meetings : "생성(leader)"
+    users ||--o{ meeting_participants : "참가"
+    users ||--o{ user_activities : "활동기록"
+    users ||--o{ user_badges : "획득"
+    users ||--o{ failed_activity_events : "실패이벤트"
+
+    meetings ||--o{ meeting_participants : "포함"
+
+    badges ||--o{ user_badges : "수여됨"
+    badges ||--o{ badge_rules : "평가규칙"
+
+    users {
+        bigint id PK
+        varchar email UK
+        varchar nickname
+        int points
+    }
+
+    meetings {
+        bigint id PK
+        bigint leader_id FK
+        varchar title
+        text description
+        datetime start_time
+        datetime end_time
+        int max_members
+        int current_members
+        enum status
+    }
+
+    meeting_participants {
+        bigint id PK
+        bigint meeting_id FK
+        bigint user_id FK
+        enum status
+        datetime created_at
+    }
+
+    user_activities {
+        bigint id PK
+        bigint user_id FK
+        enum activity_type
+        enum resource_type
+        bigint target_id
+        int points_earned
+        datetime created_at
+    }
+
+    badges {
+        bigint id PK
+        varchar name UK
+        varchar description
+        varchar image_url
+    }
+
+    user_badges {
+        bigint id PK
+        bigint user_id FK
+        bigint badge_id FK
+        datetime awarded_at
+    }
+
+    badge_rules {
+        bigint id PK
+        bigint badge_id FK
+        enum activity_type
+        enum evaluation_type
+        int threshold
+        boolean enabled
+    }
+
+    failed_activity_events {
+        bigint id PK
+        bigint user_id FK
+        enum activity_type
+        enum operation_type
+        bigint target_id
+        int retry_count
+        enum status
+        text error_message
+    }
+```
+
+---
+
+## 배포 아키텍처
+
+**운영 환경**: 3개의 Docker 인스턴스로 구성된 고가용성 환경에서 AWS RDS를 활용한 실제 프로덕션 배포 구조입니다.
+
+### CI/CD 파이프라인
+
+![eventitta-architecture.png](docs/images/eventitta-architecture.png)
+
+### 운영 환경
+
+| 구성 요소 | 기술 | 역할 |
+|-------------------|-------------------------|------------------|
+| **CI/CD** | GitHub Actions | 자동 빌드/테스트/배포 |
+| **컨테이너** | Docker + Docker Compose | 애플리케이션 격리 및 배포 |
+| **WAS** | Spring Boot (Docker) | 비즈니스 로직 처리 |
+| **DB** | AWS RDS (MySQL 8.0) | 데이터 영속성 |
+| **Reverse Proxy** | Nginx | 로드 밸런싱, HTTPS 종료 |
+| **스토리지** | AWS S3 | 이미지/파일 저장 |
+| **모니터링** | Slack Webhook | 에러 알림, 배포 알림 |
+
+### 무중단 배포
+
+- **헬스체크 기반 배포**: Spring Boot Actuator `/actuator/health` 엔드포인트 활용
+- **롤백 전략**: 이전 Docker 이미지로 즉시 전환 가능
+- **배포 검증**: 실행 중인 컨테이너 이미지 태그 자동 확인
+
+---
+
 ## 핵심 기능
 
 - **커뮤니티**: 게시글/댓글, 좋아요, 이미지 업로드
@@ -37,27 +264,13 @@
 | **Slack 알림 폭증**   | Caffeine Cache 기반 Rate Limiter          | Alert Level별 차등 제한, 7가지 알고리즘 비교  |
 | **Badge 평가 확장성**  | 전략 패턴 + EvaluationType 분리               | 새 평가 기준 추가 시 Evaluator만 구현       |
 
-**📄 상세 문서**: [기술적 챌린지 전체 내용 보기](docs/TECHNICAL_CHALLENGES.md)
+상세한 기술적 해결 과정은 [TECHNICAL_CHALLENGES.md](docs/TECHNICAL_CHALLENGES.md)에서 확인할 수 있습니다.
 
 ---
 
-## 기술 선택에 대한 이유
+## 시스템 아키텍처
 
-| 기술                    | 선택 이유                                                     |
-|-----------------------|-----------------------------------------------------------|
-| **JWT + HttpOnly 쿠키** | localStorage 대비 XSS 방어 강화, Refresh Token 해시 저장으로 DB 탈취 대응 |
-| **비관적 락**             | 선착순 승인처럼 **충돌 빈번 + 정합성 우선** 시나리오에 적합                      |
-| **QueryDSL 5.0.0**    | 지역+날짜+키워드 조합의 **동적 검색 15가지 케이스** 타입 안전하게 처리               |
-| **ShedLock 6.6.0**    | 외부 API **Rate Limit 준수**를 위한 단일 실행 보장 (분산 환경)             |
-| **Spring Events**     | 게임화 시스템 **도메인 디커플링**, 새 활동 타입 추가 시 리스너만 수정                |
-| **Caffeine Cache**    | 지역 데이터 **빈번한 조회 최적화** (TTL 30일, Hit Rate 95%+)            |
-| **P6Spy**             | SQL 모니터링, **슬로우 쿼리 즉시 식별**                                |
-
----
-
-## 아키텍처
-
-### 시스템 아키텍처
+### 전체 시스템 구조
 
 ```mermaid
 graph LR
@@ -72,17 +285,6 @@ graph LR
   D --> I[External APIs]
   C --> J[Exception Handler]
   J --> K[Slack + RateLimiter]
-```
-
-### 게임화 시스템 이벤트 플로우
-
-```mermaid
-graph LR
-  A[게시글 작성] --> B[PostService]
-  B --> C[이벤트 발행]
-  C -. AFTER_COMMIT .-> D[EventListener]
-  D --> E[포인트 적립]
-  D --> F[배지 평가]
 ```
 
 ### JWT 인증 플로우
@@ -105,33 +307,7 @@ sequenceDiagram
   end
 ```
 
-**📄 상세 문서**: [전체 아키텍처 설계 보기](docs/ARCHITECTURE.md)
-
----
-
-## 배포 아키텍처
-
-### CI/CD 파이프라인
-
-![eventitta-architecture.png](docs/images/eventitta-architecture.png)
-
-### 운영 환경
-
-| 구성 요소             | 기술                      | 역할               |
-|-------------------|-------------------------|------------------|
-| **CI/CD**         | GitHub Actions          | 자동 빌드/테스트/배포     |
-| **컨테이너**          | Docker + Docker Compose | 애플리케이션 격리 및 배포   |
-| **WAS**           | Spring Boot (Docker)    | 비즈니스 로직 처리       |
-| **DB**            | AWS RDS (MySQL 8.0)     | 데이터 영속성          |
-| **Reverse Proxy** | Nginx                   | 로드 밸런싱, HTTPS 종료 |
-| **스토리지**          | AWS S3                  | 이미지/파일 저장        |
-| **모니터링**          | Slack Webhook           | 에러 알림, 배포 알림     |
-
-### 무중단 배포
-
-- **헬스체크 기반 배포**: Spring Boot Actuator `/actuator/health` 엔드포인트 활용
-- **롤백 전략**: 이전 Docker 이미지로 즉시 전환 가능
-- **배포 검증**: 실행 중인 컨테이너 이미지 태그 자동 확인
+전체 아키텍처 설계와 도메인 구조는 [ARCHITECTURE.md](docs/ARCHITECTURE.md)에서 확인할 수 있습니다.
 
 ---
 
@@ -167,14 +343,19 @@ open http://localhost:8080/swagger-ui.html
 
 ## 문서
 
-- **[시스템 아키텍처](docs/ARCHITECTURE.md)** - 전체 설계, DDD, 이벤트 기반 구조, JWT 인증
-- **[기술적 챌린지](docs/TECHNICAL_CHALLENGES.md)** - 문제 해결 과정과 성과
+- [**시스템 아키텍처**](docs/ARCHITECTURE.md) - 전체 설계, DDD, 이벤트 기반 구조, JWT 인증
+- [**기술적 챌린지**](docs/TECHNICAL_CHALLENGES.md) - 문제 해결 과정과 성과
 
 ---
 
-**기술 스택**: Java 17, Spring Boot 3.4.5, Spring Data JPA, QueryDSL, JWT, MySQL, Flyway, ShedLock, Caffeine
+### 기술 스택
+- **Backend**: Java 17, Spring Boot 3.4.5, Spring Data JPA, QueryDSL 5.0.0
+- **Security**: Spring Security, JWT (HttpOnly Cookie)
+- **Database**: MySQL 8.0, Flyway Migration
+- **Infrastructure**: Docker, GitHub Actions, AWS RDS, Nginx
+- **Monitoring**: P6Spy, Spring Actuator, Slack Webhook
+- **기타**: ShedLock (분산 락), Caffeine Cache, Spring Retry
 
-**개발 도구**: P6Spy (SQL 모니터링, 개발 환경 전용)
-
-**v1.0 완료**: 커뮤니티, 모임 관리, 게임화 시스템, 축제 연동  
-**v2.0 개발 중**: Rank 조회 쿼리 성능 및 축제 데이터 조회 쿼리 개선
+### 버전 관리
+- **v1.0** (2024.12): 커뮤니티, 모임 관리, 게임화 시스템, 축제 정보 연동 완료
+- **v2.0** (진행 중): 랭킹 시스템 쿼리 최적화, 축제 데이터 조회 성능 개선

@@ -519,7 +519,7 @@ class PostServiceTest {
 
         given(userRepository.findById(userId)).willReturn(Optional.empty());
 
-        assertThrows(AuthException.class, () -> postService.toggleLike(postId, userId));
+        assertThrows(UserException.class, () -> postService.toggleLike(postId, userId));
     }
 
     @Test

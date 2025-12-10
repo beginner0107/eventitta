@@ -105,19 +105,11 @@ public void removeExpiredRefreshTokens() {
 
 ```java
 // 문제 코드: 검사와 갱신 사이에 다른 트랜잭션 진입 가능
-if(meeting.getCurrentMembers() >=meeting.
-
-getMaxMembers()){
-  throw MEETING_FULL.
-
-defaultException();
+if (meeting.getCurrentMembers() >= meeting.getMaxMembers()) {
+  throw MEETING_FULL.defaultException();
 }
-  participant.
-
-approve();
-meeting.
-
-incrementCurrentMembers();  // 동시 실행 시 덮어쓰기 발생
+participant.approve();
+meeting.incrementCurrentMembers();  // 동시 실행 시 덮어쓰기 발생
 ```
 
 ### 해결 방법
@@ -624,20 +616,15 @@ public record PostSummaryResponse(
 }
 
 // 쿼리에서 직접 DTO 생성
-queryFactory.
-
-select(new QPostSummaryResponse(
-         post.id,
-       post.title,
-       post.author.name,
-       post.likeCount
-       ))
-  .
-
-from(post)
-.
-
-fetch();
+queryFactory
+  .select(new QPostSummaryResponse(
+    post.id,
+    post.title,
+    post.author.name,
+    post.likeCount
+  ))
+  .from(post)
+  .fetch();
 ```
 
 **2. BooleanBuilder 패턴으로 동적 쿼리**
@@ -716,12 +703,8 @@ public enum AlertLevel {
 }
 
 AlertLevel level = alertLevelResolver.resolve(errorCode);
-if(rateLimiter.
-
-tryAcquire(errorCode.name())){
-  slackNotificationService.
-
-sendAlert(level, message);
+if (rateLimiter.tryAcquire(errorCode.name())) {
+  slackNotificationService.sendAlert(level, message);
 }
 ```
 

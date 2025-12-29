@@ -215,7 +215,7 @@ erDiagram
 
 ## 배포 아키텍처
 
-**운영 환경**: 3개의 Docker 인스턴스로 구성된 고가용성 환경에서 AWS RDS를 활용한 실제 프로덕션 배포 구조입니다.
+**운영 환경**: EC2 기반 Docker 컨테이너와 AWS RDS를 활용한 실제 프로덕션 배포 구조입니다.
 
 ### CI/CD 파이프라인
 
@@ -229,7 +229,7 @@ erDiagram
 | **컨테이너** | Docker + Docker Compose | 애플리케이션 격리 및 배포 |
 | **WAS** | Spring Boot (Docker) | 비즈니스 로직 처리 |
 | **DB** | AWS RDS (MySQL 8.0) | 데이터 영속성 |
-| **Reverse Proxy** | Nginx | 로드 밸런싱, HTTPS 종료 |
+| **Reverse Proxy** | Nginx | 역방향 프록시, HTTPS 종료 |
 | **스토리지** | AWS S3 | 이미지/파일 저장 |
 | **모니터링** | Slack Webhook | 에러 알림, 배포 알림 |
 
@@ -259,7 +259,7 @@ erDiagram
 | **포인트 동시성**       | Atomic Update 쿼리 (`u.points + :amount`) | 높은 동시성 유지하면서 포인트 유실 방지           |
 | **비동기 이벤트 신뢰성**   | Retry + DB 저장 + 스케줄러 복구                 | 데이터 유실 방지, 자동 복구                 |
 | **도메인 간 강결합**     | Spring Events + 비동기 처리                  | 핵심 도메인과 부가 기능 의존성 분리             |
-| **분산 스케줄러 중복 실행** | ShedLock (JDBC 락)                       | 3개 인스턴스 환경에서 단일 실행 보장            |
+| **분산 스케줄러 중복 실행** | ShedLock (JDBC 락)                       | 다중 인스턴스 환경 대비 단일 실행 보장            |
 | **복잡한 검색 조건**     | QueryDSL 동적 쿼리 + Fetch Join             | N+1 문제 해결, 타입 안전 처리              |
 | **Slack 알림 폭증**   | Caffeine Cache 기반 Rate Limiter          | Alert Level별 차등 제한, 7가지 알고리즘 비교  |
 | **Badge 평가 확장성**  | 전략 패턴 + EvaluationType 분리               | 새 평가 기준 추가 시 Evaluator만 구현       |

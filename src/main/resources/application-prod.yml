@@ -39,6 +39,21 @@ spring:
     serialization:
       write-dates-as-timestamps: false
     default-property-inclusion: non_null
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: 6379
+      ssl: true
+      password: ${REDIS_PASSWORD:}
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 20
+          max-idle: 10
+          min-idle: 5
+        cluster:
+          refresh:
+            period: 60s
 
 server:
   port: ${SERVER_PORT:8080}

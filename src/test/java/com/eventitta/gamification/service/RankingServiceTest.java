@@ -30,6 +30,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("null")
 class RankingServiceTest {
 
     @Mock
@@ -45,11 +46,11 @@ class RankingServiceTest {
     private ZSetOperations<String, Object> zSetOperations;
 
     @InjectMocks
-    private RankingService rankingService;
+    private RedisRankingService rankingService;
 
     @BeforeEach
     void setUp() {
-        rankingService = new RankingService(
+        rankingService = new RedisRankingService(
             redisTemplate,
             userRepository,
             userActivityRepository

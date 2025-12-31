@@ -1,5 +1,6 @@
 package com.eventitta.gamification.event;
 
+import com.eventitta.common.config.redis.MockRedisConfig;
 import com.eventitta.gamification.domain.ActivityType;
 import com.eventitta.gamification.domain.FailedActivityEvent;
 import com.eventitta.gamification.domain.OperationType;
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -34,6 +36,7 @@ import static org.mockito.Mockito.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@Import(MockRedisConfig.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class UserActivityEventListenerTest {
 

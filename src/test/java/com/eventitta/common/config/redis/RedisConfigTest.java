@@ -1,5 +1,7 @@
 package com.eventitta.common.config.redis;
 
+import com.eventitta.gamification.service.RankingService;
+import com.eventitta.testsupport.EnabledIfDockerAvailable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -9,6 +11,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.containers.GenericContainer;
 
 import java.time.Duration;
@@ -21,6 +24,8 @@ import static org.awaitility.Awaitility.await;
 @SpringBootTest
 @ActiveProfiles("test")
 @Import(RedisTestConfig.class)
+@EnabledIfDockerAvailable
+@SuppressWarnings("null")
 class RedisConfigTest {
 
     @Autowired
@@ -31,6 +36,9 @@ class RedisConfigTest {
 
     @Autowired
     private GenericContainer<?> redisContainer;
+
+    @MockitoBean
+    private RankingService rankingService;
 
     @AfterEach
     void tearDown() {

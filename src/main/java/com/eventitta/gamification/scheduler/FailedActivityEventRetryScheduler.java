@@ -25,6 +25,10 @@ public class FailedActivityEventRetryScheduler {
     private final FailedActivityEventRepository failedActivityEventRepository;
     private final FailedEventRecoveryService failedEventRecoveryService;
 
+    /**
+     * 실패 이벤트 재처리 스케줄러
+     * 각 이벤트를 개별 트랜잭션으로 처리하여 하나의 실패가 다른 이벤트에 영향을 주지 않도록 함
+     */
     @Scheduled(fixedDelay = FAILED_EVENT_RETRY_FIXED_DELAY_MS)
     @SchedulerLock(name = "retryFailedActivityEvents", lockAtMostFor = "55s", lockAtLeastFor = "5s")
     @Transactional(propagation = NEVER)
@@ -39,16 +43,25 @@ public class FailedActivityEventRetryScheduler {
         log.info("[Scheduler] 실패 이벤트 재처리 시작 - 대상 건수: {}, 배치 크기: {}",
             pendingEvents.size(), FAILED_EVENT_RETRY_BATCH_SIZE);
 
-        try {
-            List<FailedActivityEvent> eventsToProcess = pendingEvents.stream()
-                .limit(FAILED_EVENT_RETRY_BATCH_SIZE)
-                .collect(Collectors.toList());
+        List<FailedActivityEvent> eventsToProcess = pendingEvents.stream()
+            .limit(FAILED_EVENT_RETRY_BATCH_SIZE)
+            .toList();
 
-            eventsToProcess.forEach(failedEventRecoveryService::recoverFailedEvent);
+        int successCount = 0;
+        int failureCount = 0;
 
-            log.info("[Scheduler] 실패 이벤트 재처리 완료 - 처리 건수: {}", eventsToProcess.size());
-        } catch (Exception e) {
-            log.error("[Scheduler] 실패 이벤트 재처리 중 오류 - error={}", e.getMessage(), e);
+        for (FailedActivityEvent event : eventsToProcess) {
+            try {
+                failedEventRecoveryService.recoverFailedEventIndependently(event.getId());
+                successCount++;
+            } catch (Exception e) {
+                log.warn("[Scheduler] 개별 이벤트 재처리 실패 - eventId={}, error={}",
+                    event.getId(), e.getMessage());
+                failureCount++;
+            }
         }
+
+        log.info("[Scheduler] 실패 이벤트 재처리 완료 - 성공: {}, 실패: {}, 전체: {}",
+            successCount, failureCount, eventsToProcess.size());
     }
 }

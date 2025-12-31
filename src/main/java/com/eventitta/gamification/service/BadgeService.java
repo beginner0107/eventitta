@@ -30,7 +30,10 @@ public class BadgeService {
     private final UserActivityRepository userActivityRepository;
     private final List<BadgeRuleEvaluator> evaluators;
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    /**
+     * 뱃지 체크 및 부여
+     */
+    @Transactional(propagation = Propagation.REQUIRED)
     public List<String> checkAndAwardBadges(User user) {
         List<BadgeRule> rules = badgeRuleRepository.findAllEnabledWithBadge();
 

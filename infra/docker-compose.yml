@@ -13,21 +13,38 @@ services:
     networks:
       - eventitta-network
 
-#  app:
-#    build:
-#      context: ..
-#      dockerfile: Dockerfile
-#    container_name: eventitta-app
-#    depends_on:
-#      - db
-#    env_file:
-#      - ../.env
-#    environment:
-#      SPRING_PROFILES_ACTIVE: docker
-#    ports:
-#      - "${APP_PORT:-8080}:8080"
-#    networks:
-#      - eventitta-network
+    #  app:
+    #    build:
+    #      context: ..
+    #      dockerfile: Dockerfile
+    #    container_name: eventitta-app
+    #    depends_on:
+    #      - db
+    #    env_file:
+    #      - ../.env
+    #    environment:
+    #      SPRING_PROFILES_ACTIVE: docker
+    #    ports:
+    #      - "${APP_PORT:-8080}:8080"
+    #    networks:
+    #      - eventitta-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: eventitta-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
 networks:
   eventitta-network:
+
+volumes:
+  redis-data:

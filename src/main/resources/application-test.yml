@@ -4,6 +4,11 @@ spring:
     activate:
       on-profile: test
 
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
   flyway:
     enabled: false
 
@@ -24,10 +29,14 @@ spring:
     show-sql: false
     defer-datasource-initialization: true
 
-  # H2에서는 스키마 초기화 비활성화 (JPA가 테이블 자동 생성)
+  # H2에서 ShedLock 테이블 생성을 위해 활성화
   sql:
     init:
-      mode: never
+      mode: always
+      schema-locations: classpath:schema.sql
+      # 테스트에서 src/main/resources/data.sql(프로덕션 시드)가 실행되지 않도록
+      # no-op 스크립트를 지정한다.
+      data-locations: classpath:data-test.sql
 
   h2:
     console:
@@ -79,3 +88,7 @@ logging:
   level:
     root: INFO
     org.hibernate.SQL: INFO
+
+# Scheduling disabled for tests
+scheduling:
+  enabled: false

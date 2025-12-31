@@ -87,6 +87,10 @@ public class FailedActivityEvent extends BaseTimeEntity {
         this.status = EventStatus.PENDING;
     }
 
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
+    }
+
     public enum EventStatus {
         PENDING,    // 재처리 대기
         PROCESSING, // 처리 중

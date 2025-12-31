@@ -11,10 +11,12 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.testcontainers.containers.GenericContainer;
 
+import java.time.Duration;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -81,19 +83,24 @@ class RedisConfigTest {
 
     @Test
     @DisplayName("TTL 설정 테스트")
-    void testTTL() throws InterruptedException {
+    void testTTL() {
         // given
         String key = "test:ttl";
         String value = "expire soon";
 
         // when
-        stringRedisTemplate.opsForValue().set(key, value, 2, TimeUnit.SECONDS);
+        stringRedisTemplate.opsForValue().set(key, value, 1, TimeUnit.SECONDS);
 
-        // then
+        // then - 즉시 값이 존재하는지 확인
         assertThat(stringRedisTemplate.opsForValue().get(key)).isEqualTo(value);
 
-        Thread.sleep(3000);
-        assertThat(stringRedisTemplate.opsForValue().get(key)).isNull();
+        // Awaitility로 만료 확인 - 최대 2초 대기, 100ms 간격으로 체크
+        await()
+            .atMost(Duration.ofSeconds(2))
+            .pollInterval(Duration.ofMillis(100))
+            .untilAsserted(() ->
+                assertThat(stringRedisTemplate.opsForValue().get(key)).isNull()
+            );
     }
 
     @Test

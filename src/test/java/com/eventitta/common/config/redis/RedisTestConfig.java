@@ -1,8 +1,9 @@
 package com.eventitta.common.config.redis;
 
+import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.utility.DockerImageName;
@@ -15,9 +16,8 @@ public class RedisTestConfig {
     private static final int REDIS_PORT = 6379;
 
     @Bean
-    @ServiceConnection(name = "redis")
     public GenericContainer<?> redisContainer() {
-        return new GenericContainer<>(DockerImageName.parse(REDIS_IMAGE))
+        GenericContainer<?> container = new GenericContainer<>(DockerImageName.parse(REDIS_IMAGE))
             .withExposedPorts(REDIS_PORT)
             .withCommand("redis-server",
                 "--maxmemory", "64mb",
@@ -25,6 +25,17 @@ public class RedisTestConfig {
                 "--timeout", "300",
                 "--save", "\"\"",
                 "--appendonly", "no");
+        container.start();
+        return container;
+    }
+
+    @Bean
+    @Primary
+    public RedisProperties redisProperties(GenericContainer<?> redisContainer) {
+        RedisProperties properties = new RedisProperties();
+        properties.setHost(redisContainer.getHost());
+        properties.setPort(redisContainer.getFirstMappedPort());
+        return properties;
     }
 
     public static class RedisTestHelper {

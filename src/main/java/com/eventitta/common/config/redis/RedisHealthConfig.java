@@ -76,20 +76,7 @@ public class RedisHealthConfig {
             try {
                 return redisTemplate.execute((RedisCallback<Properties>) connection -> {
                     Properties props = connection.serverCommands().info();
-                    if (props == null) {
-                        props = new Properties();
-                    }
-
-                    Properties info = new Properties();
-                    for (String line : props.toString().split("\n")) {
-                        if (!line.startsWith("#") && line.contains(":")) {
-                            String[] parts = line.split(":", 2);
-                            if (parts.length == 2) {
-                                info.setProperty(parts[0].trim(), parts[1].trim());
-                            }
-                        }
-                    }
-                    return info;
+                    return props != null ? props : new Properties();
                 });
             } catch (Exception e) {
                 log.warn("Failed to get Redis info", e);

@@ -35,8 +35,8 @@ public class RedisConfig {
     @Value("${spring.data.redis.ssl:false}")
     private boolean useSsl;
 
-    @Value("${spring.data.redis.timeout:3000}")
-    private long timeout;
+    @Value("${spring.data.redis.timeout:3s}")
+    private Duration timeout;
 
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
@@ -50,7 +50,7 @@ public class RedisConfig {
 
         LettuceClientConfiguration.LettuceClientConfigurationBuilder builder =
             LettuceClientConfiguration.builder()
-                .commandTimeout(Duration.ofMillis(timeout));
+                .commandTimeout(timeout);
 
         if (useSsl) {
             builder.useSsl();
@@ -58,7 +58,7 @@ public class RedisConfig {
 
         ClientOptions clientOptions = ClientOptions.builder()
             .socketOptions(SocketOptions.builder()
-                .connectTimeout(Duration.ofMillis(timeout))
+                .connectTimeout(timeout)
                 .keepAlive(true)
                 .tcpNoDelay(true)
                 .build())

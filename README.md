@@ -1,230 +1,361 @@
-# Eventitta
+<div align="center">
+  <img src="docs/images/eventitta-logo.png" alt="Eventitta" width="200"/>
+  <h1>Eventitta</h1>
+  <p><strong>지역 기반 소셜 커뮤니티 플랫폼</strong></p>
+  <p>이벤트 기반 게임화 시스템, 외부 API 자동 동기화, 동적 검색 쿼리 최적화</p>
+  <p>
+    <a href="https://openjdk.org/"><img src="https://img.shields.io/badge/Java-17-orange?logo=java" alt="Java"></a>
+    <a href="https://spring.io/projects/spring-boot"><img src="https://img.shields.io/badge/Spring%20Boot-3.4.5-brightgreen?logo=springboot" alt="Spring Boot"></a>
+    <a href="https://www.mysql.com/"><img src="https://img.shields.io/badge/MySQL-8.0-blue?logo=mysql" alt="MySQL"></a>
+    <a href="build/reports/tests/test/index.html"><img src="https://img.shields.io/badge/Tests-Passing-success" alt="Tests"></a>
+    <a href="http://localhost:8080/swagger-ui.html"><img src="https://img.shields.io/badge/API%20Docs-Swagger-85EA2D?logo=swagger" alt="Swagger"></a>
+  </p>
+</div>
 
-> 지역 기반 소셜 커뮤니티 플랫폼
+---
 
-**개발 기간**: 2025.05 ~ 진행 중
+## 목차
 
-Eventitta는 지역 주민들이 온라인에서 관심사와 정보를 공유하고, 오프라인 이벤트나 모임으로 자연스럽게 연결될 수 있는 환경을 제공하는 Spring Boot 기반 소셜 커뮤니티 플랫폼입니다.
+- [프로젝트 개요](#프로젝트-개요)
+- [ERD (Entity Relationship Diagram)](#erd-entity-relationship-diagram)
+- [배포 아키텍처](#배포-아키텍처)
+- [핵심 기능](#핵심-기능)
+- [기술적 하이라이트](#기술적-하이라이트)
+- [시스템 아키텍처](#시스템-아키텍처)
+- [품질 & 안정성](#품질--안정성)
+- [빠른 시작](#빠른-시작)
+- [문서](#문서)
 
-## 기술 스택
+---
 
-### Backend
+## 프로젝트 개요
 
-- **Java 17** + **Spring Boot 3.4.5**
-- **Spring Data JPA** + **QueryDSL 5.0.0**
-- **Spring Security** + **JWT**
-- **MySQL 8.0** / **H2**
+실제 운영 환경을 고려하여 설계한 지역 기반 커뮤니티 플랫폼입니다. 동시성 문제 해결, 이벤트 기반 아키텍처, 외부 API 연동 등 실무에서 직면하는 기술적 문제들을 직접 해결하며 구현했습니다.
 
-### DevOps & Tools
+| 구분 | 내용 |
+|------|------|
+| **개발 기간** | 2024.10 - 2025.01 (3개월) |
+| **기술 스택** | Java 17, Spring Boot 3.4.5, JPA, QueryDSL 5.0.0 |
+| **데이터베이스** | MySQL 8.0 (운영), H2 (테스트) |
+| **테스트** | 단위/통합/동시성 테스트 446개 |
+| **인프라** | Docker, GitHub Actions, AWS RDS, Nginx |
+| **주요 해결 과제** | 동시성 제어, 이벤트 신뢰성, N+1 문제, 분산 스케줄러 |
 
-- **Gradle** (빌드)
-- **Docker** (컨테이너화)
-- **ShedLock 6.6.0** (분산 스케줄링)
-- **Swagger/OpenAPI** (API 문서화)
+---
 
-## 주요 기능
+## ERD (Entity Relationship Diagram)
 
-- **JWT 인증/인가**: Access/Refresh 토큰 기반
-- **커뮤니티**: 게시글 작성, 댓글, 좋아요, 이미지 업로드
-- **모임 관리**: 모임 생성, 참가 신청, 승인 시스템
-- **축제 정보**: 전국/서울시 축제 데이터 자동 동기화
-- **게임화**: 사용자 활동 포인트, 배지 시스템
-- **위치 기반**: 지역별 콘텐츠 분류 및 거리 기반 검색
-- **대시보드**: 사용자 활동 통계 및 랭킹
+### 커뮤니티 핵심 엔티티
 
-## 프로젝트 구조
+```mermaid
+erDiagram
+    users ||--o{ posts : "작성"
+    users ||--o{ comments : "작성"
+    users ||--o{ post_likes : "좋아요"
+    users ||--o{ refresh_tokens : "인증"
 
+    posts ||--o{ post_images : "포함"
+    posts ||--o{ post_likes : "받음"
+    posts ||--o{ comments : "달림"
+    posts }o--|| regions : "속함"
+
+    comments }o--o| comments : "parent(계층)"
+
+    regions }o--o| regions : "parent(계층)"
+
+    users {
+        bigint id PK
+        varchar email UK
+        varchar password
+        varchar nickname
+        int points
+        enum role
+        enum provider
+        datetime created_at
+    }
+
+    posts {
+        bigint id PK
+        bigint user_id FK
+        varchar region_code FK
+        varchar title
+        text content
+        int like_count
+        boolean deleted
+        datetime created_at
+    }
+
+    comments {
+        bigint id PK
+        bigint post_id FK
+        bigint user_id FK
+        bigint parent_comment_id FK
+        varchar content
+        boolean deleted
+        datetime created_at
+    }
+
+    post_images {
+        bigint id PK
+        bigint post_id FK
+        varchar file_path
+        int display_order
+    }
+
+    post_likes {
+        bigint id PK
+        bigint post_id FK
+        bigint user_id FK
+        datetime created_at
+    }
+
+    regions {
+        varchar code PK
+        varchar name
+        varchar parent_code FK
+        int level
+    }
+
+    refresh_tokens {
+        bigint id PK
+        bigint user_id FK
+        varchar token_hash
+        datetime expires_at
+    }
 ```
-src/main/java/com/eventitta/
-├── EventittaApplication.java
-├── auth/                 # JWT 인증/인가, 토큰 관리
-├── comment/              # 계층형 댓글 시스템
-├── common/               # 공통 설정, 예외 처리, 유틸리티
-├── dashboard/            # 사용자 활동 통계 및 랭킹
-├── festivals/            # 축제 정보 관리, 외부 API 연동
-├── file/                 # 파일 업로드 및 저장
-├── gamification/         # 포인트, 배지, 사용자 활동 추적
-├── meeting/              # 모임 생성, 참가 관리
-├── post/                 # 게시글, 좋아요, 이미지
-├── region/               # 행정구역 기반 지역 관리
-└── user/                 # 사용자 프로필 관리
+
+### 모임 & 게임화 시스템
+
+```mermaid
+erDiagram
+    users ||--o{ meetings : "생성(leader)"
+    users ||--o{ meeting_participants : "참가"
+    users ||--o{ user_activities : "활동기록"
+    users ||--o{ user_badges : "획득"
+    users ||--o{ failed_activity_events : "실패이벤트"
+
+    meetings ||--o{ meeting_participants : "포함"
+
+    badges ||--o{ user_badges : "수여됨"
+    badges ||--o{ badge_rules : "평가규칙"
+
+    users {
+        bigint id PK
+        varchar email UK
+        varchar nickname
+        int points
+    }
+
+    meetings {
+        bigint id PK
+        bigint leader_id FK
+        varchar title
+        text description
+        datetime start_time
+        datetime end_time
+        int max_members
+        int current_members
+        enum status
+    }
+
+    meeting_participants {
+        bigint id PK
+        bigint meeting_id FK
+        bigint user_id FK
+        enum status
+        datetime created_at
+    }
+
+    user_activities {
+        bigint id PK
+        bigint user_id FK
+        enum activity_type
+        enum resource_type
+        bigint target_id
+        int points_earned
+        datetime created_at
+    }
+
+    badges {
+        bigint id PK
+        varchar name UK
+        varchar description
+        varchar image_url
+    }
+
+    user_badges {
+        bigint id PK
+        bigint user_id FK
+        bigint badge_id FK
+        datetime awarded_at
+    }
+
+    badge_rules {
+        bigint id PK
+        bigint badge_id FK
+        enum activity_type
+        enum evaluation_type
+        int threshold
+        boolean enabled
+    }
+
+    failed_activity_events {
+        bigint id PK
+        bigint user_id FK
+        enum activity_type
+        enum operation_type
+        bigint target_id
+        int retry_count
+        enum status
+        text error_message
+    }
 ```
 
-## 핵심 엔티티
+---
 
-| 엔티티              | 설명                       |
-|------------------|--------------------------|
-| **User**         | 사용자 정보, JWT 인증, 프로필 관리   |
-| **Post**         | 게시글, 좋아요, 이미지 첨부, 지역 분류  |
-| **Comment**      | 계층형 댓글 시스템, 대댓글 지원       |
-| **Meeting**      | 모임 정보, 참가자 관리, 상태 추적     |
-| **Festival**     | 축제 정보, 외부 API 데이터, 위치 기반 |
-| **UserActivity** | 사용자 활동 추적, 포인트 적립        |
-| **Badge**        | 배지 시스템, 활동 기반 자동 지급      |
-| **Region**       | 행정구역 코드, 계층형 지역 관리       |
+## 배포 아키텍처
 
-## API 엔드포인트
+**운영 환경**: EC2 기반 Docker 컨테이너와 AWS RDS를 활용한 실제 프로덕션 배포 구조입니다.
 
-### 인증 `/api/v1/auth`
+### CI/CD 파이프라인
 
-- `POST /signup` - 회원가입
-- `POST /login` - 로그인 (JWT 토큰 발급)
-- `POST /refresh` - 토큰 갱신
-- `POST /logout` - 로그아웃
+![eventitta-architecture.png](docs/images/eventitta-architecture.png)
 
-### 커뮤니티 `/api/v1/posts`
+### 운영 환경
 
-- `GET /` - 게시글 목록 (페이징, 필터링)
-- `POST /` - 게시글 작성
-- `GET /{id}` - 게시글 상세
-- `PUT /{id}` - 게시글 수정
-- `DELETE /{id}` - 게시글 삭제
-- `POST /{id}/like` - 좋아요 토글
+| 구성 요소 | 기술 | 역할 |
+|-------------------|-------------------------|------------------|
+| **CI/CD** | GitHub Actions | 자동 빌드/테스트/배포 |
+| **컨테이너** | Docker + Docker Compose | 애플리케이션 격리 및 배포 |
+| **WAS** | Spring Boot (Docker) | 비즈니스 로직 처리 |
+| **DB** | AWS RDS (MySQL 8.0) | 데이터 영속성 |
+| **Reverse Proxy** | Nginx | 역방향 프록시, HTTPS 종료 |
+| **스토리지** | AWS S3 | 이미지/파일 저장 |
+| **모니터링** | Slack Webhook | 에러 알림, 배포 알림 |
 
-### 모임 `/api/v1/meetings`
+### 무중단 배포
 
-- `GET /` - 모임 검색
-- `POST /` - 모임 생성
-- `POST /{id}/join` - 모임 참가 신청
-- `PUT /{id}/participants/{pid}/approve` - 참가 승인
+- **헬스체크 기반 배포**: Spring Boot Actuator `/actuator/health` 엔드포인트 활용
+- **롤백 전략**: 이전 Docker 이미지로 즉시 전환 가능
+- **배포 검증**: 실행 중인 컨테이너 이미지 태그 자동 확인
 
-### 축제 `/api/v1/festivals`
+---
 
-- `GET /nearby` - 위치 기반 축제 검색
+## 핵심 기능
 
-### 파일 `/api/v1/uploads`
+- **커뮤니티**: 게시글/댓글, 좋아요, 이미지 업로드
+- **모임 관리**: 생성/참가 신청/승인 워크플로우 (동시성 제어 적용)
+- **축제 정보**: 서울시/전국 축제 API 연동 및 자동 동기화
+- **게임화 시스템**: 사용자 활동 추적, 포인트/배지 자동 지급 (이벤트 기반)
 
-- `POST /images` - 이미지 업로드
+---
 
-## 외부 API 연동
+## 기술적 하이라이트
 
-### 서울시 문화행사 API
+| 챌린지               | 해결                                      | 결과                               |
+|-------------------|-----------------------------------------|----------------------------------|
+| **JWT 인증 보안**     | HttpOnly 쿠키 + Refresh Token 해시 저장       | XSS 방어, 토큰 탈취 시 피해 최소화           |
+| **모임 참가 동시성**     | JPA 비관적 락 (`SELECT ... FOR UPDATE`)     | 정원 초과 승인 100% 방지, Lost Update 해결 |
+| **포인트 동시성**       | Atomic Update 쿼리 (`u.points + :amount`) | 높은 동시성 유지하면서 포인트 유실 방지           |
+| **비동기 이벤트 신뢰성**   | Retry + DB 저장 + 스케줄러 복구                 | 데이터 유실 방지, 자동 복구                 |
+| **도메인 간 강결합**     | Spring Events + 비동기 처리                  | 핵심 도메인과 부가 기능 의존성 분리             |
+| **분산 스케줄러 중복 실행** | ShedLock (JDBC 락)                       | 다중 인스턴스 환경 대비 단일 실행 보장            |
+| **복잡한 검색 조건**     | QueryDSL 동적 쿼리 + Fetch Join             | N+1 문제 해결, 타입 안전 처리              |
+| **Slack 알림 폭증**   | Caffeine Cache 기반 Rate Limiter          | Alert Level별 차등 제한, 7가지 알고리즘 비교  |
+| **Badge 평가 확장성**  | 전략 패턴 + EvaluationType 분리               | 새 평가 기준 추가 시 Evaluator만 구현       |
 
-- **URL**: `http://openapi.seoul.go.kr:8088`
-- **스케줄**: 매일 03:00 (KST) 자동 동기화
-- **데이터**: 서울시 문화행사, 공연, 전시 정보
+상세한 기술적 해결 과정은 [TECHNICAL_CHALLENGES.md](docs/TECHNICAL_CHALLENGES.md)에서 확인할 수 있습니다.
 
-### 전국 축제 API
+---
 
-- **URL**: `http://api.data.go.kr/openapi/tn_pubr_public_cltur_fstvl_api`
-- **스케줄**: 분기별 (1/4/7/10월 1일 02:00) 자동 동기화
-- **데이터**: 전국 문화축제 정보
+## 시스템 아키텍처
 
-## 스케줄러 작업 (ShedLock 적용)
+### 전체 시스템 구조
 
-| 작업         | 주기     | 설명                |
-|------------|--------|-------------------|
-| 축제 데이터 동기화 | 일별/분기별 | 외부 API에서 축제 정보 수집 |
-| 토큰 정리      | 매시간    | 만료된 Refresh 토큰 삭제 |
-| 모임 상태 업데이트 | 매분     | 종료된 모임 상태 자동 변경   |
+```mermaid
+graph LR
+  A[Client] --> B[JWT Filter]
+  B --> C[Controllers]
+  C --> D[Services]
+  D --> E[Event Publisher]
+  E -. 비동기 .-> F[Event Listeners]
+  D --> G[QueryDSL]
+  G --> H[(MySQL)]
+  F --> H
+  D --> I[External APIs]
+  C --> J[Exception Handler]
+  J --> K[Slack + RateLimiter]
+```
 
-## 게임화 시스템
+### JWT 인증 플로우
 
-### 포인트 시스템
+```mermaid
+sequenceDiagram
+  participant Client
+  participant Filter as JwtAuthenticationFilter
+  participant Controller
+  participant DB
+  Client ->> Filter: Request + Cookie(accessToken)
+  alt Token Valid
+    Filter ->> Filter: validateToken()
+    Filter ->> Controller: Continue
+    Controller -->> Client: 200 OK
+  else Token Expired
+    Client ->> Controller: /refresh + Cookie(refreshToken)
+    Controller ->> DB: Hash 비교 검증
+    Controller -->> Client: New Tokens (HttpOnly Cookie)
+  end
+```
 
-- 게시글 작성: **10 포인트**
-- 댓글 작성: **5 포인트**
-- 좋아요 받기: **1 포인트**
-- 모임 참가: **20 포인트**
+전체 아키텍처 설계와 도메인 구조는 [ARCHITECTURE.md](docs/ARCHITECTURE.md)에서 확인할 수 있습니다.
 
-### 배지 시스템
+---
 
-- **첫 게시글**: 첫 번째 게시글 작성
-- **열혈 댓글러**: 10개 이상 댓글 작성
-- **첫 모임 참가**: 첫 번째 모임 참가
-- **프로 좋아요꾼**: 50개 이상 좋아요 받기
+## 품질 & 안정성
 
-## 로컬 실행
+- **테스트**: 446개 테스트 통과 (단위/통합/컨트롤러/동시성 테스트)
+- **동시성 제어**: 비관적 락 + Atomic Update로 Race Condition 해결
+- **이벤트 신뢰성**: Retry + DB 저장 + 스케줄러로 비동기 이벤트 자동 복구
+- **쿼리 최적화**: QueryDSL + Fetch Join으로 N+1 문제 해결
+- **외부 API 안정성**: Spring Retry로 일시적 오류 자동 복구 (3회, exponential backoff)
+- **분산 환경**: ShedLock으로 스케줄러 중복 실행 방지
+- **알림 관리**: Caffeine Cache 기반 Rate Limiter로 Slack 알림 폭증 방지
 
-### 필요 조건
+---
 
-- Java 17+
-- MySQL 8.0+
-- Gradle 7.0+
-
-### 실행 방법
-
-1. **저장소 클론**
+## 빠른 시작
 
 ```bash
-git clone https://github.com/your-username/eventitta.git
-cd eventitta
-```
+# 1. MySQL 실행
+cd infra && docker-compose up -d
 
-2. **데이터베이스 설정**
+# 2. 환경 변수 설정
+export MYSQL_PASSWORD=your-password SECRET_KEY=your-jwt-secret
 
-```bash
-cd infra
-docker-compose up -d
-```
-
-3. **환경 변수 설정**
-
-```bash
-export MYSQL_PASSWORD=your-password
-export SECRET_KEY=your-jwt-secret
-export SEOUL_API_KEY=your-seoul-api-key
-export NATIONAL_API_KEY=your-national-api-key
-```
-
-4. **애플리케이션 실행**
-
-```bash
+# 3. 애플리케이션 실행
 ./gradlew bootRun --args='--spring.profiles.active=local'
+
+# 4. API 문서 확인
+open http://localhost:8080/swagger-ui.html
 ```
 
-### 빌드 및 테스트
+---
 
-```bash
-# 프로젝트 빌드
-./gradlew build
+## 문서
 
-# 테스트 실행
-./gradlew test
+- [**시스템 아키텍처**](docs/ARCHITECTURE.md) - 전체 설계, DDD, 이벤트 기반 구조, JWT 인증
+- [**기술적 챌린지**](docs/TECHNICAL_CHALLENGES.md) - 문제 해결 과정과 성과
 
-# 코드 스타일 검사
-./gradlew editorconfigCheck
-```
+---
 
-## 모니터링
+### 기술 스택
+- **Backend**: Java 17, Spring Boot 3.4.5, Spring Data JPA, QueryDSL 5.0.0
+- **Security**: Spring Security, JWT (HttpOnly Cookie)
+- **Database**: MySQL 8.0, Flyway Migration
+- **Infrastructure**: Docker, GitHub Actions, AWS RDS, Nginx
+- **Monitoring**: P6Spy, Spring Actuator, Slack Webhook
+- **기타**: ShedLock (분산 락), Caffeine Cache, Spring Retry
 
-- **Swagger UI**: `http://localhost:8080/swagger-ui.html`
-- **SQL 로깅**: P6Spy를 통한 쿼리 로깅
-- **응답 시간**: ResponseTimeFilter로 API 성능 측정
-
-## 보안
-
-- **JWT 인증**: Access Token (1시간) + Refresh Token (24시간)
-- **쿠키 보안**: HttpOnly, Secure 플래그 적용
-- **비밀번호 암호화**: BCrypt 해싱
-
-## 최근 업데이트
-
-- ShedLock 적용: 분산 환경에서 스케줄러 중복 실행 방지
-- User 엔티티 개선: Primary Key 자료형 최적화
-- 축제 데이터 리팩토링: 중복 감지 및 데이터 품질 향상
-- 통합 테스트 강화: 스케줄러 동시 실행 테스트 추가
-
-## 개발 진행 상황
-
-### 완료
-
-- JWT 기반 인증/인가 시스템
-- 사용자 관리 및 프로필
-- 게시글 CRUD 및 좋아요 시스템
-- 계층형 댓글 시스템
-- 모임 생성 및 참가 관리
-- 축제 정보 외부 API 연동
-- 게임화 시스템 (포인트, 배지)
-- 파일 업로드 기능
-- 위치 기반 검색
-- ShedLock 분산 스케줄링
-
-### 진행 예정
-
-- 실시간 알림 시스템
-- 성능 최적화 및 캐싱
-
-## 라이센스
-
-개인 프로젝트
+### 버전 관리
+- **v1.0** (2024.12): 커뮤니티, 모임 관리, 게임화 시스템, 축제 정보 연동 완료
+- **v2.0** (진행 중): 랭킹 시스템 쿼리 최적화, 축제 데이터 조회 성능 개선

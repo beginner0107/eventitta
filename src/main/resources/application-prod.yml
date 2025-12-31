@@ -39,6 +39,30 @@ spring:
     serialization:
       write-dates-as-timestamps: false
     default-property-inclusion: non_null
+  data:
+    redis:
+      host: ${ELASTICACHE_PRIMARY_ENDPOINT}
+      port: 6379
+      ssl:
+        enabled: true
+      password: ${ELASTICACHE_AUTH_TOKEN:}
+      timeout: 2000ms
+      connect-timeout: 5000ms
+      command-timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 5
+          min-idle: 2
+          max-wait: 2000ms
+          time-between-eviction-runs: 60s
+        read-from: MASTER
+        cluster:
+          refresh:
+            adaptive: false
+            period: 300s
+          follow-redirects: false
+          max-redirects: 0
 
 server:
   port: ${SERVER_PORT:8080}

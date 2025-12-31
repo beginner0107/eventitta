@@ -70,10 +70,25 @@ dependencies {
     // Spring Actuator
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
+    // Redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'io.lettuce:lettuce-core'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testImplementation 'com.h2database:h2'
     testImplementation 'org.springframework.security:spring-security-test'
+
+    // Spring Boot Testcontainers Support
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+
+    // Testcontainers for Redis
+    testImplementation 'org.testcontainers:testcontainers:1.19.3'
+    testImplementation 'org.testcontainers:junit-jupiter:1.19.3'
+    testImplementation 'com.redis:testcontainers-redis:2.2.2'
+
+    // Awaitility for async testing
+    testImplementation 'org.awaitility:awaitility:4.2.0'
 }
 
 tasks.withType(JavaCompile).configureEach {

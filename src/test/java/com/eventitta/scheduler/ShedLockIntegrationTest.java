@@ -17,7 +17,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.context.jdbc.Sql;
 
 import java.sql.Timestamp;
 import java.time.Duration;
@@ -37,7 +36,6 @@ import static org.mockito.Mockito.*;
  */
 @ActiveProfiles("test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@Sql(scripts = "classpath:schema-h2.sql")
 @DisplayName("동시 실행 방지 기능 테스트 - 같은 작업이 여러 번 동시에 실행되지 않는지 확인")
 class ShedLockIntegrationTest extends IntegrationTestSupport {
 

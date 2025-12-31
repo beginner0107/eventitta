@@ -14,8 +14,6 @@ import com.eventitta.comment.controller.CommentController;
 import com.eventitta.comment.service.CommentService;
 import com.eventitta.notification.resolver.AlertLevelResolver;
 import com.eventitta.notification.service.SlackNotificationService;
-import com.eventitta.dashboard.controller.DashboardController;
-import com.eventitta.dashboard.service.DashboardService;
 import com.eventitta.file.controller.FileUploadController;
 import com.eventitta.file.service.FileStorageService;
 import com.eventitta.file.service.FileValidationService;
@@ -41,7 +39,6 @@ import org.springframework.test.web.servlet.MockMvc;
     FileUploadController.class,
     CommentController.class,
     UserController.class,
-    DashboardController.class,
     RegionController.class
 })
 @AutoConfigureMockMvc(addFilters = false)
@@ -75,8 +72,6 @@ public abstract class ControllerTestSupport {
     protected UserService userService;
     @MockitoBean
     protected UserActivityService userActivityService;
-    @MockitoBean
-    protected DashboardService dashboardService;
     @MockitoBean
     protected SlackNotificationService slackNotificationService;
     @MockitoBean

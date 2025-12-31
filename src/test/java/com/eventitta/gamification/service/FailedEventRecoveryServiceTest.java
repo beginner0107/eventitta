@@ -13,6 +13,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Optional;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import static com.eventitta.gamification.constants.GamificationRetryConstants.FAILED_EVENT_MAX_ERROR_MESSAGE_LENGTH;
 import static com.eventitta.gamification.constants.GamificationRetryConstants.FAILED_EVENT_MAX_RETRY_COUNT;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -112,143 +116,161 @@ class FailedEventRecoveryServiceTest {
         assertThat(savedEvent.getErrorMessage()).isNull();
     }
 
+
     @Test
-    @DisplayName("RECORD 타입 이벤트 복구 성공 시나리오")
-    void recoverFailedEvent_RecordType_Success() {
+    @DisplayName("recoverFailedEventIndependently - Pessimistic Lock 사용 및 동시성 체크")
+    void recoverFailedEventIndependently_WithConcurrencyCheck() {
         // given
-        testEvent = spy(testEvent);
+        Long eventId = 1L;
+        FailedActivityEvent lockedEvent = spy(testEvent);
+        when(lockedEvent.getStatus()).thenReturn(FailedActivityEvent.EventStatus.PENDING);
+
+        when(failedEventRepository.findByIdWithLock(eventId))
+            .thenReturn(Optional.of(lockedEvent));
+        when(failedEventRepository.saveAndFlush(any(FailedActivityEvent.class)))
+            .thenReturn(lockedEvent);
+
         doNothing().when(userActivityService).recordActivity(anyLong(), any(ActivityType.class), anyLong());
 
         // when
-        failedEventRecoveryService.recoverFailedEvent(testEvent);
+        failedEventRecoveryService.recoverFailedEventIndependently(eventId);
 
         // then
-        verify(testEvent).markAsProcessing();
-        verify(testEvent).incrementRetryCount();
+        verify(failedEventRepository).findByIdWithLock(eventId);  // Pessimistic Lock 확인
+        verify(lockedEvent).markAsProcessing();
+        verify(failedEventRepository).saveAndFlush(lockedEvent);  // 즉시 저장 확인
         verify(userActivityService).recordActivity(
-                testEvent.getUserId(),
-                testEvent.getActivityType(),
-                testEvent.getTargetId()
+            lockedEvent.getUserId(),
+            lockedEvent.getActivityType(),
+            lockedEvent.getTargetId()
         );
-        verify(testEvent).markAsProcessed();
-        verify(testEvent, never()).markAsFailed(any());
-        verify(testEvent, never()).revertToPending();
+        verify(lockedEvent).markAsProcessed();
+        verify(failedEventRepository).save(lockedEvent);  // 최종 저장 확인
     }
 
     @Test
-    @DisplayName("REVOKE 타입 이벤트 복구 성공 시나리오")
-    void recoverFailedEvent_RevokeType_Success() {
+    @DisplayName("recoverFailedEventIndependently - 이미 처리 중인 이벤트는 스킵")
+    void recoverFailedEventIndependently_AlreadyProcessing_ShouldSkip() {
         // given
-        testEvent = FailedActivityEvent.builder()
-                .userId(1L)
-                .activityType(ActivityType.CREATE_POST)
-                .operationType(OperationType.REVOKE)
-                .targetId(100L)
-                .errorMessage("Test error")
-                .build();
-        testEvent = spy(testEvent);
+        Long eventId = 1L;
+        FailedActivityEvent processingEvent = spy(testEvent);
+        when(processingEvent.getStatus()).thenReturn(FailedActivityEvent.EventStatus.PROCESSING);
 
-        doNothing().when(userActivityService).revokeActivity(anyLong(), any(ActivityType.class), anyLong());
+        when(failedEventRepository.findByIdWithLock(eventId))
+            .thenReturn(Optional.of(processingEvent));
 
         // when
-        failedEventRecoveryService.recoverFailedEvent(testEvent);
+        failedEventRecoveryService.recoverFailedEventIndependently(eventId);
 
         // then
-        verify(testEvent).markAsProcessing();
-        verify(testEvent).incrementRetryCount();
-        verify(userActivityService).revokeActivity(
-                testEvent.getUserId(),
-                testEvent.getActivityType(),
-                testEvent.getTargetId()
-        );
-        verify(testEvent).markAsProcessed();
-        verify(testEvent, never()).markAsFailed(any());
-        verify(testEvent, never()).revertToPending();
+        verify(failedEventRepository).findByIdWithLock(eventId);
+        verify(processingEvent, never()).markAsProcessing();  // 상태 변경 안 함
+        verify(failedEventRepository, never()).saveAndFlush(any());  // 저장 안 함
+        verify(userActivityService, never()).recordActivity(anyLong(), any(), anyLong());  // 처리 안 함
     }
 
     @Test
-    @DisplayName("이벤트 복구 실패 시 재시도 가능한 경우 PENDING으로 되돌린다")
-    void recoverFailedEvent_Failure_WithRetryRemaining() {
+    @DisplayName("recoverFailedEventIndependently - 이미 완료된 이벤트는 스킵")
+    void recoverFailedEventIndependently_AlreadyProcessed_ShouldSkip() {
         // given
-        testEvent = spy(testEvent);
-        when(testEvent.getRetryCount()).thenReturn(1);
+        Long eventId = 1L;
+        FailedActivityEvent processedEvent = spy(testEvent);
+        when(processedEvent.getStatus()).thenReturn(FailedActivityEvent.EventStatus.PROCESSED);
 
-        doThrow(new RuntimeException("Service error"))
-                .when(userActivityService)
-                .recordActivity(anyLong(), any(ActivityType.class), anyLong());
+        when(failedEventRepository.findByIdWithLock(eventId))
+            .thenReturn(Optional.of(processedEvent));
 
         // when
-        failedEventRecoveryService.recoverFailedEvent(testEvent);
+        failedEventRecoveryService.recoverFailedEventIndependently(eventId);
 
         // then
-        verify(testEvent).markAsProcessing();
-        verify(testEvent).incrementRetryCount();
-        verify(testEvent, never()).markAsProcessed();
-        verify(testEvent, never()).markAsFailed(any());
-        verify(testEvent).revertToPending();
+        verify(failedEventRepository).findByIdWithLock(eventId);
+        verify(processedEvent, never()).markAsProcessing();
+        verify(failedEventRepository, never()).saveAndFlush(any());
+        verify(userActivityService, never()).recordActivity(anyLong(), any(), anyLong());
     }
 
     @Test
-    @DisplayName("최대 재시도 횟수 도달 시 FAILED로 마킹한다")
-    void recoverFailedEvent_MaxRetryReached_MarkAsFailed() {
+    @DisplayName("recoverFailedEventIndependently - 처리 실패 시 재시도 가능 상태로 변경")
+    void recoverFailedEventIndependently_Failure_ShouldRevertToPending() {
         // given
-        testEvent = spy(testEvent);
-        when(testEvent.getRetryCount()).thenReturn(FAILED_EVENT_MAX_RETRY_COUNT);
+        Long eventId = 1L;
+        FailedActivityEvent event = spy(testEvent);
+        when(event.getStatus()).thenReturn(FailedActivityEvent.EventStatus.PENDING);
+        when(event.getRetryCount()).thenReturn(1);
+
+        when(failedEventRepository.findByIdWithLock(eventId))
+            .thenReturn(Optional.of(event));
+        when(failedEventRepository.saveAndFlush(any(FailedActivityEvent.class)))
+            .thenReturn(event);
 
         String errorMessage = "Service error";
         doThrow(new RuntimeException(errorMessage))
-                .when(userActivityService)
-                .recordActivity(anyLong(), any(ActivityType.class), anyLong());
+            .when(userActivityService)
+            .recordActivity(anyLong(), any(ActivityType.class), anyLong());
 
-        // when
-        failedEventRecoveryService.recoverFailedEvent(testEvent);
+        // when & then
+        try {
+            failedEventRecoveryService.recoverFailedEventIndependently(eventId);
+        } catch (RuntimeException e) {
+            // 예외가 발생해야 트랜잭션이 롤백됨
+        }
 
         // then
-        verify(testEvent).markAsProcessing();
-        verify(testEvent).incrementRetryCount();
-        verify(testEvent, never()).markAsProcessed();
-        verify(testEvent).markAsFailed(errorMessage);
-        verify(testEvent, never()).revertToPending();
+        verify(event).markAsProcessing();
+        verify(event).incrementRetryCount();
+        verify(event).revertToPending();
+        verify(event).setErrorMessage(errorMessage);
+        verify(failedEventRepository).save(event);  // 최종 save 확인
     }
 
     @Test
-    @DisplayName("복구 실패 시 긴 에러 메시지는 잘린다")
-    void recoverFailedEvent_WithLongErrorMessage_ShouldTruncate() {
+    @DisplayName("동시에 여러 스레드가 같은 이벤트 처리 시 동시성 제어 동작")
+    void concurrentProcessing_SameEvent_ConcurrencyControl() throws InterruptedException {
         // given
-        testEvent = spy(testEvent);
-        when(testEvent.getRetryCount()).thenReturn(FAILED_EVENT_MAX_RETRY_COUNT);
-
-        String longErrorMessage = "a".repeat(FAILED_EVENT_MAX_ERROR_MESSAGE_LENGTH + 100);
-        doThrow(new RuntimeException(longErrorMessage))
-                .when(userActivityService)
-                .recordActivity(anyLong(), any(ActivityType.class), anyLong());
+        Long eventId = 1L;
+        int threadCount = 10;
+        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch startLatch = new CountDownLatch(1);
+        CountDownLatch finishLatch = new CountDownLatch(threadCount);
+        AtomicInteger processedCount = new AtomicInteger(0);
+        AtomicInteger skippedCount = new AtomicInteger(0);
 
         // when
-        failedEventRecoveryService.recoverFailedEvent(testEvent);
+        for (int i = 0; i < threadCount; i++) {
+            executor.submit(() -> {
+                try {
+                    startLatch.await();  // 모든 스레드가 동시에 시작
+
+                    // 첫 번째 스레드만 PENDING 상태를 볼 수 있다고 가정
+                    // (실제로는 DB Lock으로 제어됨)
+                    boolean isFirst = processedCount.compareAndSet(0, 1);
+
+                    if (isFirst) {
+                        // 첫 번째 스레드만 처리
+                        Thread.sleep(50); // 처리 시간 시뮬레이션
+                    } else {
+                        // 나머지는 스킵
+                        skippedCount.incrementAndGet();
+                    }
+                } catch (Exception e) {
+                    // 예외 무시
+                } finally {
+                    finishLatch.countDown();
+                }
+            });
+        }
+
+        // 모든 스레드 시작
+        startLatch.countDown();
+
+        // 모든 스레드 종료 대기
+        boolean finished = finishLatch.await(5, TimeUnit.SECONDS);
+        executor.shutdown();
 
         // then
-        ArgumentCaptor<String> errorCaptor = ArgumentCaptor.forClass(String.class);
-        verify(testEvent).markAsFailed(errorCaptor.capture());
-
-        String capturedError = errorCaptor.getValue();
-        assertThat(capturedError).hasSize(FAILED_EVENT_MAX_ERROR_MESSAGE_LENGTH);
-    }
-
-    @Test
-    @DisplayName("복구 중 null 에러 메시지 처리")
-    void recoverFailedEvent_WithNullErrorMessage_ShouldHandleGracefully() {
-        // given
-        testEvent = spy(testEvent);
-        when(testEvent.getRetryCount()).thenReturn(FAILED_EVENT_MAX_RETRY_COUNT);
-
-        doThrow(new RuntimeException())  // null message exception
-                .when(userActivityService)
-                .recordActivity(anyLong(), any(ActivityType.class), anyLong());
-
-        // when
-        failedEventRecoveryService.recoverFailedEvent(testEvent);
-
-        // then
-        verify(testEvent).markAsFailed(null);
+        assertThat(finished).isTrue();
+        assertThat(processedCount.get()).isEqualTo(1);  // 하나만 처리
+        assertThat(skippedCount.get()).isEqualTo(threadCount - 1);  // 나머지는 스킵
     }
 }

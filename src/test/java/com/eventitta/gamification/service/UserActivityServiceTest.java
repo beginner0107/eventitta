@@ -2,6 +2,7 @@ package com.eventitta.gamification.service;
 
 import com.eventitta.gamification.domain.ActivityType;
 import com.eventitta.gamification.domain.UserActivity;
+import com.eventitta.gamification.event.ActivityRecordedEvent;
 import com.eventitta.gamification.repository.UserActivityRepository;
 import com.eventitta.user.domain.Provider;
 import com.eventitta.user.domain.Role;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.Optional;
 
@@ -32,7 +34,7 @@ class UserActivityServiceTest {
     @Mock
     private UserRepository userRepository;
     @Mock
-    private BadgeService badgeService;
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private UserActivityService userActivityService;
@@ -49,19 +51,21 @@ class UserActivityServiceTest {
     }
 
     @Test
-    @DisplayName("활동 기록 시 사용자 포인트가 증가하고 배지 서비스가 호출된다")
-    void givenValidActivity_whenRecordActivity_thenPointsIncreasedAndBadgeServiceCalled() {
+    @DisplayName("활동 기록 시 사용자 포인트가 증가하고 이벤트가 발행된다")
+    void givenValidActivity_whenRecordActivity_thenPointsIncreasedAndEventPublished() {
         // given
         Long userId = 1L;
         Long targetId = 10L;
-        User user = createTestUser();
         int pointsToAdd = USER_LOGIN.getDefaultPoint();
 
         when(userActivityRepository.save(any(UserActivity.class)))
-            .thenAnswer(invocation -> invocation.getArgument(0));
+            .thenAnswer(invocation -> {
+                UserActivity activity = invocation.getArgument(0);
+                // 실제로는 DB가 ID를 할당하지만, 테스트에서는 간단히 처리
+                return activity;
+            });
         when(userRepository.incrementPoints(userId, pointsToAdd))
             .thenReturn(1); // 성공적으로 업데이트됨
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
         // when
         userActivityService.recordActivity(userId, USER_LOGIN, targetId);
@@ -69,12 +73,12 @@ class UserActivityServiceTest {
         // then
         verify(userActivityRepository).save(any(UserActivity.class));
         verify(userRepository).incrementPoints(userId, pointsToAdd);
-        verify(badgeService).checkAndAwardBadges(user);
+        verify(eventPublisher).publishEvent(any(ActivityRecordedEvent.class));
     }
 
     @Test
-    @DisplayName("활동 취소 시 포인트가 감소하고 기록이 삭제된다")
-    void givenActivity_whenRevokeActivity_thenPointsDecreasedAndActivityDeleted() {
+    @DisplayName("활동 취소 시 포인트가 감소하고 이벤트가 발행된다")
+    void givenActivity_whenRevokeActivity_thenPointsDecreasedAndEventPublished() {
         // given
         Long userId = 1L;
         Long targetId = 10L;
@@ -93,6 +97,7 @@ class UserActivityServiceTest {
         verify(userActivityRepository)
             .deleteByUserIdAndActivityTypeAndTargetId(userId, type, targetId);
         verify(userRepository).decrementPoints(userId, pointsToDeduct);
+        verify(eventPublisher).publishEvent(any(ActivityRecordedEvent.class));
     }
 
     @Test

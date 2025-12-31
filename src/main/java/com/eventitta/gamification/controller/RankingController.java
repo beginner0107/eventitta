@@ -14,6 +14,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
@@ -52,10 +53,10 @@ public class RankingController {
     })
     public ResponseEntity<RankingPageResponse> getTopRankings(
         @Parameter(description = "순위 타입", example = "POINTS")
-        @RequestParam(defaultValue = "POINTS") RankingType type,
+        @RequestParam(name = "type", defaultValue = "POINTS") RankingType type,
 
         @Parameter(description = "조회할 순위 수", example = "100")
-        @RequestParam(defaultValue = "100") @Min(1) @Max(500) int limit
+        @RequestParam(name = "limit", defaultValue = "100") @Min(1) @Max(500) int limit
     ) {
         log.debug("[RankingAPI] Getting top {} rankings for type: {}", limit, type);
         RankingPageResponse response = rankingService.getTopRankings(type, limit);
@@ -83,10 +84,14 @@ public class RankingController {
     })
     public ResponseEntity<UserRankResponse> getMyRank(
         @Parameter(description = "순위 타입", example = "POINTS")
-        @RequestParam(defaultValue = "POINTS") RankingType type,
+        @RequestParam(name = "type", defaultValue = "POINTS") RankingType type,
 
         @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
+        if (userPrincipal == null) {
+            return ResponseEntity.status(401).build();
+        }
+
         Long userId = userPrincipal.getId();
         log.debug("[RankingAPI] Getting rank for current user: userId={}, type={}", userId, type);
 
@@ -114,10 +119,10 @@ public class RankingController {
     })
     public ResponseEntity<UserRankResponse> getUserRank(
         @Parameter(description = "유저 ID", example = "1")
-        @PathVariable Long userId,
+        @PathVariable("userId") Long userId,
 
         @Parameter(description = "순위 타입", example = "POINTS")
-        @RequestParam(defaultValue = "POINTS") RankingType type
+        @RequestParam(name = "type", defaultValue = "POINTS") RankingType type
     ) {
         log.debug("[RankingAPI] Getting rank for user: userId={}, type={}", userId, type);
         UserRankResponse response = rankingService.getUserRank(type, userId);

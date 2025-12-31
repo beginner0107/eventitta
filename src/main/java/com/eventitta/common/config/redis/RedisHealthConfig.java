@@ -6,6 +6,7 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisCallback;
@@ -17,9 +18,11 @@ import static com.eventitta.common.constants.RedisConstants.*;
 
 /**
  * Redis 헬스체크 설정
+ * 테스트 프로파일에서는 비활성화됨
  */
 @Slf4j
 @Configuration
+@Profile("!test")  // 테스트 프로파일에서 비활성화
 @RequiredArgsConstructor
 public class RedisHealthConfig {
 

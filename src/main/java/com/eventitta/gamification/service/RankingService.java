@@ -40,7 +40,7 @@ public class RankingService {
     /**
      * Top N 순위 조회 (유저 정보 포함)
      *
-     * @param type 순위 타입 (POINTS 또는 ACTIVITY_COUNT)
+     * @param type  순위 타입 (POINTS 또는 ACTIVITY_COUNT)
      * @param limit 조회할 순위 수
      * @return 순위 페이지 응답
      */
@@ -77,7 +77,7 @@ public class RankingService {
             List<UserRankResponse> userRankResponses = new ArrayList<>();
             for (ZSetOperations.TypedTuple<Object> tuple : rankings) {
                 Long userId = tuple.getValue() instanceof String
-                    ? Long.parseLong((String) tuple.getValue())
+                    ? Long.valueOf(Long.parseLong((String) tuple.getValue()))
                     : (Long) tuple.getValue();
                 User user = userMap.get(userId);
 
@@ -114,7 +114,7 @@ public class RankingService {
      * 특정 유저의 순위 조회
      * 캐시를 사용하여 Redis 부하 감소
      *
-     * @param type 순위 타입
+     * @param type   순위 타입
      * @param userId 유저 ID
      * @return 유저 순위 응답
      */
@@ -180,7 +180,7 @@ public class RankingService {
     /**
      * 활동량 순위 업데이트
      *
-     * @param userId 유저 ID
+     * @param userId        유저 ID
      * @param activityCount 활동 수
      */
     public void updateActivityCountRanking(Long userId, long activityCount) {
@@ -203,7 +203,7 @@ public class RankingService {
     /**
      * 배치로 여러 유저 점수 업데이트
      *
-     * @param type 순위 타입
+     * @param type       순위 타입
      * @param userScores 유저별 점수 맵
      */
     public void updateScoresBatch(RankingType type, Map<Long, Double> userScores) {
@@ -234,7 +234,7 @@ public class RankingService {
     /**
      * 유저 순위 캐시 무효화
      *
-     * @param type 순위 타입
+     * @param type   순위 타입
      * @param userId 유저 ID
      */
     @CacheEvict(value = "userRank", key = "#type + ':' + #userId")
@@ -245,7 +245,7 @@ public class RankingService {
     /**
      * 특정 유저를 순위에서 제거
      *
-     * @param type 순위 타입
+     * @param type   순위 타입
      * @param userId 유저 ID
      */
     public void removeUser(RankingType type, Long userId) {

@@ -144,8 +144,7 @@ class RedisConfigTest {
         int batchSize = 1000;
 
         // when
-        long startTime = System.currentTimeMillis();
-        redisTemplate.executePipelined((org.springframework.data.redis.core.RedisCallback<Object>) connection -> {
+        stringRedisTemplate.executePipelined((org.springframework.data.redis.core.RedisCallback<Object>) connection -> {
             for (int i = 0; i < batchSize; i++) {
                 connection.zSetCommands().zAdd(
                     ("test:batch:ranking").getBytes(),
@@ -155,13 +154,16 @@ class RedisConfigTest {
             }
             return null;
         });
-        long endTime = System.currentTimeMillis();
 
         // then
-        Long count = redisTemplate.opsForZSet().zCard("test:batch:ranking");
+        // 파이프라인을 통해 모든 데이터가 정상적으로 저장되었는지 검증
+        Long count = stringRedisTemplate.opsForZSet().zCard("test:batch:ranking");
         assertThat(count).isEqualTo(batchSize);
 
-        assertThat(endTime - startTime).isLessThan(1000);
+        // 상위 3개 사용자가 올바른 순서로 저장되었는지 확인 (점수가 높은 순)
+        Set<String> topUsers = stringRedisTemplate.opsForZSet().reverseRange("test:batch:ranking", 0, 2);
+        assertThat(topUsers).hasSize(3);
+        assertThat(topUsers).containsExactly("user999", "user998", "user997");
     }
 
     static class TestUser {

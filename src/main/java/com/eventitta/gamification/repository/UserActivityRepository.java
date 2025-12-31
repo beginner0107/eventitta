@@ -32,4 +32,24 @@ public interface UserActivityRepository extends JpaRepository<UserActivity, Long
                                 @Param("activityType") ActivityType activityType,
                                 @Param("startOfDay") LocalDateTime startOfDay,
                                 @Param("endOfDay") LocalDateTime endOfDay);
+
+    /**
+     * 특정 유저의 전체 활동 수 조회
+     */
+    long countByUserId(Long userId);
+
+    /**
+     * 최근 N시간 이내 활동이 있는 유저 ID 목록 조회
+     */
+    @Query("SELECT DISTINCT ua.userId FROM UserActivity ua " +
+        "WHERE ua.createdAt >= :since " +
+        "ORDER BY ua.userId")
+    List<Long> findRecentlyActiveUserIds(@Param("since") LocalDateTime since);
+
+    /**
+     * 최근 N시간 이내 활동이 있는 유저 ID 목록 조회 (헬퍼 메서드)
+     */
+    default List<Long> findRecentlyActiveUserIds(int hours) {
+        return findRecentlyActiveUserIds(LocalDateTime.now().minusHours(hours));
+    }
 }

@@ -45,7 +45,7 @@ spring:
       port: 6379
       ssl:
         enabled: true
-      password: ${ELASTICACHE_AUTH_TOKEN}
+      password: ${ELASTICACHE_AUTH_TOKEN:}
       timeout: 2000ms
       connect-timeout: 5000ms
       command-timeout: 2000ms

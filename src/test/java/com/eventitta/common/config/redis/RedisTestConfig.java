@@ -1,5 +1,7 @@
 package com.eventitta.common.config.redis;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -11,6 +13,8 @@ import org.testcontainers.utility.DockerImageName;
 @TestConfiguration
 @Profile("test")
 public class RedisTestConfig {
+
+    private static final Logger log = LoggerFactory.getLogger(RedisTestConfig.class);
 
     private static final String REDIS_IMAGE = "redis:7-alpine";
     private static final int REDIS_PORT = 6379;
@@ -40,19 +44,21 @@ public class RedisTestConfig {
 
     public static class RedisTestHelper {
 
+        private static final Logger log = LoggerFactory.getLogger(RedisTestHelper.class);
+
         public static void cleanupRedis(GenericContainer<?> container) {
             try {
                 container.execInContainer("redis-cli", "FLUSHALL");
             } catch (Exception e) {
-                System.err.println("Failed to cleanup Redis: " + e.getMessage());
+                log.error("Failed to cleanup Redis", e);
             }
         }
 
         public static void printConnectionInfo(GenericContainer<?> container) {
-            System.out.println("Redis Test Container Info:");
-            System.out.println("  Host: " + container.getHost());
-            System.out.println("  Port: " + container.getFirstMappedPort());
-            System.out.println("  Image: " + container.getDockerImageName());
+            log.debug("Redis Test Container Info: Host={}, Port={}, Image={}",
+                container.getHost(),
+                container.getFirstMappedPort(),
+                container.getDockerImageName());
         }
     }
 }

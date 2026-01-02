@@ -79,7 +79,7 @@ public class RegionService {
      *
      * @return 리프 노드 지역 옵션 목록 (코드 기준 오름차순)
      */
-    @Cacheable(value = REGION_OPTIONS, key = "'leafRegions'")
+    @Cacheable(value = REGION_OPTIONS, key = "'leafRegions'", sync = true)
     public List<RegionOptionResponse> getRegionOptions() {
         Map<String, Region> regionMap = cacheService.getAllRegionsAsMap();
         List<Region> leafRegions = getLeafRegions(regionMap);

@@ -45,7 +45,7 @@ public class PostImageFileScheduler {
             log.info("[Scheduler] 미사용 이미지 파일 정리 완료 - 삭제 건수: {}, 전체 파일: {}, DB 이미지: {}",
                 deletedCount, filesInStorage.size(), imageUrls.size());
         } catch (Exception e) {
-            log.error("[Scheduler] 미사용 이미지 파일 정리 실패 - error={}", e.getMessage(), e);
+            log.error("[Scheduler] 미사용 이미지 파일 정리 실패", e);
         }
     }
 

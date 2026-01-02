@@ -35,7 +35,7 @@ public class MeetingStatusScheduler {
                 log.debug("[Scheduler] 종료된 미팅 상태 변경 없음");
             }
         } catch (Exception e) {
-            log.error("[Scheduler] 종료된 미팅 상태 업데이트 실패 - error={}", e.getMessage(), e);
+            log.error("[Scheduler] 종료된 미팅 상태 업데이트 실패", e);
         }
     }
 }

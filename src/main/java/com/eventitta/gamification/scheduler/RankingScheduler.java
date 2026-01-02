@@ -18,6 +18,9 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class RankingScheduler {
 
+    private static final long INCREMENTAL_SYNC_INTERVAL_MS = 3_600_000L;    // 1시간
+    private static final long INCREMENTAL_SYNC_INITIAL_DELAY_MS = 600_000L; // 10분
+
     private final RankingSyncService rankingSyncService;
 
     /**
@@ -26,12 +29,12 @@ public class RankingScheduler {
      */
     @EventListener(ApplicationReadyEvent.class)
     public void onApplicationReady() {
-        log.info("[RankingScheduler] Application ready, starting initial ranking sync");
+        log.info("[Scheduler] RankingScheduler - Application ready, starting initial ranking sync");
         try {
             rankingSyncService.syncAllRankingsFromDatabase();
-            log.info("[RankingScheduler] Initial ranking sync completed successfully");
+            log.info("[Scheduler] RankingScheduler - Initial ranking sync completed successfully");
         } catch (Exception e) {
-            log.error("[RankingScheduler] Failed to perform initial ranking sync", e);
+            log.error("[Scheduler] RankingScheduler - Failed to perform initial ranking sync", e);
         }
     }
 
@@ -46,14 +49,14 @@ public class RankingScheduler {
         lockAtLeastFor = "5m"
     )
     public void performFullSync() {
-        log.info("[RankingScheduler] Starting scheduled full ranking sync");
+        log.info("[Scheduler] RankingScheduler - Starting scheduled full ranking sync");
         try {
             long startTime = System.currentTimeMillis();
             rankingSyncService.syncAllRankingsFromDatabase();
             long duration = System.currentTimeMillis() - startTime;
-            log.info("[RankingScheduler] Full ranking sync completed in {} ms", duration);
+            log.info("[Scheduler] RankingScheduler - Full ranking sync completed in {} ms", duration);
         } catch (Exception e) {
-            log.error("[RankingScheduler] Failed to perform full ranking sync", e);
+            log.error("[Scheduler] RankingScheduler - Failed to perform full ranking sync", e);
         }
     }
 
@@ -61,19 +64,22 @@ public class RankingScheduler {
      * 매 1시간마다 증분 동기화 수행
      * 최근 활동이 있는 유저들만 동기화하여 성능 최적화
      */
-    @Scheduled(fixedDelay = 3600000, initialDelay = 600000) // 1시간마다, 초기 지연 10분
+    @Scheduled(
+        fixedDelay = INCREMENTAL_SYNC_INTERVAL_MS,
+        initialDelay = INCREMENTAL_SYNC_INITIAL_DELAY_MS
+    )
     @SchedulerLock(
         name = "RankingScheduler_incrementalSync",
         lockAtMostFor = "10m",
         lockAtLeastFor = "1m"
     )
     public void performIncrementalSync() {
-        log.debug("[RankingScheduler] Starting scheduled incremental ranking sync");
+        log.debug("[Scheduler] RankingScheduler - Starting scheduled incremental ranking sync");
         try {
             rankingSyncService.syncRecentlyActiveUsers();
-            log.debug("[RankingScheduler] Incremental ranking sync completed");
+            log.debug("[Scheduler] RankingScheduler - Incremental ranking sync completed");
         } catch (Exception e) {
-            log.error("[RankingScheduler] Failed to perform incremental ranking sync", e);
+            log.error("[Scheduler] RankingScheduler - Failed to perform incremental ranking sync", e);
         }
     }
 
@@ -88,13 +94,13 @@ public class RankingScheduler {
         lockAtLeastFor = "10m"
     )
     public void performWeeklyRebuild() {
-        log.info("[RankingScheduler] Starting weekly ranking rebuild");
+        log.info("[Scheduler] RankingScheduler - Starting weekly ranking rebuild");
         try {
             // 전체 재동기화 수행
             rankingSyncService.syncAllRankingsFromDatabase();
-            log.info("[RankingScheduler] Weekly ranking rebuild completed successfully");
+            log.info("[Scheduler] RankingScheduler - Weekly ranking rebuild completed successfully");
         } catch (Exception e) {
-            log.error("[RankingScheduler] Failed to perform weekly ranking rebuild", e);
+            log.error("[Scheduler] RankingScheduler - Failed to perform weekly ranking rebuild", e);
         }
     }
 }

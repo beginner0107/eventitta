@@ -27,7 +27,7 @@ public class RefreshTokenCleanupTask {
             long deleted = refreshTokenRepository.deleteByExpiresAtBefore(LocalDateTime.now());
             log.info("[Scheduler] 만료된 리프레시 토큰 정리 완료 - 삭제 건수: {}", deleted);
         } catch (Exception e) {
-            log.error("[Scheduler] 만료된 리프레시 토큰 정리 실패 - error={}", e.getMessage(), e);
+            log.error("[Scheduler] 만료된 리프레시 토큰 정리 실패", e);
         }
     }
 }

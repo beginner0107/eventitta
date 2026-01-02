@@ -13,6 +13,7 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.util.StringUtils;
@@ -108,6 +109,19 @@ public class RedisConfig {
         template.setHashKeySerializer(stringSerializer);
         template.setHashValueSerializer(jsonSerializer);
 
+        template.afterPropertiesSet();
+        return template;
+    }
+
+    /**
+     * StringRedisTemplate 설정 - Rate Limiter용
+     *
+     * <p>String 타입 key-value 연산에 최적화된 RedisTemplate입니다.</p>
+     */
+    @Bean
+    public StringRedisTemplate stringRedisTemplate(RedisConnectionFactory connectionFactory) {
+        StringRedisTemplate template = new StringRedisTemplate();
+        template.setConnectionFactory(connectionFactory);
         template.afterPropertiesSet();
         return template;
     }

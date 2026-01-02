@@ -92,3 +92,8 @@ logging:
 # Scheduling disabled for tests
 scheduling:
   enabled: false
+
+# 테스트 환경에서는 알림 비활성화
+notification:
+  discord:
+    enabled: false

@@ -125,7 +125,6 @@ monitoring:
     size-threshold-mb: 10
     alert-cooldown-minutes: 30
 
-# Slack 알림은 로컬에서 비활성화
 notification:
-  slack:
+  discord:
     enabled: false

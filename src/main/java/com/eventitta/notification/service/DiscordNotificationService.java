@@ -1,8 +1,8 @@
 package com.eventitta.notification.service;
 
-import com.eventitta.notification.properties.SlackProperties;
+import com.eventitta.notification.properties.DiscordProperties;
 import com.eventitta.notification.domain.AlertLevel;
-import com.eventitta.notification.domain.SlackMessage;
+import com.eventitta.notification.domain.DiscordMessage;
 import com.eventitta.notification.service.ratelimit.RateLimiter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -13,24 +13,24 @@ import org.springframework.web.client.RestClient;
 
 @Service
 @Slf4j
-public class SlackNotificationService {
+public class DiscordNotificationService {
 
-    private final SlackProperties slackProperties;
+    private final DiscordProperties discordProperties;
     private final RateLimiter rateLimiter;
-    private final RestClient slackRestClient;
+    private final RestClient discordRestClient;
     private final Environment environment;
-    private final SlackMessageBuilder messageBuilder;
+    private final DiscordMessageBuilder messageBuilder;
 
-    public SlackNotificationService(
-        SlackProperties slackProperties,
+    public DiscordNotificationService(
+        DiscordProperties discordProperties,
         @Qualifier("cacheBasedRateLimiter") RateLimiter rateLimiter,
-        @Qualifier("slackRestClient") RestClient slackRestClient,
+        @Qualifier("discordRestClient") RestClient discordRestClient,
         Environment environment,
-        SlackMessageBuilder messageBuilder
+        DiscordMessageBuilder messageBuilder
     ) {
-        this.slackProperties = slackProperties;
+        this.discordProperties = discordProperties;
         this.rateLimiter = rateLimiter;
-        this.slackRestClient = slackRestClient;
+        this.discordRestClient = discordRestClient;
         this.environment = environment;
         this.messageBuilder = messageBuilder;
     }
@@ -39,7 +39,7 @@ public class SlackNotificationService {
     public void sendAlert(AlertLevel level, String errorCode, String message,
                           String requestUri, String userInfo, Throwable exception) {
 
-        if (!slackProperties.isEnabled()) {
+        if (!discordProperties.isEnabled()) {
             return;
         }
 
@@ -48,32 +48,31 @@ public class SlackNotificationService {
         }
 
         try {
-            SlackMessage slackMessage = createSlackMessage(level, errorCode, message,
+            DiscordMessage discordMessage = createDiscordMessage(level, errorCode, message,
                 requestUri, userInfo, exception);
-            sendToSlack(slackMessage);
-            log.info("[Slack 알림 전송 완료] level={}, errorCode={}", level, errorCode);
+            sendToDiscord(discordMessage);
+            log.info("[Discord 알림 전송 완료] level={}, errorCode={}", level, errorCode);
         } catch (Exception e) {
-            log.error("[Slack 알림 전송 실패] errorType={}, message={}",
+            log.error("[Discord 알림 전송 실패] errorType={}, message={}",
                 e.getClass().getSimpleName(), e.getMessage());
         }
     }
 
-    private SlackMessage createSlackMessage(AlertLevel level, String errorCode, String message,
-                                            String requestUri, String userInfo, Throwable exception) {
+    private DiscordMessage createDiscordMessage(AlertLevel level, String errorCode, String message,
+                                                String requestUri, String userInfo, Throwable exception) {
         return messageBuilder.buildMessage(
             level, errorCode, message, requestUri, userInfo, exception,
-            getActiveProfile(), slackProperties.getChannel(), slackProperties.getUsername()
+            getActiveProfile(), discordProperties.getUsername()
         );
     }
 
-    private void sendToSlack(SlackMessage message) {
-        slackRestClient.post()
-            .uri(slackProperties.getWebhookUrl())
+    private void sendToDiscord(DiscordMessage message) {
+        discordRestClient.post()
+            .uri(discordProperties.getWebhookUrl())
             .body(message)
             .retrieve()
             .toBodilessEntity();
     }
-
 
     private String getActiveProfile() {
         String[] activeProfiles = environment.getActiveProfiles();

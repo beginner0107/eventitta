@@ -3,7 +3,7 @@ package com.eventitta.common.exception;
 import com.eventitta.auth.exception.AuthErrorCode;
 import com.eventitta.notification.domain.AlertLevel;
 import com.eventitta.notification.resolver.AlertLevelResolver;
-import com.eventitta.notification.service.SlackNotificationService;
+import com.eventitta.notification.service.DiscordNotificationService;
 import com.eventitta.common.response.ApiErrorResponse;
 import com.eventitta.auth.jwt.service.UserInfoService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,14 +27,14 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 public class GlobalExceptionHandler {
 
     private final HttpServletRequest request;
-    private final SlackNotificationService slackNotificationService;
+    private final DiscordNotificationService discordNotificationService;
     private final AlertLevelResolver alertLevelResolver;
     private final UserInfoService userInfoService;
 
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<ApiErrorResponse> handleCustom(CustomException ex) {
         ResponseEntity<ApiErrorResponse> response = toResponse(ex.getErrorCode());
-        sendSlackNotification(ex, ex.getErrorCode().name(), ex.getErrorCode().defaultMessage());
+        sendDiscordNotification(ex, ex.getErrorCode().name(), ex.getErrorCode().defaultMessage());
         return response;
     }
 
@@ -97,7 +97,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleUnknown(Exception ex) {
         AlertLevel level = alertLevelResolver.resolveLevel(ex);
         if (level.ordinal() >= AlertLevel.HIGH.ordinal()) {
-            sendSlackNotification(ex,
+            sendDiscordNotification(ex,
                 CommonErrorCode.INTERNAL_ERROR.name(),
                 CommonErrorCode.INTERNAL_ERROR.defaultMessage());
         }
@@ -114,11 +114,11 @@ public class GlobalExceptionHandler {
             .body(ApiErrorResponse.of(code.name(), overrideMessage, code.defaultHttpStatus().value(), request.getRequestURI()));
     }
 
-    private void sendSlackNotification(Exception exception, String errorCode, String message) {
+    private void sendDiscordNotification(Exception exception, String errorCode, String message) {
         AlertLevel level = alertLevelResolver.resolveLevel(exception);
         String userInfo = userInfoService.getCurrentUserInfo();
 
-        slackNotificationService.sendAlert(
+        discordNotificationService.sendAlert(
             level,
             errorCode,
             message,
@@ -131,7 +131,7 @@ public class GlobalExceptionHandler {
     private void sendAuthenticationFailureNotification(AuthenticationException authException) {
         try {
             String userInfo = userInfoService.extractUserInfoFromRequest(request);
-            slackNotificationService.sendAlert(
+            discordNotificationService.sendAlert(
                 AlertLevel.HIGH,
                 AuthErrorCode.ACCESS_TOKEN_INVALID.name(),
                 AuthErrorCode.ACCESS_TOKEN_INVALID.defaultMessage(),
@@ -140,7 +140,7 @@ public class GlobalExceptionHandler {
                 authException
             );
         } catch (Exception e) {
-            // 슬랙 알림 실패는 로그만 남기고 원래 예외 처리 진행
+            // Discord 알림 실패는 로그만 남기고 원래 예외 처리 진행
         }
     }
 }

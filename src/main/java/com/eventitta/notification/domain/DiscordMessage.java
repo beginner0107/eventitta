@@ -5,9 +5,9 @@ import lombok.Builder;
 import java.util.List;
 
 @Builder
-public record SlackMessage(
-    String channel,
+public record DiscordMessage(
+    String content,
     String username,
-    String text,
-    List<SlackAttachment> attachments) {
+    List<DiscordEmbed> embeds
+) {
 }

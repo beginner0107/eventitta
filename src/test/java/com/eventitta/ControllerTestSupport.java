@@ -13,7 +13,7 @@ import com.eventitta.auth.service.TokenService;
 import com.eventitta.comment.controller.CommentController;
 import com.eventitta.comment.service.CommentService;
 import com.eventitta.notification.resolver.AlertLevelResolver;
-import com.eventitta.notification.service.SlackNotificationService;
+import com.eventitta.notification.service.DiscordNotificationService;
 import com.eventitta.file.controller.FileUploadController;
 import com.eventitta.file.service.FileStorageService;
 import com.eventitta.file.service.FileValidationService;
@@ -73,7 +73,7 @@ public abstract class ControllerTestSupport {
     @MockitoBean
     protected UserActivityService userActivityService;
     @MockitoBean
-    protected SlackNotificationService slackNotificationService;
+    protected DiscordNotificationService discordNotificationService;
     @MockitoBean
     protected AlertLevelResolver alertLevelResolver;
     @MockitoBean

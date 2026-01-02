@@ -4,7 +4,7 @@ import com.eventitta.gamification.repository.UserActivityRepository;
 import com.eventitta.gamification.service.BadgeService;
 import com.eventitta.gamification.service.RankingService;
 import com.eventitta.notification.domain.AlertLevel;
-import com.eventitta.notification.service.SlackNotificationService;
+import com.eventitta.notification.service.DiscordNotificationService;
 import com.eventitta.user.domain.User;
 import com.eventitta.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +36,7 @@ public class ActivityPostProcessor {
     private final RankingService rankingService;
     private final UserRepository userRepository;
     private final UserActivityRepository userActivityRepository;
-    private final SlackNotificationService slackNotificationService;
+    private final DiscordNotificationService discordNotificationService;
 
     /**
      * 활동 기록 후 뱃지와 랭킹을 비동기로 처리
@@ -106,7 +106,7 @@ public class ActivityPostProcessor {
             event.userId(), event.activityType(), e);
 
         // 뱃지 체크 실패는 핵심 기능이 아니므로 경고 레벨로 알림
-        sendSlackAlertSafely(
+        sendDiscordAlertSafely(
             AlertLevel.MEDIUM,
             BADGE_CHECK_FAILED,
             String.format("뱃지 체크 실패: userId=%d, activityType=%s",
@@ -162,7 +162,7 @@ public class ActivityPostProcessor {
     private void handleRankingUpdateFailure(ActivityRecordedEvent event, Exception e) {
         log.error("[Ranking] 랭킹 업데이트 실패 - userId={}", event.userId(), e);
 
-        sendSlackAlertSafely(
+        sendDiscordAlertSafely(
             AlertLevel.INFO,
             RANKING_UPDATE_FAILED,
             String.format("랭킹 업데이트 실패: userId=%d", event.userId()),
@@ -172,12 +172,12 @@ public class ActivityPostProcessor {
     }
 
     /**
-     * Slack 알림 발송
+     * Discord 알림 발송
      */
-    private void sendSlackAlertSafely(AlertLevel level, String errorCode, String message,
-                                      Long userId, Exception e) {
+    private void sendDiscordAlertSafely(AlertLevel level, String errorCode, String message,
+                                        Long userId, Exception e) {
         try {
-            slackNotificationService.sendAlert(
+            discordNotificationService.sendAlert(
                 level,
                 errorCode,
                 message,
@@ -185,8 +185,8 @@ public class ActivityPostProcessor {
                 String.format("userId=%d", userId),
                 e
             );
-        } catch (Exception slackException) {
-            log.error("[Slack] 알림 발송 실패", slackException);
+        } catch (Exception discordException) {
+            log.error("[Discord] 알림 발송 실패", discordException);
         }
     }
 }

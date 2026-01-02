@@ -19,7 +19,7 @@ public class PostImageFileScheduler {
     private final FileStorageService fileStorageService;
     private final PostImageRepository postImageRepository;
 
-    @Scheduled(cron = "0 0 3 * * SUN")
+    @Scheduled(cron = "0 0 3 * * SUN", zone = "Asia/Seoul")
     @SchedulerLock(name = "deleteUnusedImageFiles", lockAtMostFor = "PT30M", lockAtLeastFor = "PT5M")
     public void deleteUnusedImageFiles() {
         log.info("[Scheduler] 미사용 이미지 파일 정리 시작");

@@ -17,7 +17,7 @@ public class RefreshTokenCleanupTask {
 
     private final RefreshTokenRepository refreshTokenRepository;
 
-    @Scheduled(cron = "0 0 * * * *")
+    @Scheduled(cron = "0 0 * * * *", zone = "Asia/Seoul")
     @SchedulerLock(name = "removeExpiredRefreshTokens", lockAtMostFor = "PT30M", lockAtLeastFor = "PT2M")
     @Transactional
     public void removeExpiredRefreshTokens() {

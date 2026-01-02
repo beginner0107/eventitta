@@ -1,7 +1,6 @@
 package com.eventitta.festivals.scheduler;
 
 import com.eventitta.festivals.service.FestivalService;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
@@ -14,22 +13,6 @@ import org.springframework.stereotype.Component;
 public class FestivalScheduler {
 
     private final FestivalService festivalService;
-
-    /**
-     * 초기 수동 적재용: 전국문화행사표준데이터
-     */
-//    @PostConstruct
-    public void loadInitialNationalFestivalData() {
-        festivalService.loadInitialNationalFestivalData();
-    }
-
-    /**
-     * 초기 수동 적재용: 서울
-     */
-//    @PostConstruct
-    public void loadInitialSeoulFestivalData() {
-        festivalService.loadInitialSeoulFestivalData();
-    }
 
     /**
      * 전국 축제 데이터 정기 동기화

@@ -19,7 +19,11 @@ public class MeetingStatusScheduler {
     private final MeetingRepository meetingRepository;
 
     @Scheduled(cron = "0 * * * * *", zone = "Asia/Seoul")
-    @SchedulerLock(name = "markFinishedMeetings")
+    @SchedulerLock(
+        name = "markFinishedMeetings",
+        lockAtMostFor = "PT5M",
+        lockAtLeastFor = "PT30S"
+    )
     @Transactional
     public void markFinishedMeetings() {
         try {

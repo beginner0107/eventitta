@@ -2,7 +2,7 @@ package com.eventitta.scheduler;
 
 import com.eventitta.IntegrationTestSupport;
 import com.eventitta.auth.repository.RefreshTokenRepository;
-import com.eventitta.auth.schedule.RefreshTokenCleanupTask;
+import com.eventitta.auth.scheduler.RefreshTokenCleanupTask;
 import com.eventitta.festivals.scheduler.FestivalScheduler;
 import com.eventitta.festivals.service.FestivalService;
 import com.eventitta.meeting.repository.MeetingRepository;
@@ -13,6 +13,7 @@ import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
@@ -37,6 +38,11 @@ import static org.mockito.Mockito.*;
 @ActiveProfiles("test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @DisplayName("동시 실행 방지 기능 테스트 - 같은 작업이 여러 번 동시에 실행되지 않는지 확인")
+@SpringBootTest(properties = {
+    "scheduler.festival-sync.enabled=true",
+    "scheduler.meeting-status.enabled=true",
+    "scheduler.token-cleanup.enabled=true"
+})
 class ShedLockIntegrationTest extends IntegrationTestSupport {
 
     @Autowired

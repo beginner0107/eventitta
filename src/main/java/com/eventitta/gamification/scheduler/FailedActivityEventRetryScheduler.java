@@ -7,6 +7,7 @@ import com.eventitta.gamification.service.FailedEventRecoveryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,11 @@ import static org.springframework.transaction.annotation.Propagation.NEVER;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@ConditionalOnProperty(
+    name = "scheduler.failed-event-retry.enabled",
+    havingValue = "true",
+    matchIfMissing = true
+)
 public class FailedActivityEventRetryScheduler {
 
     private final FailedActivityEventRepository failedActivityEventRepository;
@@ -30,7 +36,7 @@ public class FailedActivityEventRetryScheduler {
      * 각 이벤트를 개별 트랜잭션으로 처리하여 하나의 실패가 다른 이벤트에 영향을 주지 않도록 함
      */
     @Scheduled(fixedDelay = FAILED_EVENT_RETRY_FIXED_DELAY_MS)
-    @SchedulerLock(name = "retryFailedActivityEvents", lockAtMostFor = "55s", lockAtLeastFor = "5s")
+    @SchedulerLock(name = "retryFailedActivityEvents", lockAtMostFor = "PT55S", lockAtLeastFor = "PT5S")
     @Transactional(propagation = NEVER)
     public void retryFailedEvents() {
         List<FailedActivityEvent> pendingEvents = failedActivityEventRepository

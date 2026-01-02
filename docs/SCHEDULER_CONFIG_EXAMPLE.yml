@@ -1,0 +1,92 @@
+# ========================================
+# 스케줄러 활성화 조건 설정 예시
+# ========================================
+# 이 파일은 application.yml에 추가할 수 있는 스케줄러 설정 예시입니다.
+# 모든 스케줄러는 기본적으로 활성화되어 있으며 (matchIfMissing = true),
+# 특정 스케줄러만 비활성화하려면 해당 설정을 false로 지정하세요.
+
+scheduler:
+  # 토큰 정리 스케줄러 (RefreshTokenCleanupTask)
+  # 만료된 리프레시 토큰을 매시간 정리
+  token-cleanup:
+    enabled: true
+
+  # 축제 데이터 동기화 스케줄러 (FestivalScheduler)
+  # 전국/서울시 축제 데이터를 정기적으로 동기화
+  festival-sync:
+    enabled: true
+
+  # 미팅 상태 업데이트 스케줄러 (MeetingStatusScheduler)
+  # 종료된 미팅 상태를 매분 업데이트
+  meeting-status:
+    enabled: true
+
+  # 이미지 정리 스케줄러 (PostImageFileScheduler)
+  # 미사용 이미지 파일을 주간 단위로 정리
+  image-cleanup:
+    enabled: true
+
+  # 실패 이벤트 재시도 스케줄러 (FailedActivityEventRetryScheduler)
+  # 실패한 활동 이벤트를 재처리
+  failed-event-retry:
+    enabled: true
+
+  # 랭킹 동기화 스케줄러 (RankingScheduler)
+  # MySQL → Redis 랭킹 데이터 동기화
+  ranking-sync:
+    enabled: true
+
+# ========================================
+# 사용 시나리오 예시
+# ========================================
+
+# 시나리오 1: 로컬 개발 환경 (모든 스케줄러 비활성화)
+# scheduler:
+#   token-cleanup:
+#     enabled: false
+#   festival-sync:
+#     enabled: false
+#   meeting-status:
+#     enabled: false
+#   image-cleanup:
+#     enabled: false
+#   failed-event-retry:
+#     enabled: false
+#   ranking-sync:
+#     enabled: false
+
+# 시나리오 2: 장애 대응 (특정 스케줄러만 비활성화)
+# 예: 랭킹 동기화에서 Redis 장애 발생 시
+# scheduler:
+#   ranking-sync:
+#     enabled: false
+
+# 시나리오 3: 성능 튜닝 (리소스 집약적 스케줄러 일시 중지)
+# scheduler:
+#   festival-sync:
+#     enabled: false
+#   image-cleanup:
+#     enabled: false
+
+# 시나리오 4: 스테이징 환경 (일부 스케줄러만 활성화)
+# scheduler:
+#   token-cleanup:
+#     enabled: true
+#   meeting-status:
+#     enabled: true
+#   festival-sync:
+#     enabled: false  # 외부 API 호출 방지
+#   image-cleanup:
+#     enabled: false  # 파일 삭제 방지
+#   failed-event-retry:
+#     enabled: true
+#   ranking-sync:
+#     enabled: true
+
+# ========================================
+# 주의 사항
+# ========================================
+# 1. 설정 변경 후 애플리케이션 재시작 필요
+# 2. 비활성화된 스케줄러는 Spring Bean으로 등록되지 않음
+# 3. matchIfMissing = true이므로 설정이 없으면 기본적으로 활성화됨
+# 4. 운영 환경에서 스케줄러 비활성화 시 영향도 검토 필수

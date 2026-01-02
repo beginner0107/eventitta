@@ -1,4 +1,4 @@
-package com.eventitta.auth.schedule;
+package com.eventitta.auth.scheduler;
 
 import com.eventitta.auth.repository.RefreshTokenRepository;
 import org.junit.jupiter.api.DisplayName;

@@ -24,16 +24,21 @@ public class UserInfoService {
     private final ObjectMapper objectMapper;
     private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
+    private final HttpServletRequest request;
 
     public String getCurrentUserInfo() {
-        return SecurityUtil.getCurrentUserInfo();
+        String userInfo = SecurityUtil.getCurrentUserInfo();
+        if (ANONYMOUS.equals(userInfo)) {
+            return getClientIp();
+        }
+        return userInfo;
     }
 
     public String extractUserInfoFromRequest(HttpServletRequest request) {
         try {
             return tryExtractUserInfo(request);
         } catch (Exception e) {
-            return ANONYMOUS;
+            return getClientIp(request);  // ANONYMOUS → IP
         }
     }
 
@@ -48,17 +53,9 @@ public class UserInfoService {
     private String tryTokenExtraction(HttpServletRequest request) {
         String token = JwtTokenUtil.extractTokenFromRequest(request);
         if (token == null) {
-            return ANONYMOUS;
+            return getClientIp(request);
         }
-        return extractUserFromToken(token);
-    }
-
-    private String extractUserFromToken(String token) {
-        String userInfo = tryStandardTokenParsing(token);
-        if (userInfo != null) {
-            return userInfo;
-        }
-        return tryTamperedTokenParsing(token);
+        return extractUserFromToken(token, request);
     }
 
     private String tryStandardTokenParsing(String token) {
@@ -68,15 +65,6 @@ public class UserInfoService {
         } catch (Exception e) {
             return null;
         }
-    }
-
-    private String tryTamperedTokenParsing(String token) {
-        Long userId = extractUserIdFromTamperedToken(token);
-        String userInfo = getUserInfoIfExists(userId);
-        if (userInfo != null) {
-            return userInfo;
-        }
-        return ANONYMOUS;
     }
 
     private String getUserInfoIfExists(Long userId) {
@@ -140,11 +128,48 @@ public class UserInfoService {
             .orElse(formatUnknownUser(userId));
     }
 
+
+    private String extractUserFromToken(String token, HttpServletRequest request) {
+        String userInfo = tryStandardTokenParsing(token);
+        if (userInfo != null) {
+            return userInfo;
+        }
+
+        Long userId = extractUserIdFromTamperedToken(token);
+        userInfo = getUserInfoIfExists(userId);
+        if (userInfo != null) {
+            return userInfo;
+        }
+        return getClientIp(request);
+    }
+
     private String formatUserInfo(String email, Long id) {
         return String.format(USER_INFO_FORMAT, email, id);
     }
 
     private String formatUnknownUser(Long userId) {
         return String.format(UNKNOWN_USER_FORMAT, userId);
+    }
+
+    private String getClientIp() {
+        return getClientIp(this.request);
+    }
+
+    private String getClientIp(HttpServletRequest request) {
+        String[] headerNames = {
+            "X-Forwarded-For",
+            "X-Real-IP",
+            "Proxy-Client-IP",
+            "WL-Proxy-Client-IP"
+        };
+
+        for (String header : headerNames) {
+            String ip = request.getHeader(header);
+            if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
+                return ip.split(",")[0].trim();
+            }
+        }
+
+        return request.getRemoteAddr();
     }
 }

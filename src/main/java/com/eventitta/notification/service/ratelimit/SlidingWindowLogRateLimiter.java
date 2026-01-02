@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.eventitta.notification.constants.AlertConstants.RATE_LIMIT_WINDOW_MINUTES;
 
-@Component
+// @Component
 @RequiredArgsConstructor
 public class SlidingWindowLogRateLimiter implements RateLimiter {
 

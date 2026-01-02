@@ -8,7 +8,7 @@ import com.eventitta.gamification.repository.FailedActivityEventRepository;
 import com.eventitta.gamification.service.FailedEventRecoveryService;
 import com.eventitta.gamification.service.UserActivityService;
 import com.eventitta.notification.domain.AlertLevel;
-import com.eventitta.notification.service.SlackNotificationService;
+import com.eventitta.notification.service.DiscordNotificationService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,7 +50,7 @@ class UserActivityEventListenerTest {
     private UserActivityService userActivityService;
 
     @MockitoBean
-    private SlackNotificationService slackNotificationService;
+    private DiscordNotificationService discordNotificationService;
 
     @Autowired
     private ApplicationContext applicationContext;
@@ -250,19 +250,19 @@ class UserActivityEventListenerTest {
 
         assertThat(callCount.get()).isEqualTo(3);
 
-        // Slack 알림은 발송되지 않아야 함 (성공했으므로)
-        verify(slackNotificationService, never()).sendAlert(
+        // Discord 알림은 발송되지 않아야 함 (성공했으므로)
+        verify(discordNotificationService, never()).sendAlert(
             any(AlertLevel.class), anyString(), anyString(), anyString(), anyString(), any(Throwable.class)
         );
     }
 
     @Test
-    @DisplayName("활동 기록이 모든 재시도 후에도 실패하면 Slack 알림이 발송된다")
-    void givenPersistentFailure_whenAllRetriesFail_thenSlackAlertSent() throws InterruptedException {
+    @DisplayName("활동 기록이 모든 재시도 후에도 실패하면 Discord 알림이 발송된다")
+    void givenPersistentFailure_whenAllRetriesFail_thenDiscordAlertSent() throws InterruptedException {
         // given
         AtomicInteger callCount = new AtomicInteger(0);
         CountDownLatch serviceLatch = new CountDownLatch(3); // 3번 재시도
-        CountDownLatch slackLatch = new CountDownLatch(1);   // Slack 호출 1번
+        CountDownLatch discordLatch = new CountDownLatch(1);   // Discord 호출 1번
 
         doAnswer(invocation -> {
             callCount.incrementAndGet();
@@ -271,9 +271,9 @@ class UserActivityEventListenerTest {
         }).when(userActivityService).recordActivity(anyLong(), any(ActivityType.class), anyLong());
 
         doAnswer(invocation -> {
-            slackLatch.countDown();
+            discordLatch.countDown();
             return null;
-        }).when(slackNotificationService).sendAlert(
+        }).when(discordNotificationService).sendAlert(
             any(AlertLevel.class), anyString(), anyString(), anyString(), anyString(), any(Throwable.class)
         );
 
@@ -283,14 +283,14 @@ class UserActivityEventListenerTest {
             return null;
         });
 
-        // then - 재시도 및 Slack 알림 완료까지 대기
+        // then - 재시도 및 Discord 알림 완료까지 대기
         assertTrue(serviceLatch.await(10, TimeUnit.SECONDS), "재시도가 완료되지 않았습니다");
-        assertTrue(slackLatch.await(5, TimeUnit.SECONDS), "Slack 알림이 발송되지 않았습니다");
+        assertTrue(discordLatch.await(5, TimeUnit.SECONDS), "Discord 알림이 발송되지 않았습니다");
 
         verify(userActivityService, timeout(10000).times(3))
             .recordActivity(9L, CREATE_COMMENT, 90L);
 
-        verify(slackNotificationService, timeout(5000).times(1))
+        verify(discordNotificationService, timeout(5000).times(1))
             .sendAlert(
                 eq(AlertLevel.HIGH),
                 eq("ACTIVITY_RECORD_FAILED"),
@@ -338,8 +338,8 @@ class UserActivityEventListenerTest {
         verify(userActivityService, timeout(10000).times(2))
             .revokeActivity(10L, LIKE_POST_CANCEL, 100L);
 
-        // Slack 알림은 발송되지 않아야 함 (성공했으므로)
-        verify(slackNotificationService, never()).sendAlert(
+        // Discord 알림은 발송되지 않아야 함 (성공했으므로)
+        verify(discordNotificationService, never()).sendAlert(
             any(AlertLevel.class), anyString(), anyString(), anyString(), anyString(), any(Throwable.class)
         );
     }
@@ -386,7 +386,7 @@ class UserActivityEventListenerTest {
         // given
         AtomicInteger callCount = new AtomicInteger(0);
         CountDownLatch serviceLatch = new CountDownLatch(3); // 3번 재시도
-        CountDownLatch slackLatch = new CountDownLatch(1);   // Slack 호출 1번
+        CountDownLatch discordLatch = new CountDownLatch(1);   // Discord 호출 1번
 
         doAnswer(invocation -> {
             callCount.incrementAndGet();
@@ -395,9 +395,9 @@ class UserActivityEventListenerTest {
         }).when(userActivityService).revokeActivity(anyLong(), any(ActivityType.class), anyLong());
 
         doAnswer(invocation -> {
-            slackLatch.countDown();
+            discordLatch.countDown();
             return null;
-        }).when(slackNotificationService).sendAlert(
+        }).when(discordNotificationService).sendAlert(
             any(AlertLevel.class), anyString(), anyString(), anyString(), anyString(), any(Throwable.class)
         );
 
@@ -407,14 +407,14 @@ class UserActivityEventListenerTest {
             return null;
         });
 
-        // then - 재시도 및 Slack 알림 완료까지 대기
+        // then - 재시도 및 Discord 알림 완료까지 대기
         assertTrue(serviceLatch.await(10, TimeUnit.SECONDS), "재시도가 완료되지 않았습니다");
-        assertTrue(slackLatch.await(5, TimeUnit.SECONDS), "Slack 알림이 발송되지 않았습니다");
+        assertTrue(discordLatch.await(5, TimeUnit.SECONDS), "Discord 알림이 발송되지 않았습니다");
 
         verify(userActivityService, timeout(10000).times(3))
             .revokeActivity(12L, LIKE_POST_CANCEL, 120L);
 
-        verify(slackNotificationService, timeout(5000).times(1))
+        verify(discordNotificationService, timeout(5000).times(1))
             .sendAlert(
                 eq(AlertLevel.HIGH),
                 eq("ACTIVITY_REVOKE_FAILED"),

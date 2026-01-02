@@ -12,7 +12,7 @@ import com.eventitta.gamification.dto.response.RankingPageResponse;
 import com.eventitta.gamification.dto.response.UserRankResponse;
 import com.eventitta.gamification.exception.RankingException;
 import com.eventitta.gamification.service.RankingService;
-import com.eventitta.notification.service.SlackNotificationService;
+import com.eventitta.notification.service.DiscordNotificationService;
 import com.eventitta.notification.resolver.AlertLevelResolver;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
@@ -42,11 +42,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 
 @WebMvcTest(
-        controllers = RankingController.class,
-        excludeFilters = @ComponentScan.Filter(
-                type = FilterType.ASSIGNABLE_TYPE,
-                classes = {JwtAuthenticationFilter.class, JwtAuthenticationEntryPoint.class}
-        )
+    controllers = RankingController.class,
+    excludeFilters = @ComponentScan.Filter(
+        type = FilterType.ASSIGNABLE_TYPE,
+        classes = {JwtAuthenticationFilter.class, JwtAuthenticationEntryPoint.class}
+    )
 )
 @AutoConfigureMockMvc(addFilters = false)
 @Import({GlobalExceptionHandler.class, RankingControllerTestConfig.class})
@@ -65,7 +65,10 @@ class RankingControllerTest {
     private JwtTokenProvider jwtTokenProvider;
 
     @MockitoBean
-    private SlackNotificationService slackNotificationService;
+    private DiscordNotificationService discordNotificationService;
+
+
+    ;
 
     @MockitoBean
     private AlertLevelResolver alertLevelResolver;
@@ -78,32 +81,32 @@ class RankingControllerTest {
     void getTopRankings_Success() throws Exception {
         // given
         List<UserRankResponse> rankings = List.of(
-                new UserRankResponse(1L, "user1", "avatarUrl1", 1000, 1),
-                new UserRankResponse(2L, "user2", "avatarUrl2", 900, 2),
-                new UserRankResponse(3L, "user3", "avatarUrl3", 800, 3)
+            new UserRankResponse(1L, "user1", "avatarUrl1", 1000, 1),
+            new UserRankResponse(2L, "user2", "avatarUrl2", 900, 2),
+            new UserRankResponse(3L, "user3", "avatarUrl3", 800, 3)
         );
         RankingPageResponse response = new RankingPageResponse(
-                rankings,
-                100L,
-                RankingType.POINTS
+            rankings,
+            100L,
+            RankingType.POINTS
         );
 
         given(rankingService.getTopRankings(eq(RankingType.POINTS), eq(100)))
-                .willReturn(response);
+            .willReturn(response);
 
         // when & then
         mockMvc.perform(get("/api/v1/rankings/top")
-                        .param("type", "POINTS")
-                        .param("limit", "100")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.type").value("POINTS"))
-                .andExpect(jsonPath("$.rankings", hasSize(3)))
-                .andExpect(jsonPath("$.rankings[0].userId").value(1))
-                .andExpect(jsonPath("$.rankings[0].score").value(1000.0))
-                .andExpect(jsonPath("$.rankings[0].rank").value(1))
-                .andExpect(jsonPath("$.totalUsers").value(100));
+                .param("type", "POINTS")
+                .param("limit", "100")
+                .contentType(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.type").value("POINTS"))
+            .andExpect(jsonPath("$.rankings", hasSize(3)))
+            .andExpect(jsonPath("$.rankings[0].userId").value(1))
+            .andExpect(jsonPath("$.rankings[0].score").value(1000.0))
+            .andExpect(jsonPath("$.rankings[0].rank").value(1))
+            .andExpect(jsonPath("$.totalUsers").value(100));
 
         verify(rankingService, times(1)).getTopRankings(RankingType.POINTS, 100);
     }
@@ -113,21 +116,21 @@ class RankingControllerTest {
     void getTopRankings_WithDefaults() throws Exception {
         // given
         RankingPageResponse response = new RankingPageResponse(
-                List.of(),
-                0L,
-                RankingType.POINTS
+            List.of(),
+            0L,
+            RankingType.POINTS
         );
 
         given(rankingService.getTopRankings(eq(RankingType.POINTS), eq(100)))
-                .willReturn(response);
+            .willReturn(response);
 
         // when & then
         mockMvc.perform(get("/api/v1/rankings/top")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.type").value("POINTS"))
-                .andExpect(jsonPath("$.rankings", hasSize(0)));
+                .contentType(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.type").value("POINTS"))
+            .andExpect(jsonPath("$.rankings", hasSize(0)));
 
         verify(rankingService, times(1)).getTopRankings(RankingType.POINTS, 100);
     }
@@ -137,24 +140,24 @@ class RankingControllerTest {
     void getTopRankings_ActivityType() throws Exception {
         // given
         RankingPageResponse response = new RankingPageResponse(
-                List.of(
-                        new UserRankResponse(1L, "user1", null, 50, 1)
-                ),
-                1L,
-                RankingType.ACTIVITY_COUNT
+            List.of(
+                new UserRankResponse(1L, "user1", null, 50, 1)
+            ),
+            1L,
+            RankingType.ACTIVITY_COUNT
         );
 
         given(rankingService.getTopRankings(eq(RankingType.ACTIVITY_COUNT), eq(50)))
-                .willReturn(response);
+            .willReturn(response);
 
         // when & then
         mockMvc.perform(get("/api/v1/rankings/top")
-                        .param("type", "ACTIVITY_COUNT")
-                        .param("limit", "50")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.type").value("ACTIVITY_COUNT"));
+                .param("type", "ACTIVITY_COUNT")
+                .param("limit", "50")
+                .contentType(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.type").value("ACTIVITY_COUNT"));
     }
 
     @Test
@@ -162,10 +165,10 @@ class RankingControllerTest {
     void getTopRankings_ValidationFailure() throws Exception {
         // when & then
         mockMvc.perform(get("/api/v1/rankings/top")
-                        .param("limit", "501") // 최대값 500 초과
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isBadRequest());
+                .param("limit", "501") // 최대값 500 초과
+                .contentType(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isBadRequest());
 
         verify(rankingService, never()).getTopRankings(any(), anyInt());
     }
@@ -176,30 +179,30 @@ class RankingControllerTest {
         // given
         Long userId = 1L;
         UserRankResponse response = new UserRankResponse(
-                userId,
-                "testUser",
-                "avatarUrl",
-                1000,
-                5
+            userId,
+            "testUser",
+            "avatarUrl",
+            1000,
+            5
         );
 
         given(rankingService.getUserRank(eq(RankingType.POINTS), eq(userId)))
-                .willReturn(response);
+            .willReturn(response);
 
         // when & then
         mockMvc.perform(get("/api/v1/rankings/me")
-                        .param("type", "POINTS")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .with(request -> {
-                            request.setUserPrincipal(() -> "1");
-                            return request;
-                        }))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.userId").value(userId))
-                .andExpect(jsonPath("$.nickname").value("testUser"))
-                .andExpect(jsonPath("$.score").value(1000.0))
-                .andExpect(jsonPath("$.rank").value(5));
+                .param("type", "POINTS")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(request -> {
+                    request.setUserPrincipal(() -> "1");
+                    return request;
+                }))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.userId").value(userId))
+            .andExpect(jsonPath("$.nickname").value("testUser"))
+            .andExpect(jsonPath("$.score").value(1000.0))
+            .andExpect(jsonPath("$.rank").value(5));
 
         verify(rankingService, times(1)).getUserRank(RankingType.POINTS, userId);
     }
@@ -209,9 +212,9 @@ class RankingControllerTest {
     void getMyRank_Unauthorized() throws Exception {
         // when & then
         mockMvc.perform(get("/api/v1/rankings/me")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isUnauthorized());
+                .contentType(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isUnauthorized());
 
         verify(rankingService, never()).getUserRank(any(), anyLong());
     }
@@ -222,26 +225,26 @@ class RankingControllerTest {
         // given
         Long userId = 2L;
         UserRankResponse response = new UserRankResponse(
-                userId,
-                "otherUser",
-                null,
-                800,
-                10
+            userId,
+            "otherUser",
+            null,
+            800,
+            10
         );
 
         given(rankingService.getUserRank(eq(RankingType.POINTS), eq(userId)))
-                .willReturn(response);
+            .willReturn(response);
 
         // when & then
         mockMvc.perform(get("/api/v1/rankings/users/{userId}", userId)
-                        .param("type", "POINTS")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.userId").value(userId))
-                .andExpect(jsonPath("$.nickname").value("otherUser"))
-                .andExpect(jsonPath("$.score").value(800.0))
-                .andExpect(jsonPath("$.rank").value(10));
+                .param("type", "POINTS")
+                .contentType(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.userId").value(userId))
+            .andExpect(jsonPath("$.nickname").value("otherUser"))
+            .andExpect(jsonPath("$.score").value(800.0))
+            .andExpect(jsonPath("$.rank").value(10));
 
         verify(rankingService, times(1)).getUserRank(RankingType.POINTS, userId);
     }
@@ -252,14 +255,14 @@ class RankingControllerTest {
         // given
         Long userId = 999L;
         given(rankingService.getUserRank(eq(RankingType.POINTS), eq(userId)))
-                .willThrow(new RankingException(RANKING_NOT_FOUND));
+            .willThrow(new RankingException(RANKING_NOT_FOUND));
 
         // when & then
         mockMvc.perform(get("/api/v1/rankings/users/{userId}", userId)
-                        .param("type", "POINTS")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isNotFound());
+                .param("type", "POINTS")
+                .contentType(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isNotFound());
 
         verify(rankingService, times(1)).getUserRank(RankingType.POINTS, userId);
     }
@@ -273,11 +276,11 @@ class RankingControllerTest {
 
         // when & then
         mockMvc.perform(get("/api/v1/rankings/stats")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.pointsRankingCount").value(100))
-                .andExpect(jsonPath("$.activityRankingCount").value(80));
+                .contentType(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.pointsRankingCount").value(100))
+            .andExpect(jsonPath("$.activityRankingCount").value(80));
 
         verify(rankingService, times(1)).getTotalUsers(RankingType.POINTS);
         verify(rankingService, times(1)).getTotalUsers(RankingType.ACTIVITY_COUNT);
@@ -292,10 +295,10 @@ class RankingControllerTest {
 
         // when & then
         mockMvc.perform(get("/api/v1/rankings/stats")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.pointsRankingCount").value(0))
-                .andExpect(jsonPath("$.activityRankingCount").value(50));
+                .contentType(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.pointsRankingCount").value(0))
+            .andExpect(jsonPath("$.activityRankingCount").value(50));
     }
 }

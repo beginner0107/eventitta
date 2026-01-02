@@ -1,35 +1,24 @@
 package com.eventitta.festivals.scheduler;
 
 import com.eventitta.festivals.service.FestivalService;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@ConditionalOnProperty(
+    name = "scheduler.festival-sync.enabled",
+    havingValue = "true",
+    matchIfMissing = true
+)
 public class FestivalScheduler {
 
     private final FestivalService festivalService;
-
-    /**
-     * 초기 수동 적재용: 전국문화행사표준데이터
-     */
-//    @PostConstruct
-    public void loadInitialNationalFestivalData() {
-        festivalService.loadInitialNationalFestivalData();
-    }
-
-    /**
-     * 초기 수동 적재용: 서울
-     */
-//    @PostConstruct
-    public void loadInitialSeoulFestivalData() {
-        festivalService.loadInitialSeoulFestivalData();
-    }
 
     /**
      * 전국 축제 데이터 정기 동기화

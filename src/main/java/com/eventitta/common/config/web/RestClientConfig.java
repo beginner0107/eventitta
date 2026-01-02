@@ -53,13 +53,6 @@ public class RestClientConfig {
     }
 
     @Bean
-    public RestClient slackRestClient() {
-        return RestClient.builder()
-            .requestInterceptor(new RestClientLoggingInterceptor())
-            .build();
-    }
-
-    @Bean
     public HttpClient geocodingHttpClient() {
         return HttpClient.newBuilder()
             .version(HttpClient.Version.HTTP_1_1)
@@ -81,6 +74,14 @@ public class RestClientConfig {
             .defaultHeader("User-Agent", userAgent)
             .defaultHeader("Connection", "close")
             .requestInterceptor(new RestClientLoggingInterceptor())
+            .build();
+    }
+
+    @Bean
+    @Qualifier("discordRestClient")
+    public RestClient discordRestClient() {
+        return RestClient.builder()
+            .defaultHeader("Content-Type", "application/json")
             .build();
     }
 }

@@ -4,7 +4,7 @@ import com.eventitta.gamification.domain.OperationType;
 import com.eventitta.gamification.service.UserActivityService;
 import com.eventitta.gamification.service.FailedEventRecoveryService;
 import com.eventitta.notification.domain.AlertLevel;
-import com.eventitta.notification.service.SlackNotificationService;
+import com.eventitta.notification.service.DiscordNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.retry.annotation.Backoff;
@@ -25,7 +25,7 @@ import static org.springframework.transaction.event.TransactionPhase.AFTER_COMMI
 public class UserActivityEventListener {
 
     private final UserActivityService userActivityService;
-    private final SlackNotificationService slackNotificationService;
+    private final DiscordNotificationService discordNotificationService;
     private final FailedEventRecoveryService failedEventRecoveryService;
 
     @Async
@@ -72,7 +72,7 @@ public class UserActivityEventListener {
             event.userId(), event.activityType(), event.targetId()
         );
 
-        sendSlackAlertSafely(
+        sendDiscordAlertSafely(
             ACTIVITY_RECORD_FAILED,
             message,
             event.userId(),
@@ -124,7 +124,7 @@ public class UserActivityEventListener {
             event.userId(), event.activityType(), event.targetId()
         );
 
-        sendSlackAlertSafely(
+        sendDiscordAlertSafely(
             ACTIVITY_REVOKE_FAILED,
             message,
             event.userId(),
@@ -132,11 +132,11 @@ public class UserActivityEventListener {
         );
     }
 
-    private void sendSlackAlertSafely(String errorCode, String message, Long userId, Exception e) {
+    private void sendDiscordAlertSafely(String errorCode, String message, Long userId, Exception e) {
         String userInfo = String.format(USER_INFO_FORMAT, userId);
 
         try {
-            slackNotificationService.sendAlert(
+            discordNotificationService.sendAlert(
                 AlertLevel.HIGH,
                 errorCode,
                 message,
@@ -144,8 +144,8 @@ public class UserActivityEventListener {
                 userInfo,
                 e
             );
-        } catch (Exception slackException) {
-            log.error("[Slack 알림 발송 실패]", slackException);
+        } catch (Exception discordException) {
+            log.error("[Discord 알림 발송 실패]", discordException);
         }
     }
 }

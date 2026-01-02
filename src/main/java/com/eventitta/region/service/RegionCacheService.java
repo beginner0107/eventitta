@@ -25,7 +25,7 @@ public class RegionCacheService {
 
     private final RegionRepository regionRepository;
 
-    @Cacheable(value = REGIONS, key = "'allRegionsMap'")
+    @Cacheable(value = REGIONS, key = "'allRegionsMap'", sync = true)
     public Map<String, Region> getAllRegionsAsMap() {
         log.debug("캐시 미스 - DB에서 전체 지역 데이터 로드");
         return regionRepository.findAll()

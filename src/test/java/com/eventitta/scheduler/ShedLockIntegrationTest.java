@@ -2,7 +2,7 @@ package com.eventitta.scheduler;
 
 import com.eventitta.IntegrationTestSupport;
 import com.eventitta.auth.repository.RefreshTokenRepository;
-import com.eventitta.auth.schedule.RefreshTokenCleanupTask;
+import com.eventitta.auth.scheduler.RefreshTokenCleanupTask;
 import com.eventitta.festivals.scheduler.FestivalScheduler;
 import com.eventitta.festivals.service.FestivalService;
 import com.eventitta.meeting.repository.MeetingRepository;

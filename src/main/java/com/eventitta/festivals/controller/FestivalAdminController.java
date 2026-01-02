@@ -1,5 +1,7 @@
 package com.eventitta.festivals.controller;
 
+import com.eventitta.festivals.dto.response.FestivalSyncResponse;
+import com.eventitta.festivals.exception.FestivalErrorCode;
 import com.eventitta.festivals.service.FestivalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -9,8 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Map;
 
 /**
  * 축제 데이터 관리용 Admin API
@@ -44,24 +44,19 @@ public class FestivalAdminController {
             "초기 데이터 적재 또는 스케줄러 실패 시 사용합니다."
     )
     @PostMapping("/sync/national")
-    public ResponseEntity<Map<String, String>> syncNationalFestivalData() {
+    public ResponseEntity<FestivalSyncResponse> syncNationalFestivalData() {
         log.info("[Admin] 전국 축제 데이터 수동 동기화 요청");
 
         try {
             festivalService.loadInitialNationalFestivalData();
             log.info("[Admin] 전국 축제 데이터 수동 동기화 완료");
 
-            return ResponseEntity.ok(Map.of(
-                "status", "success",
-                "message", "전국 축제 데이터 동기화가 완료되었습니다."
-            ));
+            return ResponseEntity.ok(
+                FestivalSyncResponse.success("전국 축제 데이터 동기화가 완료되었습니다.")
+            );
         } catch (Exception e) {
             log.error("[Admin] 전국 축제 데이터 수동 동기화 실패", e);
-
-            return ResponseEntity.internalServerError().body(Map.of(
-                "status", "error",
-                "message", "전국 축제 데이터 동기화 중 오류가 발생했습니다: " + e.getMessage()
-            ));
+            throw FestivalErrorCode.DATA_SYNC_ERROR.defaultException(e);
         }
     }
 
@@ -82,24 +77,19 @@ public class FestivalAdminController {
             "초기 데이터 적재 또는 스케줄러 실패 시 사용합니다."
     )
     @PostMapping("/sync/seoul")
-    public ResponseEntity<Map<String, String>> syncSeoulFestivalData() {
+    public ResponseEntity<FestivalSyncResponse> syncSeoulFestivalData() {
         log.info("[Admin] 서울시 축제 데이터 수동 동기화 요청");
 
         try {
             festivalService.loadInitialSeoulFestivalData();
             log.info("[Admin] 서울시 축제 데이터 수동 동기화 완료");
 
-            return ResponseEntity.ok(Map.of(
-                "status", "success",
-                "message", "서울시 축제 데이터 동기화가 완료되었습니다."
-            ));
+            return ResponseEntity.ok(
+                FestivalSyncResponse.success("서울시 축제 데이터 동기화가 완료되었습니다.")
+            );
         } catch (Exception e) {
             log.error("[Admin] 서울시 축제 데이터 수동 동기화 실패", e);
-
-            return ResponseEntity.internalServerError().body(Map.of(
-                "status", "error",
-                "message", "서울시 축제 데이터 동기화 중 오류가 발생했습니다: " + e.getMessage()
-            ));
+            throw FestivalErrorCode.DATA_SYNC_ERROR.defaultException(e);
         }
     }
 }

@@ -4,14 +4,15 @@ import com.eventitta.gamification.domain.RankingType;
 import com.eventitta.gamification.dto.response.RankingPageResponse;
 import com.eventitta.gamification.dto.response.UserRankResponse;
 import com.eventitta.gamification.repository.UserActivityRepository;
+import com.eventitta.notification.domain.AlertLevel;
+import com.eventitta.notification.service.DiscordNotificationService;
 import com.eventitta.user.domain.User;
 import com.eventitta.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
@@ -36,6 +37,7 @@ public class RedisRankingService implements RankingService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final UserRepository userRepository;
     private final UserActivityRepository userActivityRepository;
+    private final DiscordNotificationService discordNotificationService;
 
     /**
      * Top N 순위 조회
@@ -140,16 +142,30 @@ public class RedisRankingService implements RankingService {
 
     /**
      * 특정 유저의 순위 조회
+     * Caffeine 캐시를 제거하고 Redis만 사용하여 분산 환경 정합성 보장
      */
     @Override
-    @Cacheable(value = "userRank", key = "#type + ':' + #userId", unless = "#result == null")
     @Transactional(readOnly = true)
     public UserRankResponse getUserRank(RankingType type, Long userId) {
         try {
             return getUserRankFromRedis(type, userId);
+        } catch (RedisConnectionFailureException e) {
+            // Redis 완전 장애: Critical 알림 + MySQL Fallback
+            log.error("Redis connection failed for user rank, using MySQL fallback. userId={}, type={}, error={}",
+                userId, type, e.getMessage());
+            discordNotificationService.sendAlert(
+                AlertLevel.CRITICAL,
+                "REDIS_CONNECTION_FAILURE",
+                "Redis connection failed while getting user rank",
+                "/api/v1/rankings/user",
+                "userId=" + userId + ", type=" + type,
+                e
+            );
+            return getUserRankFromDatabase(type, userId);
         } catch (Exception e) {
-            log.error("Redis failed for user rank, fallback to MySQL. userId={}, error={}",
-                userId, e.getMessage());
+            // 기타 예외 (타임아웃 포함): MySQL Fallback
+            log.warn("Redis error for user rank, using MySQL fallback. userId={}, type={}, error={}",
+                userId, type, e.getMessage());
             return getUserRankFromDatabase(type, userId);
         }
     }
@@ -211,7 +227,6 @@ public class RedisRankingService implements RankingService {
                 member,
                 points
             );
-            evictUserRankCache(RankingType.POINTS, userId);
         } catch (Exception e) {
             log.error("Failed to update points ranking. userId={}, points={}", userId, points, e);
         }
@@ -226,15 +241,11 @@ public class RedisRankingService implements RankingService {
                 member,
                 (double) activityCount
             );
-            evictUserRankCache(RankingType.ACTIVITY_COUNT, userId);
         } catch (Exception e) {
             log.error("Failed to update activity ranking. userId={}, count={}", userId, activityCount, e);
         }
     }
 
-    @CacheEvict(value = "userRank", key = "#type + ':' + #userId")
-    public void evictUserRankCache(RankingType type, Long userId) {
-    }
 
     @Override
     public void removeUser(RankingType type, Long userId) {
@@ -242,7 +253,6 @@ public class RedisRankingService implements RankingService {
             String redisKey = Objects.requireNonNull(type.getRedisKey());
             String member = Objects.requireNonNull(userId).toString();
             redisTemplate.opsForZSet().remove(redisKey, member);
-            evictUserRankCache(type, userId);
         } catch (Exception e) {
             log.error("Failed to remove user from ranking. type={}, userId={}", type, userId, e);
         }

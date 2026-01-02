@@ -4,6 +4,7 @@ import com.eventitta.gamification.domain.RankingType;
 import com.eventitta.gamification.dto.response.RankingPageResponse;
 import com.eventitta.gamification.dto.response.UserRankResponse;
 import com.eventitta.gamification.repository.UserActivityRepository;
+import com.eventitta.notification.service.DiscordNotificationService;
 import com.eventitta.user.domain.User;
 import com.eventitta.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,6 +44,9 @@ class RankingServiceTest {
     private UserActivityRepository userActivityRepository;
 
     @Mock
+    private DiscordNotificationService discordNotificationService;
+
+    @Mock
     private ZSetOperations<String, Object> zSetOperations;
 
     @InjectMocks
@@ -53,7 +57,8 @@ class RankingServiceTest {
         rankingService = new RedisRankingService(
             redisTemplate,
             userRepository,
-            userActivityRepository
+            userActivityRepository,
+            discordNotificationService
         );
 
         when(redisTemplate.opsForZSet()).thenReturn(zSetOperations);

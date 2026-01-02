@@ -30,7 +30,7 @@ public class FailedActivityEventRetryScheduler {
      * 각 이벤트를 개별 트랜잭션으로 처리하여 하나의 실패가 다른 이벤트에 영향을 주지 않도록 함
      */
     @Scheduled(fixedDelay = FAILED_EVENT_RETRY_FIXED_DELAY_MS)
-    @SchedulerLock(name = "retryFailedActivityEvents", lockAtMostFor = "55s", lockAtLeastFor = "5s")
+    @SchedulerLock(name = "retryFailedActivityEvents", lockAtMostFor = "PT55S", lockAtLeastFor = "PT5S")
     @Transactional(propagation = NEVER)
     public void retryFailedEvents() {
         List<FailedActivityEvent> pendingEvents = failedActivityEventRepository

@@ -45,8 +45,8 @@ public class RankingScheduler {
     @Scheduled(cron = "0 0 4 * * *", zone = "Asia/Seoul")
     @SchedulerLock(
         name = "RankingScheduler_fullSync",
-        lockAtMostFor = "1h",
-        lockAtLeastFor = "5m"
+        lockAtMostFor = "PT1H",
+        lockAtLeastFor = "PT5M"
     )
     public void performFullSync() {
         log.info("[Scheduler] RankingScheduler - Starting scheduled full ranking sync");
@@ -70,8 +70,8 @@ public class RankingScheduler {
     )
     @SchedulerLock(
         name = "RankingScheduler_incrementalSync",
-        lockAtMostFor = "10m",
-        lockAtLeastFor = "1m"
+        lockAtMostFor = "PT10M",
+        lockAtLeastFor = "PT1M"
     )
     public void performIncrementalSync() {
         log.debug("[Scheduler] RankingScheduler - Starting scheduled incremental ranking sync");
@@ -90,8 +90,8 @@ public class RankingScheduler {
     @Scheduled(cron = "0 0 3 * * SUN", zone = "Asia/Seoul")
     @SchedulerLock(
         name = "RankingScheduler_weeklyRebuild",
-        lockAtMostFor = "2h",
-        lockAtLeastFor = "10m"
+        lockAtMostFor = "PT2H",
+        lockAtLeastFor = "PT10M"
     )
     public void performWeeklyRebuild() {
         log.info("[Scheduler] RankingScheduler - Starting weekly ranking rebuild");

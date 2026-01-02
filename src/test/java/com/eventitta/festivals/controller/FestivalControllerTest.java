@@ -2,7 +2,7 @@ package com.eventitta.festivals.controller;
 
 import com.eventitta.auth.jwt.service.UserInfoService;
 import com.eventitta.notification.resolver.AlertLevelResolver;
-import com.eventitta.notification.service.SlackNotificationService;
+import com.eventitta.notification.service.DiscordNotificationService;
 import com.eventitta.common.response.PageResponse;
 import com.eventitta.festivals.dto.response.FestivalNearbyResponse;
 import com.eventitta.festivals.dto.request.NearbyFestivalRequest;
@@ -39,7 +39,7 @@ class FestivalControllerTest {
     private FestivalService festivalService;
 
     @MockitoBean
-    protected SlackNotificationService slackNotificationService;
+    protected DiscordNotificationService discordNotificationService;
 
     @MockitoBean
     protected AlertLevelResolver alertLevelResolver;

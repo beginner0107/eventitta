@@ -1,7 +1,7 @@
 package com.eventitta.common.monitoring;
 
 import com.eventitta.notification.domain.AlertLevel;
-import com.eventitta.notification.service.SlackNotificationService;
+import com.eventitta.notification.service.DiscordNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,7 +28,7 @@ import java.util.stream.Stream;
  * 기능:
  * - 주기적으로 에러 로그 파일을 체크하여 비정상적인 에러 발생 감지
  * - 로그 파일 크기 모니터링
- * - 임계치 초과 시 Slack 알림
+ * - 임계치 초과 시 Discord 알림
  *
  * 프리티어 최적화:
  * - 파일 I/O를 최소화하여 디스크 부하 감소
@@ -40,7 +40,7 @@ import java.util.stream.Stream;
 @ConditionalOnProperty(name = "monitoring.log.enabled", havingValue = "true", matchIfMissing = false)
 public class LogMonitor {
 
-    private final SlackNotificationService slackNotificationService;
+    private final DiscordNotificationService discordNotificationService;
 
     @Value("${logging.file.path:/app/logs}")
     private String logPath;
@@ -195,7 +195,7 @@ public class LogMonitor {
             timeWindowMinutes, errorCount, errorThreshold
         );
 
-        slackNotificationService.sendAlert(
+        discordNotificationService.sendAlert(
             AlertLevel.HIGH,
             "LOG_ERROR_THRESHOLD",
             message,
@@ -223,7 +223,7 @@ public class LogMonitor {
             totalSizeMB, logSizeThresholdMb
         );
 
-        slackNotificationService.sendAlert(
+        discordNotificationService.sendAlert(
             AlertLevel.MEDIUM,
             "LOG_SIZE_THRESHOLD",
             message,

@@ -4,6 +4,7 @@ import com.eventitta.gamification.service.RankingSyncService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -16,6 +17,11 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@ConditionalOnProperty(
+    name = "scheduler.ranking-sync.enabled",
+    havingValue = "true",
+    matchIfMissing = true
+)
 public class RankingScheduler {
 
     private static final long INCREMENTAL_SYNC_INTERVAL_MS = 3_600_000L;    // 1시간

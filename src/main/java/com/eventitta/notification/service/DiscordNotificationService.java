@@ -23,7 +23,7 @@ public class DiscordNotificationService {
 
     public DiscordNotificationService(
         DiscordProperties discordProperties,
-        @Qualifier("cacheBasedRateLimiter") RateLimiter rateLimiter,
+        RateLimiter rateLimiter,
         @Qualifier("discordRestClient") RestClient discordRestClient,
         Environment environment,
         DiscordMessageBuilder messageBuilder

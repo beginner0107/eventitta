@@ -9,7 +9,7 @@ import java.time.Clock;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-@Component
+// @Component
 @RequiredArgsConstructor
 public class FixedWindowRateLimiter implements RateLimiter {
 

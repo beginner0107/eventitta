@@ -8,7 +8,7 @@ import java.time.Clock;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-@Component
+// @Component
 @RequiredArgsConstructor
 public class TokenBucketRateLimiter implements RateLimiter {
     private final ConcurrentHashMap<String, TokenBucket> alerts = new ConcurrentHashMap<>();

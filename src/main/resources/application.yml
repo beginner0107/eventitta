@@ -40,10 +40,9 @@ festival:
     enabled: true
 
 notification:
-  slack:
+  discord:
     enabled: false
-    webhook-url: ${SLACK_WEBHOOK_URL:}
-    channel: "#eventitta-alerts"
+    webhook-url: ${DISCORD_WEBHOOK_URL:}
     username: "eventitta-bot"
     timeout-seconds: 5
 

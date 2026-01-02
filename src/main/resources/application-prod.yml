@@ -152,12 +152,11 @@ management:
     enabled: false
 
 notification:
-  slack:
+  discord:
     enabled: true
-    webhook-url: ${SLACK_WEBHOOK_URL}
-    channel: ${SLACK_CHANNEL:#eventitta-alerts}
-    username: ${SLACK_USERNAME:eventitta-bot}
-    timeout-seconds: ${SLACK_TIMEOUT:5}
+    webhook-url: ${DISCORD_WEBHOOK_URL}
+    username: ${DISCORD_USERNAME:eventitta-bot}
+    timeout-seconds: ${DISCORD_TIMEOUT:5}
 
 monitoring:
   log:

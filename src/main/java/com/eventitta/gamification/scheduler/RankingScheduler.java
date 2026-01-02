@@ -84,10 +84,10 @@ public class RankingScheduler {
     }
 
     /**
-     * 매주 일요일 새벽 3시에 Redis 데이터 정리 및 재구축
+     * 매주 일요일 새벽 2시에 Redis 데이터 정리 및 재구축
      * 오래된 데이터 제거 및 전체 재동기화
      */
-    @Scheduled(cron = "0 0 3 * * SUN", zone = "Asia/Seoul")
+    @Scheduled(cron = "0 0 2 * * SUN", zone = "Asia/Seoul")
     @SchedulerLock(
         name = "RankingScheduler_weeklyRebuild",
         lockAtMostFor = "PT2H",

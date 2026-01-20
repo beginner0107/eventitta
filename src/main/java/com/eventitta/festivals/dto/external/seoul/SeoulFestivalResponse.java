@@ -14,6 +14,7 @@ public record SeoulFestivalResponse(
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record CulturalEventInfo(
         @JsonProperty("row")
+        @JacksonXmlElementWrapper(useWrapping = false)
         List<SeoulFestivalRow> row
     ) {
     }

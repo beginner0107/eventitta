@@ -93,9 +93,9 @@ class FestivalServiceTest {
     @DisplayName("내 주변 축제 찾기 - 위치와 조건을 입력하면 조건에 맞는 축제 목록을 보여준다")
     void givenNearbyFestivalsRequest_whenGetNearbyFestival_thenReturnsFestivalPage() {
         // given
-        Double latitude = 37.5665;
-        Double longitude = 126.9780;
-        Double distanceKm = 5.0;
+        double latitude = 37.5665;
+        double longitude = 126.9780;
+        double distanceKm = 5.0;
         LocalDate from = LocalDate.of(2025, 8, 1);
         LocalDate to = LocalDate.of(2025, 8, 31);
         int page = 0;
@@ -211,9 +211,9 @@ class FestivalServiceTest {
     @DisplayName("내 주변 축제 찾기 - 날짜 조건 없이 검색하면 오늘을 기준으로 해당하는 축제를 보여준다")
     void givenRequestWithoutDateRange_whenGetNearbyFestival_thenUsesDefaultDateRange() {
         // given
-        Double latitude = 37.5665;
-        Double longitude = 126.9780;
-        Double distanceKm = 5.0;
+        double latitude = 37.5665;
+        double longitude = 126.9780;
+        double distanceKm = 5.0;
 
         NearbyFestivalRequest request = new NearbyFestivalRequest(
             latitude, longitude, distanceKm, null, null, 0, 20
@@ -273,9 +273,9 @@ class FestivalServiceTest {
     @DisplayName("내 주변 축제 찾기 - 페이지 설정 없이 검색하면 기본 설정(첫 페이지, 20개씩)으로 보여준다")
     void givenRequestWithNullPageParams_whenGetNearbyFestival_thenUsesDefaultPageParams() {
         // given
-        Double latitude = 37.5665;
-        Double longitude = 126.9780;
-        Double distanceKm = 5.0;
+        double latitude = 37.5665;
+        double longitude = 126.9780;
+        double distanceKm = 5.0;
 
         NearbyFestivalRequest request = new NearbyFestivalRequest(
             latitude, longitude, distanceKm, null, null, null, null

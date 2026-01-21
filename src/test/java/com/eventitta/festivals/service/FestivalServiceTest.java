@@ -4,7 +4,10 @@ import com.eventitta.common.response.PageResponse;
 import com.eventitta.festivals.dto.response.FestivalNearbyResponse;
 import com.eventitta.festivals.dto.projection.FestivalProjection;
 import com.eventitta.festivals.dto.request.NearbyFestivalRequest;
+import com.eventitta.festivals.exception.FestivalException;
 import com.eventitta.festivals.repository.FestivalRepository;
+import com.eventitta.festivals.util.BoundingBox;
+import com.eventitta.festivals.util.BoundingBoxCalculator;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,6 +22,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -37,6 +41,9 @@ class FestivalServiceTest {
 
     @Mock
     private FestivalRepository festivalRepository;
+
+    @Mock
+    private BoundingBoxCalculator boundingBoxCalculator;
 
     @InjectMocks
     private FestivalService festivalService;
@@ -86,9 +93,9 @@ class FestivalServiceTest {
     @DisplayName("내 주변 축제 찾기 - 위치와 조건을 입력하면 조건에 맞는 축제 목록을 보여준다")
     void givenNearbyFestivalsRequest_whenGetNearbyFestival_thenReturnsFestivalPage() {
         // given
-        Double latitude = 37.5665;
-        Double longitude = 126.9780;
-        Double distanceKm = 5.0;
+        double latitude = 37.5665;
+        double longitude = 126.9780;
+        double distanceKm = 5.0;
         LocalDate from = LocalDate.of(2025, 8, 1);
         LocalDate to = LocalDate.of(2025, 8, 31);
         int page = 0;
@@ -97,6 +104,11 @@ class FestivalServiceTest {
         NearbyFestivalRequest request = new NearbyFestivalRequest(
             latitude, longitude, distanceKm, from, to, page, size
         );
+
+        // BoundingBox Mock 설정
+        BoundingBox mockBox = new BoundingBox(37.5215, 37.6115, 126.9155, 127.0405);
+        given(boundingBoxCalculator.calculate(latitude, longitude, distanceKm))
+            .willReturn(mockBox);
 
         // FestivalProjection 모킹
         FestivalProjection festivalProjection = new FestivalProjection() {
@@ -156,6 +168,10 @@ class FestivalServiceTest {
             eq(latitude),
             eq(longitude),
             eq(distanceKm),
+            eq(mockBox.minLatitude()),
+            eq(mockBox.maxLatitude()),
+            eq(mockBox.minLongitude()),
+            eq(mockBox.maxLongitude()),
             eq(request.getStartDateTime()),
             eq(request.getEndDateTime()),
             any(PageRequest.class)
@@ -171,11 +187,20 @@ class FestivalServiceTest {
         assertThat(result.content().get(0).getDistance()).isEqualTo(3.2);
         assertThat(result.totalElements()).isEqualTo(1);
 
+        // BoundingBoxCalculator 호출 검증
+        then(boundingBoxCalculator).should(times(1))
+            .calculate(latitude, longitude, distanceKm);
+
+        // Repository 호출 검증
         then(festivalRepository).should(times(1))
             .findFestivalsWithinDistanceAndDateBetween(
                 eq(latitude),
                 eq(longitude),
                 eq(distanceKm),
+                eq(mockBox.minLatitude()),
+                eq(mockBox.maxLatitude()),
+                eq(mockBox.minLongitude()),
+                eq(mockBox.maxLongitude()),
                 eq(request.getStartDateTime()),
                 eq(request.getEndDateTime()),
                 eq(PageRequest.of(page, size))
@@ -186,13 +211,26 @@ class FestivalServiceTest {
     @DisplayName("내 주변 축제 찾기 - 날짜 조건 없이 검색하면 오늘을 기준으로 해당하는 축제를 보여준다")
     void givenRequestWithoutDateRange_whenGetNearbyFestival_thenUsesDefaultDateRange() {
         // given
+        double latitude = 37.5665;
+        double longitude = 126.9780;
+        double distanceKm = 5.0;
+
         NearbyFestivalRequest request = new NearbyFestivalRequest(
-            37.5665, 126.9780, 5.0, null, null, 0, 20
+            latitude, longitude, distanceKm, null, null, 0, 20
         );
+
+        // BoundingBox Mock 설정
+        BoundingBox mockBox = new BoundingBox(37.5215, 37.6115, 126.9155, 127.0405);
+        given(boundingBoxCalculator.calculate(latitude, longitude, distanceKm))
+            .willReturn(mockBox);
 
         PageImpl<FestivalProjection> mockPage = new PageImpl<>(List.of());
 
         given(festivalRepository.findFestivalsWithinDistanceAndDateBetween(
+            any(Double.class),
+            any(Double.class),
+            any(Double.class),
+            any(Double.class),
             any(Double.class),
             any(Double.class),
             any(Double.class),
@@ -212,11 +250,19 @@ class FestivalServiceTest {
         LocalDateTime expectedStart = LocalDate.now().atStartOfDay();
         LocalDateTime expectedEnd = LocalDateTime.of(9999, 12, 31, 23, 59, 59);
 
+        // BoundingBoxCalculator 호출 검증
+        then(boundingBoxCalculator).should(times(1))
+            .calculate(latitude, longitude, distanceKm);
+
         then(festivalRepository).should(times(1))
             .findFestivalsWithinDistanceAndDateBetween(
-                eq(37.5665),
-                eq(126.9780),
-                eq(5.0),
+                eq(latitude),
+                eq(longitude),
+                eq(distanceKm),
+                eq(mockBox.minLatitude()),
+                eq(mockBox.maxLatitude()),
+                eq(mockBox.minLongitude()),
+                eq(mockBox.maxLongitude()),
                 eq(expectedStart),
                 eq(expectedEnd),
                 eq(PageRequest.of(0, 20))
@@ -227,13 +273,26 @@ class FestivalServiceTest {
     @DisplayName("내 주변 축제 찾기 - 페이지 설정 없이 검색하면 기본 설정(첫 페이지, 20개씩)으로 보여준다")
     void givenRequestWithNullPageParams_whenGetNearbyFestival_thenUsesDefaultPageParams() {
         // given
+        double latitude = 37.5665;
+        double longitude = 126.9780;
+        double distanceKm = 5.0;
+
         NearbyFestivalRequest request = new NearbyFestivalRequest(
-            37.5665, 126.9780, 5.0, null, null, null, null
+            latitude, longitude, distanceKm, null, null, null, null
         );
+
+        // BoundingBox Mock 설정
+        BoundingBox mockBox = new BoundingBox(37.5215, 37.6115, 126.9155, 127.0405);
+        given(boundingBoxCalculator.calculate(latitude, longitude, distanceKm))
+            .willReturn(mockBox);
 
         PageImpl<FestivalProjection> mockPage = new PageImpl<>(List.of());
 
         given(festivalRepository.findFestivalsWithinDistanceAndDateBetween(
+            any(Double.class),
+            any(Double.class),
+            any(Double.class),
+            any(Double.class),
             any(Double.class),
             any(Double.class),
             any(Double.class),
@@ -248,9 +307,17 @@ class FestivalServiceTest {
         // then
         assertThat(result).isNotNull();
 
+        // BoundingBoxCalculator 호출 검증
+        then(boundingBoxCalculator).should(times(1))
+            .calculate(latitude, longitude, distanceKm);
+
         // 기본 페이지 파라미터 (page=0, size=20)로 호출되는지 확인
         then(festivalRepository).should(times(1))
             .findFestivalsWithinDistanceAndDateBetween(
+                any(Double.class),
+                any(Double.class),
+                any(Double.class),
+                any(Double.class),
                 any(Double.class),
                 any(Double.class),
                 any(Double.class),
@@ -258,5 +325,145 @@ class FestivalServiceTest {
                 any(LocalDateTime.class),
                 eq(PageRequest.of(0, 20))
             );
+    }
+
+    @Test
+    @DisplayName("내 주변 축제 찾기 - 위도가 -90보다 작으면 예외 발생")
+    void givenInvalidLatitudeTooSmall_whenGetNearbyFestival_thenThrowsException() {
+        // given
+        NearbyFestivalRequest request = new NearbyFestivalRequest(
+            -91.0,  // 잘못된 위도 (< -90)
+            126.9780,
+            5.0,
+            LocalDate.of(2025, 8, 1),
+            LocalDate.of(2025, 8, 31),
+            0,
+            20
+        );
+
+        // when & then
+        assertThatThrownBy(() -> festivalService.getNearbyFestival(request))
+            .isInstanceOf(FestivalException.class)
+            .hasMessageContaining("위치 검색 범위가 유효하지 않습니다");
+    }
+
+    @Test
+    @DisplayName("내 주변 축제 찾기 - 위도가 90보다 크면 예외 발생")
+    void givenInvalidLatitudeTooLarge_whenGetNearbyFestival_thenThrowsException() {
+        // given
+        NearbyFestivalRequest request = new NearbyFestivalRequest(
+            91.0,  // 잘못된 위도 (> 90)
+            126.9780,
+            5.0,
+            LocalDate.of(2025, 8, 1),
+            LocalDate.of(2025, 8, 31),
+            0,
+            20
+        );
+
+        // when & then
+        assertThatThrownBy(() -> festivalService.getNearbyFestival(request))
+            .isInstanceOf(FestivalException.class)
+            .hasMessageContaining("위치 검색 범위가 유효하지 않습니다");
+    }
+
+    @Test
+    @DisplayName("내 주변 축제 찾기 - 경도가 -180보다 작으면 예외 발생")
+    void givenInvalidLongitudeTooSmall_whenGetNearbyFestival_thenThrowsException() {
+        // given
+        NearbyFestivalRequest request = new NearbyFestivalRequest(
+            37.5665,
+            -181.0,  // 잘못된 경도 (< -180)
+            5.0,
+            LocalDate.of(2025, 8, 1),
+            LocalDate.of(2025, 8, 31),
+            0,
+            20
+        );
+
+        // when & then
+        assertThatThrownBy(() -> festivalService.getNearbyFestival(request))
+            .isInstanceOf(FestivalException.class)
+            .hasMessageContaining("위치 검색 범위가 유효하지 않습니다");
+    }
+
+    @Test
+    @DisplayName("내 주변 축제 찾기 - 경도가 180보다 크면 예외 발생")
+    void givenInvalidLongitudeTooLarge_whenGetNearbyFestival_thenThrowsException() {
+        // given
+        NearbyFestivalRequest request = new NearbyFestivalRequest(
+            37.5665,
+            181.0,  // 잘못된 경도 (> 180)
+            5.0,
+            LocalDate.of(2025, 8, 1),
+            LocalDate.of(2025, 8, 31),
+            0,
+            20
+        );
+
+        // when & then
+        assertThatThrownBy(() -> festivalService.getNearbyFestival(request))
+            .isInstanceOf(FestivalException.class)
+            .hasMessageContaining("위치 검색 범위가 유효하지 않습니다");
+    }
+
+    @Test
+    @DisplayName("내 주변 축제 찾기 - 거리가 0 이하이면 예외 발생")
+    void givenInvalidDistanceZero_whenGetNearbyFestival_thenThrowsException() {
+        // given
+        NearbyFestivalRequest request = new NearbyFestivalRequest(
+            37.5665,
+            126.9780,
+            0.0,  // 잘못된 거리 (<= 0)
+            LocalDate.of(2025, 8, 1),
+            LocalDate.of(2025, 8, 31),
+            0,
+            20
+        );
+
+        // when & then
+        assertThatThrownBy(() -> festivalService.getNearbyFestival(request))
+            .isInstanceOf(FestivalException.class)
+            .hasMessageContaining("위치 검색 범위가 유효하지 않습니다");
+    }
+
+    @Test
+    @DisplayName("내 주변 축제 찾기 - 거리가 100km를 초과하면 예외 발생")
+    void givenInvalidDistanceTooLarge_whenGetNearbyFestival_thenThrowsException() {
+        // given
+        NearbyFestivalRequest request = new NearbyFestivalRequest(
+            37.5665,
+            126.9780,
+            101.0,  // 잘못된 거리 (> 100)
+            LocalDate.of(2025, 8, 1),
+            LocalDate.of(2025, 8, 31),
+            0,
+            20
+        );
+
+        // when & then
+        assertThatThrownBy(() -> festivalService.getNearbyFestival(request))
+            .isInstanceOf(FestivalException.class)
+            .hasMessageContaining("위치 검색 범위가 유효하지 않습니다");
+    }
+
+    @Test
+    @DisplayName("내 주변 축제 찾기 - 시작 날짜가 종료 날짜보다 늦으면 예외 발생")
+    void givenInvalidDateRange_whenGetNearbyFestival_thenThrowsException() {
+        // given
+        NearbyFestivalRequest request = new NearbyFestivalRequest(
+            37.5665,
+            126.9780,
+            5.0,
+            LocalDate.of(2025, 8, 31),  // 시작일이 종료일보다 늦음
+            LocalDate.of(2025, 8, 1),
+            0,
+            20
+        );
+
+        // when & then
+        assertThatThrownBy(() -> festivalService.getNearbyFestival(request))
+            .isInstanceOf(FestivalException.class)
+            .hasMessageContaining("날짜 범위가 유효하지 않습니다");
     }
 }

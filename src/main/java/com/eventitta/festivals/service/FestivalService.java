@@ -5,6 +5,8 @@ import com.eventitta.festivals.dto.response.FestivalNearbyResponse;
 import com.eventitta.festivals.dto.request.NearbyFestivalRequest;
 import com.eventitta.festivals.exception.FestivalErrorCode;
 import com.eventitta.festivals.repository.FestivalRepository;
+import com.eventitta.festivals.util.BoundingBox;
+import com.eventitta.festivals.util.BoundingBoxCalculator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -21,6 +23,7 @@ public class FestivalService {
     private final SeoulFestivalInitializer seoulFestivalInitializer;
     private final NationalFestivalInitializer nationalFestivalInitializer;
     private final FestivalRepository festivalRepository;
+    private final BoundingBoxCalculator boundingBoxCalculator;
 
     public void loadInitialNationalFestivalData() {
         nationalFestivalInitializer.loadInitialData();
@@ -47,8 +50,18 @@ public class FestivalService {
         // 유효성 검증
         validateNearbyFestivalRequest(req);
 
+        // Bounding Box 계산
+        BoundingBox box = boundingBoxCalculator.calculate(
+            req.latitude(),
+            req.longitude(),
+            req.distanceKm()
+        );
+
+        // Repository 호출 (Bounding Box 파라미터 추가)
         var page = festivalRepository.findFestivalsWithinDistanceAndDateBetween(
             req.latitude(), req.longitude(), req.distanceKm(),
+            box.minLatitude(), box.maxLatitude(),
+            box.minLongitude(), box.maxLongitude(),
             req.getStartDateTime(), req.getEndDateTime(),
             PageRequest.of(req.page(), req.size())
         );
@@ -69,13 +82,30 @@ public class FestivalService {
         return PageResponse.of(dtoPage);
     }
 
+    /**
+     * 주변 축제 검색 요청 검증
+     *
+     * @throws com.eventitta.festivals.exception.FestivalException 검증 실패 시
+     */
     private void validateNearbyFestivalRequest(NearbyFestivalRequest req) {
-        if (req.distanceKm() <= 0 || req.distanceKm() > 100) {
+        // 거리 범위 검증
+        if (req.distanceKm() < 0.1 || req.distanceKm() > 100) {
             throw FestivalErrorCode.INVALID_LOCATION_RANGE.defaultException();
         }
 
+        // 날짜 범위 검증
         if (req.getStartDateTime().isAfter(req.getEndDateTime())) {
             throw FestivalErrorCode.INVALID_DATE_RANGE.defaultException();
+        }
+
+        // 위도 범위 검증
+        if (req.latitude() < -90 || req.latitude() > 90) {
+            throw FestivalErrorCode.INVALID_LOCATION_RANGE.defaultException();
+        }
+
+        // 경도 범위 검증
+        if (req.longitude() < -180 || req.longitude() > 180) {
+            throw FestivalErrorCode.INVALID_LOCATION_RANGE.defaultException();
         }
     }
 }

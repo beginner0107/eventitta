@@ -35,7 +35,9 @@ public interface FestivalRepository extends JpaRepository<Festival, Long> {
                     ) AS distance
                 FROM festivals f
                 WHERE
-                  f.start_date >= DATE(:startDateTime)
+                  f.latitude BETWEEN :minLatitude AND :maxLatitude
+                  AND f.longitude BETWEEN :minLongitude AND :maxLongitude
+                  AND f.start_date >= DATE(:startDateTime)
                   AND (:endDateTime IS NULL OR f.start_date <= DATE(:endDateTime))
                 HAVING distance <= :distanceKm
                 ORDER BY distance ASC
@@ -44,7 +46,9 @@ public interface FestivalRepository extends JpaRepository<Festival, Long> {
                 SELECT COUNT(*)
                 FROM festivals f
                 WHERE
-                  f.start_date >= DATE(:startDateTime)
+                  f.latitude BETWEEN :minLatitude AND :maxLatitude
+                  AND f.longitude BETWEEN :minLongitude AND :maxLongitude
+                  AND f.start_date >= DATE(:startDateTime)
                   AND (:endDateTime IS NULL OR f.start_date <= DATE(:endDateTime))
                   AND (
                     6371 * acos(
@@ -60,6 +64,10 @@ public interface FestivalRepository extends JpaRepository<Festival, Long> {
         @Param("latitude") double latitude,
         @Param("longitude") double longitude,
         @Param("distanceKm") double distanceKm,
+        @Param("minLatitude") double minLatitude,
+        @Param("maxLatitude") double maxLatitude,
+        @Param("minLongitude") double minLongitude,
+        @Param("maxLongitude") double maxLongitude,
         @Param("startDateTime") LocalDateTime startDateTime,
         @Param("endDateTime") LocalDateTime endDateTime,
         Pageable pageable

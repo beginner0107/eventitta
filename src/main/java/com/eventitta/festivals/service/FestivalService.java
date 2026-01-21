@@ -89,7 +89,7 @@ public class FestivalService {
      */
     private void validateNearbyFestivalRequest(NearbyFestivalRequest req) {
         // 거리 범위 검증
-        if (req.distanceKm() <= 0 || req.distanceKm() > 100) {
+        if (req.distanceKm() < 0.1 || req.distanceKm() > 100) {
             throw FestivalErrorCode.INVALID_LOCATION_RANGE.defaultException();
         }
 

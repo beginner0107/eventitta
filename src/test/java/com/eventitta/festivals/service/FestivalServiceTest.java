@@ -4,6 +4,7 @@ import com.eventitta.common.response.PageResponse;
 import com.eventitta.festivals.dto.response.FestivalNearbyResponse;
 import com.eventitta.festivals.dto.projection.FestivalProjection;
 import com.eventitta.festivals.dto.request.NearbyFestivalRequest;
+import com.eventitta.festivals.exception.FestivalException;
 import com.eventitta.festivals.repository.FestivalRepository;
 import com.eventitta.festivals.util.BoundingBox;
 import com.eventitta.festivals.util.BoundingBoxCalculator;
@@ -21,6 +22,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -323,5 +325,145 @@ class FestivalServiceTest {
                 any(LocalDateTime.class),
                 eq(PageRequest.of(0, 20))
             );
+    }
+
+    @Test
+    @DisplayName("내 주변 축제 찾기 - 위도가 -90보다 작으면 예외 발생")
+    void givenInvalidLatitudeTooSmall_whenGetNearbyFestival_thenThrowsException() {
+        // given
+        NearbyFestivalRequest request = new NearbyFestivalRequest(
+            -91.0,  // 잘못된 위도 (< -90)
+            126.9780,
+            5.0,
+            LocalDate.of(2025, 8, 1),
+            LocalDate.of(2025, 8, 31),
+            0,
+            20
+        );
+
+        // when & then
+        assertThatThrownBy(() -> festivalService.getNearbyFestival(request))
+            .isInstanceOf(FestivalException.class)
+            .hasMessageContaining("위치 검색 범위가 유효하지 않습니다");
+    }
+
+    @Test
+    @DisplayName("내 주변 축제 찾기 - 위도가 90보다 크면 예외 발생")
+    void givenInvalidLatitudeTooLarge_whenGetNearbyFestival_thenThrowsException() {
+        // given
+        NearbyFestivalRequest request = new NearbyFestivalRequest(
+            91.0,  // 잘못된 위도 (> 90)
+            126.9780,
+            5.0,
+            LocalDate.of(2025, 8, 1),
+            LocalDate.of(2025, 8, 31),
+            0,
+            20
+        );
+
+        // when & then
+        assertThatThrownBy(() -> festivalService.getNearbyFestival(request))
+            .isInstanceOf(FestivalException.class)
+            .hasMessageContaining("위치 검색 범위가 유효하지 않습니다");
+    }
+
+    @Test
+    @DisplayName("내 주변 축제 찾기 - 경도가 -180보다 작으면 예외 발생")
+    void givenInvalidLongitudeTooSmall_whenGetNearbyFestival_thenThrowsException() {
+        // given
+        NearbyFestivalRequest request = new NearbyFestivalRequest(
+            37.5665,
+            -181.0,  // 잘못된 경도 (< -180)
+            5.0,
+            LocalDate.of(2025, 8, 1),
+            LocalDate.of(2025, 8, 31),
+            0,
+            20
+        );
+
+        // when & then
+        assertThatThrownBy(() -> festivalService.getNearbyFestival(request))
+            .isInstanceOf(FestivalException.class)
+            .hasMessageContaining("위치 검색 범위가 유효하지 않습니다");
+    }
+
+    @Test
+    @DisplayName("내 주변 축제 찾기 - 경도가 180보다 크면 예외 발생")
+    void givenInvalidLongitudeTooLarge_whenGetNearbyFestival_thenThrowsException() {
+        // given
+        NearbyFestivalRequest request = new NearbyFestivalRequest(
+            37.5665,
+            181.0,  // 잘못된 경도 (> 180)
+            5.0,
+            LocalDate.of(2025, 8, 1),
+            LocalDate.of(2025, 8, 31),
+            0,
+            20
+        );
+
+        // when & then
+        assertThatThrownBy(() -> festivalService.getNearbyFestival(request))
+            .isInstanceOf(FestivalException.class)
+            .hasMessageContaining("위치 검색 범위가 유효하지 않습니다");
+    }
+
+    @Test
+    @DisplayName("내 주변 축제 찾기 - 거리가 0 이하이면 예외 발생")
+    void givenInvalidDistanceZero_whenGetNearbyFestival_thenThrowsException() {
+        // given
+        NearbyFestivalRequest request = new NearbyFestivalRequest(
+            37.5665,
+            126.9780,
+            0.0,  // 잘못된 거리 (<= 0)
+            LocalDate.of(2025, 8, 1),
+            LocalDate.of(2025, 8, 31),
+            0,
+            20
+        );
+
+        // when & then
+        assertThatThrownBy(() -> festivalService.getNearbyFestival(request))
+            .isInstanceOf(FestivalException.class)
+            .hasMessageContaining("위치 검색 범위가 유효하지 않습니다");
+    }
+
+    @Test
+    @DisplayName("내 주변 축제 찾기 - 거리가 100km를 초과하면 예외 발생")
+    void givenInvalidDistanceTooLarge_whenGetNearbyFestival_thenThrowsException() {
+        // given
+        NearbyFestivalRequest request = new NearbyFestivalRequest(
+            37.5665,
+            126.9780,
+            101.0,  // 잘못된 거리 (> 100)
+            LocalDate.of(2025, 8, 1),
+            LocalDate.of(2025, 8, 31),
+            0,
+            20
+        );
+
+        // when & then
+        assertThatThrownBy(() -> festivalService.getNearbyFestival(request))
+            .isInstanceOf(FestivalException.class)
+            .hasMessageContaining("위치 검색 범위가 유효하지 않습니다");
+    }
+
+    @Test
+    @DisplayName("내 주변 축제 찾기 - 시작 날짜가 종료 날짜보다 늦으면 예외 발생")
+    void givenInvalidDateRange_whenGetNearbyFestival_thenThrowsException() {
+        // given
+        NearbyFestivalRequest request = new NearbyFestivalRequest(
+            37.5665,
+            126.9780,
+            5.0,
+            LocalDate.of(2025, 8, 31),  // 시작일이 종료일보다 늦음
+            LocalDate.of(2025, 8, 1),
+            0,
+            20
+        );
+
+        // when & then
+        assertThatThrownBy(() -> festivalService.getNearbyFestival(request))
+            .isInstanceOf(FestivalException.class)
+            .hasMessageContaining("날짜 범위가 유효하지 않습니다");
     }
 }

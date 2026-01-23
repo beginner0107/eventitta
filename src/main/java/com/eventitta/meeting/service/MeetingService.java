@@ -69,7 +69,6 @@ public class MeetingService {
 
         findUserById(userId);
 
-        // Concurrency-safe: lock Meeting row first to serialize with approvals/cancels
         Meeting meeting = meetingRepository.findByIdForUpdate(meetingId)
             .orElseThrow(MEETING_NOT_FOUND::defaultException);
         if (meeting.isDeleted()) {
@@ -208,7 +207,6 @@ public class MeetingService {
 
         findUserById(userId);
 
-        // Not modifying counters, but keep read path as-is to avoid widening lock scope unnecessarily
         Meeting meeting = findMeetingById(meetingId);
 
         MeetingParticipant participant = validateAndGetPendingParticipant(
@@ -316,7 +314,6 @@ public class MeetingService {
 
         findUserById(userId);
 
-        // Concurrency-safe: lock Meeting row first to serialize with approvals
         Meeting meeting = meetingRepository.findByIdForUpdate(meetingId)
             .orElseThrow(MEETING_NOT_FOUND::defaultException);
 

@@ -69,7 +69,8 @@ public class MeetingService {
 
         findUserById(userId);
 
-        Meeting meeting = findMeetingById(meetingId);
+        Meeting meeting = meetingRepository.findByIdForUpdate(meetingId)
+            .orElseThrow(MEETING_NOT_FOUND::defaultException);
         if (meeting.isDeleted()) {
             throw ALREADY_DELETED_MEETING.defaultException();
         }
@@ -313,7 +314,8 @@ public class MeetingService {
 
         findUserById(userId);
 
-        Meeting meeting = findMeetingById(meetingId);
+        Meeting meeting = meetingRepository.findByIdForUpdate(meetingId)
+            .orElseThrow(MEETING_NOT_FOUND::defaultException);
 
         if (meeting.isDeleted()) {
             throw ALREADY_DELETED_MEETING.defaultException();

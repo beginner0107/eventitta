@@ -126,7 +126,7 @@ class MeetingServiceTest {
             .build();
 
         given(userRepository.findById(leaderId)).willReturn(Optional.of(leader));
-        given(meetingRepository.findById(anyLong())).willReturn(Optional.of(meeting));
+        given(meetingRepository.findByIdForUpdate(anyLong())).willReturn(Optional.of(meeting));
 
         MeetingUpdateRequest req = new MeetingUpdateRequest(
             "new", "desc",
@@ -164,7 +164,7 @@ class MeetingServiceTest {
             .build();
 
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
-        given(meetingRepository.findById(meetingId)).willReturn(Optional.of(meeting));
+        given(meetingRepository.findByIdForUpdate(meetingId)).willReturn(Optional.of(meeting));
         given(participantRepository.findByMeetingIdAndUser_Id(meetingId, userId))
             .willReturn(Optional.empty());
         MeetingParticipant saved = MeetingParticipant.builder()
@@ -426,7 +426,7 @@ class MeetingServiceTest {
         meeting.delete();
 
         given(userRepository.findById(leaderId)).willReturn(Optional.of(leader));
-        given(meetingRepository.findById(meeting.getId())).willReturn(Optional.of(meeting));
+        given(meetingRepository.findByIdForUpdate(meeting.getId())).willReturn(Optional.of(meeting));
 
         MeetingUpdateRequest req = new MeetingUpdateRequest(
             "n", null,
@@ -491,7 +491,7 @@ class MeetingServiceTest {
         meeting.delete();
 
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
-        given(meetingRepository.findById(meetingId)).willReturn(Optional.of(meeting));
+        given(meetingRepository.findByIdForUpdate(meetingId)).willReturn(Optional.of(meeting));
 
         // when & then
         assertThatThrownBy(() -> meetingService.joinMeeting(userId, meetingId))
@@ -525,7 +525,7 @@ class MeetingServiceTest {
             .build();
 
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
-        given(meetingRepository.findById(meetingId)).willReturn(Optional.of(meeting));
+        given(meetingRepository.findByIdForUpdate(meetingId)).willReturn(Optional.of(meeting));
         given(participantRepository.findByMeetingIdAndUser_Id(meetingId, userId))
             .willReturn(Optional.of(participant));
 

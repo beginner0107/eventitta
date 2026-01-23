@@ -164,7 +164,7 @@ class MeetingServiceTest {
             .build();
 
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
-        given(meetingRepository.findByIdForUpdate(meetingId)).willReturn(Optional.of(meeting));
+        given(meetingRepository.findById(meetingId)).willReturn(Optional.of(meeting));
         given(participantRepository.findByMeetingIdAndUser_Id(meetingId, userId))
             .willReturn(Optional.empty());
         MeetingParticipant saved = MeetingParticipant.builder()
@@ -290,7 +290,7 @@ class MeetingServiceTest {
             .build();
 
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
-        given(meetingRepository.findById(meetingId)).willReturn(Optional.of(meeting));
+        given(meetingRepository.findByIdForUpdate(meetingId)).willReturn(Optional.of(meeting));
         given(participantRepository.findByMeetingIdAndUser_Id(meetingId, userId))
             .willReturn(Optional.of(participant));
 
@@ -491,7 +491,7 @@ class MeetingServiceTest {
         meeting.delete();
 
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
-        given(meetingRepository.findByIdForUpdate(meetingId)).willReturn(Optional.of(meeting));
+        given(meetingRepository.findById(meetingId)).willReturn(Optional.of(meeting));
 
         // when & then
         assertThatThrownBy(() -> meetingService.joinMeeting(userId, meetingId))
@@ -560,7 +560,7 @@ class MeetingServiceTest {
             .build();
 
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
-        given(meetingRepository.findById(meetingId)).willReturn(Optional.of(meeting));
+        given(meetingRepository.findByIdForUpdate(meetingId)).willReturn(Optional.of(meeting));
         given(participantRepository.findByMeetingIdAndUser_Id(meetingId, userId))
             .willReturn(Optional.of(participant));
 

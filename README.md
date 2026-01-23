@@ -37,7 +37,6 @@
 | **개발 기간**    | 2025.07 - 2026.12 (5개월)                         |
 | **기술 스택**    | Java 17, Spring Boot 3.4.5, JPA, QueryDSL 5.0.0 |
 | **데이터베이스**   | MySQL 8.0 (운영), H2 (테스트)                        |
-| **테스트**      | 단위/통합/동시성 테스트 446개                              |
 | **인프라**      | Docker, GitHub Actions, AWS RDS, Nginx          |
 | **주요 해결 과제** | 동시성 제어, 이벤트 신뢰성, N+1 문제, 분산 스케줄러                |
 
@@ -247,21 +246,21 @@ erDiagram
 
 ## 기술적 하이라이트
 
-| 챌린지               | 해결                                      | 결과                               |
-|-------------------|-----------------------------------------|----------------------------------|
-| **JWT 인증 보안**     | HttpOnly 쿠키 + Refresh Token 해시 저장       | XSS 방어, 토큰 탈취 시 피해 최소화           |
-| **모임 참가 동시성**     | JPA 비관적 락 (`SELECT ... FOR UPDATE`)     | 정원 초과 승인 100% 방지, Lost Update 해결 |
-| **포인트 동시성**       | Atomic Update 쿼리 (`u.points + :amount`) | 높은 동시성 유지하면서 포인트 유실 방지           |
-| **트랜잭션 데드락**      | 이벤트 기반 아키텍처로 트랜잭션 분리                    | 락 보유 시간 90% 감소, 데드락 방지           |
-| **실시간 랭킹 시스템**    | Redis Sorted Set + MySQL Fallback       | 조회 속도 100배 향상, 장애 자동 복구          |
-| **비동기 이벤트 신뢰성**   | Retry + DB 저장 + 스케줄러 복구                 | 데이터 유실 방지, 자동 복구                 |
-| **스케줄러 실패 격리**    | 개별 트랜잭션 처리 (`REQUIRES_NEW`)             | 배치 작업 중 개별 실패가 전체에 영향 없음         |
-| **도메인 간 강결합**     | Spring Events + 비동기 처리                  | 핵심 도메인과 부가 기능 의존성 분리             |
-| **분산 스케줄러 중복 실행** | ShedLock (JDBC 락)                       | 다중 인스턴스 환경 대비 단일 실행 보장           |
-| **복잡한 검색 조건**     | QueryDSL 동적 쿼리 + Fetch Join             | N+1 문제 해결, 타입 안전 처리              |
-| **Festival 거리 검색** | Bounding Box + 복합 인덱스 (Two-Phase Filtering) | 응답 시간 40-65% 개선, 스캔 레코드 90% 감소 |
-| **Discord 알림 폭증** | Caffeine Cache 기반 Rate Limiter          | Alert Level별 차등 제한, 7가지 알고리즘 비교  |
-| **Badge 평가 확장성**  | 전략 패턴 + EvaluationType 분리               | 새 평가 기준 추가 시 Evaluator만 구현       |
+| 챌린지                | 해결                                          | 결과                               |
+|--------------------|---------------------------------------------|----------------------------------|
+| **JWT 인증 보안**      | HttpOnly 쿠키 + Refresh Token 해시 저장           | XSS 방어, 토큰 탈취 시 피해 최소화           |
+| **모임 참가 동시성**      | JPA 비관적 락 (`SELECT ... FOR UPDATE`)         | 정원 초과 승인 100% 방지, Lost Update 해결 |
+| **포인트 동시성**        | Atomic Update 쿼리 (`u.points + :amount`)     | 높은 동시성 유지하면서 포인트 유실 방지           |
+| **트랜잭션 데드락**       | 이벤트 기반 아키텍처로 트랜잭션 분리                        | 락 보유 시간 90% 감소, 데드락 방지           |
+| **실시간 랭킹 시스템**     | Redis Sorted Set + MySQL Fallback           | 조회 속도 100배 향상, 장애 자동 복구          |
+| **비동기 이벤트 신뢰성**    | Retry + DB 저장 + 스케줄러 복구                     | 데이터 유실 방지, 자동 복구                 |
+| **스케줄러 실패 격리**     | 개별 트랜잭션 처리 (`REQUIRES_NEW`)                 | 배치 작업 중 개별 실패가 전체에 영향 없음         |
+| **도메인 간 강결합**      | Spring Events + 비동기 처리                      | 핵심 도메인과 부가 기능 의존성 분리             |
+| **분산 스케줄러 중복 실행**  | ShedLock (JDBC 락)                           | 다중 인스턴스 환경 대비 단일 실행 보장           |
+| **복잡한 검색 조건**      | QueryDSL 동적 쿼리 + Fetch Join                 | N+1 문제 해결, 타입 안전 처리              |
+| **Festival 거리 검색** | Bounding Box + 복합 인덱스 (Two-Phase Filtering) | 응답 시간 40-65% 개선, 스캔 레코드 90% 감소   |
+| **Discord 알림 폭증**  | Caffeine Cache 기반 Rate Limiter              | Alert Level별 차등 제한, 7가지 알고리즘 비교  |
+| **Badge 평가 확장성**   | 전략 패턴 + EvaluationType 분리                   | 새 평가 기준 추가 시 Evaluator만 구현       |
 
 상세한 기술적 해결 과정은 [TECHNICAL_CHALLENGES.md](docs/TECHNICAL_CHALLENGES.md)에서 확인할 수 있습니다.
 
@@ -313,7 +312,6 @@ sequenceDiagram
 
 ## 품질 & 안정성
 
-- **테스트**: 446개 테스트 통과 (단위/통합/컨트롤러/동시성 테스트)
 - **동시성 제어**: 비관적 락 + Atomic Update로 Race Condition 해결
 - **이벤트 신뢰성**: Retry + DB 저장 + 스케줄러로 비동기 이벤트 자동 복구
 - **쿼리 최적화**: QueryDSL + Fetch Join으로 N+1 문제 해결

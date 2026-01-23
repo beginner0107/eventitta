@@ -34,7 +34,7 @@
 
 | 구분           | 내용                                              |
 |--------------|-------------------------------------------------|
-| **개발 기간**    | 2025.07 - 2026.12 (5개월)                         |
+| **개발 기간**    | 2025.07 - 2025.12 (5개월)                         |
 | **기술 스택**    | Java 17, Spring Boot 3.4.5, JPA, QueryDSL 5.0.0 |
 | **데이터베이스**   | MySQL 8.0 (운영), H2 (테스트)                        |
 | **인프라**      | Docker, GitHub Actions, AWS RDS, Nginx          |
@@ -259,7 +259,7 @@ erDiagram
 | **분산 스케줄러 중복 실행**  | ShedLock (JDBC 락)                           | 다중 인스턴스 환경 대비 단일 실행 보장           |
 | **복잡한 검색 조건**      | QueryDSL 동적 쿼리 + Fetch Join                 | N+1 문제 해결, 타입 안전 처리              |
 | **Festival 거리 검색** | Bounding Box + 복합 인덱스 (Two-Phase Filtering) | 응답 시간 40-65% 개선, 스캔 레코드 90% 감소   |
-| **Discord 알림 폭증**  | Caffeine Cache 기반 Rate Limiter              | Alert Level별 차등 제한, 7가지 알고리즘 비교  |
+| **Discord 알림 폭증**  | Caffeine Cache 기반 Rate Limiter              | Alert Level별 차등 제한, 7가지 알고리즘 구현  |
 | **Badge 평가 확장성**   | 전략 패턴 + EvaluationType 분리                   | 새 평가 기준 추가 시 Evaluator만 구현       |
 
 상세한 기술적 해결 과정은 [TECHNICAL_CHALLENGES.md](docs/TECHNICAL_CHALLENGES.md)에서 확인할 수 있습니다.
@@ -358,5 +358,4 @@ open http://localhost:8080/swagger-ui.html
 
 ### 버전 관리
 
-- **v1.0** (2024.12): 커뮤니티, 모임 관리, 게임화 시스템, 축제 정보 연동 완료
-- **v2.0** (2025.01): Redis 랭킹 시스템 도입, 트랜잭션 데드락 해결, 이벤트 기반 아키텍처 개선
+- **v1.0** (2025.12): 커뮤니티, 모임 관리, 게임화 시스템, 축제 정보 연동, Redis 랭킹 시스템, 트랜잭션 데드락 해결, 이벤트 기반 아키텍처 완료

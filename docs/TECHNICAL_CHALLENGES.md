@@ -199,10 +199,10 @@ void givenMultiplePendingParticipants_whenConcurrentApproval_thenShouldNotExceed
 
 ### 개선 효과
 
-| 케이스   | 정원   | 동시 요청 | Before    | After     |
-|-------|------|-------|-----------|-----------|
-| Case1 | 10명  | 20명   | ❌ 20명 승인  | ✅ 10명 승인  |
-| Case2 | 100명 | 200명  | ❌ 200명 승인 | ✅ 100명 승인 |
+| 케이스   | 정원   | 현재 승인 | 동시 요청 | 예상 문제 (락 미적용)     | 실제 결과 (락 적용)   |
+|-------|------|-------|-------|--------------------|-----------------|
+| Case1 | 10명  | 5명    | 20명   | 정원 초과 승인 가능       | ✅ 최대 5명 추가 승인  |
+| Case2 | 100명 | 10명   | 200명  | 정원 초과 승인 가능       | ✅ 최대 90명 추가 승인 |
 
 - **정원 초과 승인**: 100% 방지
 - **currentMembers 정합성**: 실제 승인 수와 일치
@@ -212,7 +212,6 @@ void givenMultiplePendingParticipants_whenConcurrentApproval_thenShouldNotExceed
 
 - **락 타임아웃**: 3초 설정으로 데드락 방지
 - **트랜잭션 범위**: 최소화하여 동시 처리량 확보
-- **향후 계획**: 트래픽 증가 시 Redis 분산 락 도입 검토
 
 ### 참고 문서
 
@@ -415,8 +414,8 @@ public void recoverUserActivity(Exception e, UserActivityLogRequestedEvent event
     log.error("[실패 이벤트 저장 중 오류]", persistEx);
   }
 
-  // Slack 알림으로 운영팀에 즉시 알림
-  sendSlackAlertSafely(ACTIVITY_RECORD_FAILED, message, event.userId(), e);
+  // Discord 알림으로 운영팀에 즉시 알림
+  sendDiscordAlertSafely(ACTIVITY_RECORD_FAILED, message, event.userId(), e);
 }
 ```
 
@@ -516,7 +515,7 @@ public void recoverFailedEvents() {
 ### 복구 플로우
 
 ```
-이벤트 발생 → Retry (3회) → 실패 시 DB 저장 + Slack 알림
+이벤트 발생 → Retry (3회) → 실패 시 DB 저장 + Discord 알림
                                     ↓
                             스케줄러 (5분마다)
                                     ↓
@@ -529,7 +528,7 @@ public void recoverFailedEvents() {
 
 - **데이터 유실 방지**: 실패 이벤트를 DB에 영구 저장하여 추적 가능
 - **자동 복구**: 스케줄러가 주기적으로 실패 이벤트 재처리
-- **운영 가시성**: Slack 알림으로 실패 즉시 인지, 상태별 조회 가능
+- **운영 가시성**: Discord 알림으로 실패 즉시 인지, 상태별 조회 가능
 - **RECORD/REVOKE 분리**: 포인트 추가/회수 모두 안전하게 복구
 
 ### 참고 문서
@@ -769,7 +768,7 @@ public List<Festival> fetchSeoulFestivals(LocalDate date) {
 @Recover
 public List<Festival> recover(Exception e, LocalDate date) {
   log.error("축제 데이터 가져오기 실패 (최대 재시도 초과): {}", date, e);
-  slackNotificationService.sendAlert(AlertLevel.HIGH, "축제 데이터 동기화 실패: " + date);
+  discordNotificationService.sendAlert(AlertLevel.HIGH, "축제 데이터 동기화 실패: " + date);
   return Collections.emptyList();
 }
 ```
@@ -778,7 +777,7 @@ public List<Festival> recover(Exception e, LocalDate date) {
 
 - **데이터 동기화 성공률**: 92% → 99.5% (재시도로 7.5% 추가 복구)
 - **평균 재시도 횟수**: 1.2회/일
-- **완전 실패**: 월 2-3건 → Slack 알림으로 즉시 대응
+- **완전 실패**: 월 2-3건 → Discord 알림으로 즉시 대응
 
 ---
 

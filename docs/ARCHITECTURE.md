@@ -116,12 +116,12 @@ com.eventitta/
 │   │   └── projection/
 │   └── properties/    # SeoulFestivalProperties, NationalFestivalProperties
 │
-├── notification/      # Slack 알림 (Rate Limiting)
-│   ├── domain/        # AlertLevel, SlackMessage
-│   ├── service/       # SlackNotificationService
+├── notification/      # Discord 알림 (Rate Limiting)
+│   ├── domain/        # AlertLevel, DiscordMessage
+│   ├── service/       # DiscordNotificationService
 │   ├── service/ratelimit/  # 7가지 Rate Limiter 구현
 │   ├── resolver/      # AlertLevelResolver
-│   ├── properties/    # SlackProperties
+│   ├── properties/    # DiscordProperties
 │   └── exception/
 │
 └── common/            # 공통 설정/예외 처리
@@ -528,7 +528,7 @@ public void syncDailySeoulFestivalData() {
 - API 응답 시간 로깅
 - 슬로우 쿼리 식별 (임계값: 1초)
 
-### Slack 알림
+### Discord 알림
 
 - 에러 발생 시 자동 알림
 - Alert Level 기반 차등 제한 (CRITICAL/HIGH/MEDIUM/INFO)
@@ -795,29 +795,6 @@ WHERE
 HAVING distance <= :distanceKm                -- Phase 2: 정확한 거리
 ORDER BY distance ASC
 ```
-
-### 점진적 최적화 로드맵
-
-```mermaid
-graph TD
-    A[Phase 1: Bounding Box] --> B[Phase 2: Spatial Index]
-
-    A --> A1[복합 인덱스]
-    A --> A2[40-65% 개선]
-    A --> A3[즉시 적용]
-
-    B --> B1[MySQL POINT 타입]
-    B --> B2[10배+ 개선 예상]
-    B --> B3[2-3개월 후]
-
-    style A fill:#90EE90
-    style B fill:#FFE4B5
-```
-
-| Phase | 기술 | 성능 개선 | 적용 시점 |
-|-------|------|----------|----------|
-| **Phase 1** | Bounding Box + 복합 인덱스 | 40-65% | ✅ 적용 완료 |
-| **Phase 2** | MySQL Spatial Index + ST_Distance_Sphere | 10배+ | 2-3개월 후 |
 
 ---
 

@@ -1386,34 +1386,6 @@ Using filesort |
 | **Response Time (3km)**  | 29ms                    | 17.5ms (40% ⬆)             |
 | **Response Time (10km)** | 82ms                    | 25-30ms (60-65% ⬆)         |
 
-### Phase 2 계획 (중장기)
-
-**MySQL Spatial Index 도입 (2-3개월 후):**
-
-```sql
--- 스키마 변경
-ALTER TABLE festivals
-  ADD COLUMN location POINT NOT NULL SRID 4326,
-ADD SPATIAL INDEX idx_spatial_location(location);
-
--- 최적화된 쿼리
-SELECT f.*, ST_Distance_Sphere(f.location, ST_PointFromText(:point, 4326)) / 1000 AS distance
-FROM festivals f
-WHERE ST_Distance_Sphere(f.location, ST_PointFromText(:point, 4326)) <= :distanceMeters
-ORDER BY distance ASC;
-```
-
-**예상 성능:**
-
-- 현재 대비 **10배 이상 개선** (10ms 이하)
-- Spatial Index 활용으로 근본적 해결
-
-**제약사항:**
-
-- MySQL 8.0+ 필수
-- H2 테스트 환경 호환성 고려
-- 데이터 마이그레이션 전략 필요
-
 ### 개선 효과 요약
 
 **기술적 성과:**
@@ -1421,7 +1393,6 @@ ORDER BY distance ASC;
 - ✅ 전체 테이블 스캔 → 인덱스 범위 스캔 (쿼리 타입 개선)
 - ✅ 스캔 레코드 90% 감소 (50,000 → 4,671)
 - ✅ 응답 시간 40-65% 개선
-- ✅ 점진적 최적화 로드맵 수립 (Phase 1 → Phase 2)
 
 **문제 해결 접근법:**
 
@@ -1429,7 +1400,6 @@ ORDER BY distance ASC;
 2. **3가지 방안 비교** (Bounding Box, Spatial Index, Grid Indexing)
 3. **리스크 기반 의사결정** (낮은 리스크 방안 우선 적용)
 4. **실측 데이터 기반 검증** (50,000건 기준 성능 측정)
-5. **점진적 개선 전략** (Phase 1 즉시 적용 → Phase 2 중장기 계획)
 
 ### 참고 문서
 

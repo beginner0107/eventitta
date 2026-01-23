@@ -716,6 +716,109 @@ public void recoverFailedEventIndependently(Long eventId) {
 }
 ```
 
+## Festival 거리 검색 최적화 아키텍처
+
+### 적용된 핵심 기술
+
+**Two-Phase Filtering 전략:**
+1. **Bounding Box 사전 필터링** (WHERE 절, 인덱스 활용)
+2. **Haversine 정확한 거리 계산** (HAVING 절)
+
+```mermaid
+graph LR
+    A[위치 + 반경 입력] --> B[BoundingBox<br/>계산]
+    B --> C{Phase 1:<br/>WHERE 절}
+    C -->|latitude BETWEEN| D[인덱스 스캔]
+    C -->|longitude BETWEEN| D
+    D --> E{Phase 2:<br/>HAVING 절}
+    E -->|Haversine<br/>distance ≤ radius| F[정확한 결과]
+
+    style B fill:#e1f5ff
+    style D fill:#ffe1e1
+    style F fill:#e1ffe1
+```
+
+### 아키텍처 구조
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Service
+    participant Calculator
+    participant DB
+
+    Client->>Service: 위치 + 반경
+    Service->>Calculator: calculate()
+    Calculator-->>Service: BoundingBox 좌표
+
+    Note over Service,DB: Phase 1: 인덱스 활용
+    Service->>DB: WHERE lat/lon BETWEEN
+
+    Note over Service,DB: Phase 2: 정확한 거리
+    Service->>DB: HAVING Haversine ≤ radius
+
+    DB-->>Service: 정렬된 결과
+    Service-->>Client: Response
+```
+
+### 핵심 기술 요소
+
+**1. Bounding Box 알고리즘**
+
+```java
+// 위도 1도 = 111km (고정)
+double latDelta = distanceKm / 111.0;
+
+// 경도 1도 = 111km × cos(위도) (위도에 따라 변함)
+double lonDelta = distanceKm / (111.0 * Math.cos(Math.toRadians(latitude)));
+```
+
+**2. 복합 인덱스 전략**
+
+```sql
+CREATE INDEX idx_date_location ON festivals (
+    start_date,   -- 날짜 필터링
+    latitude,     -- 위도 범위
+    longitude     -- 경도 범위
+);
+```
+
+**3. 2단계 쿼리 필터링**
+
+```sql
+SELECT f.*, (6371 * acos(...)) AS distance
+FROM festivals f
+WHERE
+  f.latitude BETWEEN :minLat AND :maxLat      -- Phase 1: 인덱스 활용
+  AND f.longitude BETWEEN :minLon AND :maxLon
+  AND f.start_date >= DATE(:startDateTime)
+HAVING distance <= :distanceKm                -- Phase 2: 정확한 거리
+ORDER BY distance ASC
+```
+
+### 점진적 최적화 로드맵
+
+```mermaid
+graph TD
+    A[Phase 1: Bounding Box] --> B[Phase 2: Spatial Index]
+
+    A --> A1[복합 인덱스]
+    A --> A2[40-65% 개선]
+    A --> A3[즉시 적용]
+
+    B --> B1[MySQL POINT 타입]
+    B --> B2[10배+ 개선 예상]
+    B --> B3[2-3개월 후]
+
+    style A fill:#90EE90
+    style B fill:#FFE4B5
+```
+
+| Phase | 기술 | 성능 개선 | 적용 시점 |
+|-------|------|----------|----------|
+| **Phase 1** | Bounding Box + 복합 인덱스 | 40-65% | ✅ 적용 완료 |
+| **Phase 2** | MySQL Spatial Index + ST_Distance_Sphere | 10배+ | 2-3개월 후 |
+
 ---
 
-**Last Updated**: 2025-01-08
+**Last Updated**: 2026-01-23

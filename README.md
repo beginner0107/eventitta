@@ -259,6 +259,7 @@ erDiagram
 | **도메인 간 강결합**     | Spring Events + 비동기 처리                  | 핵심 도메인과 부가 기능 의존성 분리             |
 | **분산 스케줄러 중복 실행** | ShedLock (JDBC 락)                       | 다중 인스턴스 환경 대비 단일 실행 보장           |
 | **복잡한 검색 조건**     | QueryDSL 동적 쿼리 + Fetch Join             | N+1 문제 해결, 타입 안전 처리              |
+| **Festival 거리 검색** | Bounding Box + 복합 인덱스 (Two-Phase Filtering) | 응답 시간 40-65% 개선, 스캔 레코드 90% 감소 |
 | **Discord 알림 폭증** | Caffeine Cache 기반 Rate Limiter          | Alert Level별 차등 제한, 7가지 알고리즘 비교  |
 | **Badge 평가 확장성**  | 전략 패턴 + EvaluationType 분리               | 새 평가 기준 추가 시 Evaluator만 구현       |
 

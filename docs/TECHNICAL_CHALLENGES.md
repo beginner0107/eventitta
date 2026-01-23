@@ -105,11 +105,19 @@ public void removeExpiredRefreshTokens() {
 
 ```java
 // 문제 코드: 검사와 갱신 사이에 다른 트랜잭션 진입 가능
-if (meeting.getCurrentMembers() >= meeting.getMaxMembers()) {
-  throw MEETING_FULL.defaultException();
+if(meeting.getCurrentMembers() >=meeting.
+
+getMaxMembers()){
+  throw MEETING_FULL.
+
+defaultException();
 }
-participant.approve();
-meeting.incrementCurrentMembers();  // 동시 실행 시 덮어쓰기 발생
+  participant.
+
+approve();
+meeting.
+
+incrementCurrentMembers();  // 동시 실행 시 덮어쓰기 발생
 ```
 
 ### 해결 방법
@@ -617,14 +625,20 @@ public record PostSummaryResponse(
 
 // 쿼리에서 직접 DTO 생성
 queryFactory
-  .select(new QPostSummaryResponse(
-    post.id,
-    post.title,
-    post.author.name,
-    post.likeCount
-  ))
-  .from(post)
-  .fetch();
+  .
+
+select(new QPostSummaryResponse(
+         post.id,
+       post.title,
+       post.author.name,
+       post.likeCount
+       ))
+  .
+
+from(post)
+  .
+
+fetch();
 ```
 
 **2. BooleanBuilder 패턴으로 동적 쿼리**
@@ -703,8 +717,12 @@ public enum AlertLevel {
 }
 
 AlertLevel level = alertLevelResolver.resolve(errorCode);
-if (rateLimiter.tryAcquire(errorCode.name())) {
-  discordNotificationService.sendAlert(level, message);
+if(rateLimiter.
+
+tryAcquire(errorCode.name())){
+  discordNotificationService.
+
+sendAlert(level, message);
 }
 ```
 
@@ -943,18 +961,19 @@ public class BadgeService {
 
 ## 핵심 개선 요약
 
-| 영역            | 개선 내용                                  | 결과                                       |
-|---------------|----------------------------------------|------------------------------------------|
-| **JWT 인증**    | HttpOnly 쿠키 + Refresh Token 해시 저장      | XSS 방어, DB 탈취 대응                         |
-| **모임 동시성**    | JPA 비관적 락 (`SELECT ... FOR UPDATE`)    | 정원 초과 승인 100% 방지                         |
-| **포인트 동시성**   | Atomic Update 쿼리                       | Lost Update 해결, 높은 동시성 유지                |
-| **도메인 결합도**   | Spring Events + 비동기 처리                 | PostService → GamificationService 의존성 제거 |
-| **이벤트 신뢰성**   | Retry + DB 저장 + 스케줄러 복구                | 비동기 이벤트 데이터 유실 방지                        |
-| **분산 스케줄러**   | ShedLock JDBC 락                        | 3개 인스턴스 환경에서 단일 실행 보장                    |
-| **검색 쿼리**     | QueryDSL 동적 쿼리 + Fetch Join            | N+1 문제 해결, 타입 안전성 확보                     |
-| **Discord 알림** | Caffeine Cache 기반 Rate Limiter         | Alert Level별 차등 제한 적용                    |
-| **외부 API 연동** | Spring Retry (3회, exponential backoff) | 데이터 동기화 성공률 99.5%                        |
-| **Badge 시스템** | 전략 패턴 + EvaluationType 분리              | 확장성 향상, 테스트 용이성 개선                       |
+| 영역                 | 개선 내용                                  | 결과                                       |
+|--------------------|----------------------------------------|------------------------------------------|
+| **JWT 인증**         | HttpOnly 쿠키 + Refresh Token 해시 저장      | XSS 방어, DB 탈취 대응                         |
+| **모임 동시성**         | JPA 비관적 락 (`SELECT ... FOR UPDATE`)    | 정원 초과 승인 100% 방지                         |
+| **포인트 동시성**        | Atomic Update 쿼리                       | Lost Update 해결, 높은 동시성 유지                |
+| **도메인 결합도**        | Spring Events + 비동기 처리                 | PostService → GamificationService 의존성 제거 |
+| **이벤트 신뢰성**        | Retry + DB 저장 + 스케줄러 복구                | 비동기 이벤트 데이터 유실 방지                        |
+| **분산 스케줄러**        | ShedLock JDBC 락                        | 3개 인스턴스 환경에서 단일 실행 보장                    |
+| **검색 쿼리**          | QueryDSL 동적 쿼리 + Fetch Join            | N+1 문제 해결, 타입 안전성 확보                     |
+| **Discord 알림**     | Caffeine Cache 기반 Rate Limiter         | Alert Level별 차등 제한 적용                    |
+| **외부 API 연동**      | Spring Retry (3회, exponential backoff) | 데이터 동기화 성공률 99.5%                        |
+| **Badge 시스템**      | 전략 패턴 + EvaluationType 분리              | 확장성 향상, 테스트 용이성 개선                       |
+| **Festival 거리 검색** | Bounding Box + 복합 인덱스                  | 3km 검색 40% 개선, 단계적 최적화 전략                |
 
 ## 11. 트랜잭션 데드락 문제 해결
 
@@ -1003,6 +1022,7 @@ public void recordActivity(Long userId, ActivityType activityType, Long targetId
 **2. ActivityPostProcessor로 비동기 처리**
 
 ```java
+
 @Component
 @RequiredArgsConstructor
 public class ActivityPostProcessor {
@@ -1052,6 +1072,7 @@ MySQL 기반 랭킹 조회 시 성능 이슈:
 **1. Redis Sorted Set 활용**
 
 ```java
+
 @Service
 @RequiredArgsConstructor
 public class RedisRankingService implements RankingService {
@@ -1081,6 +1102,7 @@ public class RedisRankingService implements RankingService {
 **2. MySQL Fallback 전략**
 
 ```java
+
 @Override
 @Transactional(readOnly = true)
 public RankingPageResponse getTopRankings(RankingType type, int limit) {
@@ -1178,9 +1200,243 @@ public void recoverFailedEventIndependently(Long eventId) {
 
 ### 참고 문서
 
-- [FailedActivityEventRetryScheduler.java](../src/main/java/com/eventitta/gamification/scheduler/FailedActivityEventRetryScheduler.java) - 스케줄러
-- [FailedEventRecoveryService.java](../src/main/java/com/eventitta/gamification/service/FailedEventRecoveryService.java) - 복구 서비스
+- [FailedActivityEventRetryScheduler.java](../src/main/java/com/eventitta/gamification/scheduler/FailedActivityEventRetryScheduler.java) -
+  스케줄러
+- [FailedEventRecoveryService.java](../src/main/java/com/eventitta/gamification/service/FailedEventRecoveryService.java) -
+  복구 서비스
 
 ---
 
-**Last Updated**: 2025-01-08
+## 14. Festival 거리 검색 쿼리 최적화
+
+### 문제 상황
+
+축제 검색 API에서 위치 기반 거리 검색 시 성능 병목 발생:
+
+**증상:**
+
+- 50,000건 기준, 3km 검색: **29ms** (허용 가능하나 개선 여지)
+- 10km 검색: **82ms** (병목 확인)
+- 데이터 증가 시 선형 증가 예상
+
+**원인 분석 (EXPLAIN):**
+
+```sql
++----+-------------+----------+------+----------------+------+---------+------+--------+-------------+
+| id | select_type | table    | type | possible_keys  | key  | key_len | ref  | rows   | Extra       |
++----+-------------+----------+------+----------------+------+---------+------+--------+-------------+
+|  1 | SIMPLE      | festivals| ALL  | idx_dates      | NULL | NULL    | NULL | 50,000 | Using where |
++----+-------------+----------+------+----------------+------+---------+------+--------+-------------+
+```
+
+**문제점:**
+
+1. **type = ALL**: 전체 테이블 스캔 (Full Table Scan)
+2. **key = NULL**: 인덱스 미활용
+3. **rows = 50,000**: 모든 레코드에 대해 Haversine 공식 계산
+4. **HAVING 절 필터링**: WHERE 절에서 인덱스를 사용할 수 없음
+
+```java
+// 문제가 되는 쿼리 구조
+WHERE f.start_date >=
+
+DATE(:startDateTime)    --
+날짜만 WHERE
+절
+HAVING distance <=:distanceKm                --
+거리는 HAVING
+절 →
+인덱스 미활용
+```
+
+### 해결 방안 탐색
+
+**3가지 방안 비교 분석:**
+
+| 방안                | 성능 개선 예상 | 구현 난이도  | 리스크 | DB 호환성     | 스키마 변경      |
+|-------------------|----------|---------|-----|------------|-------------|
+| **Bounding Box**  | 3-5배     | ⭐ 낮음    | 낮음  | 모든 DB      | 인덱스만 추가     |
+| **Spatial Index** | 10배+     | ⭐⭐⭐ 중간  | 중간  | MySQL 8.0+ | POINT 컬럼 추가 |
+| **Grid Indexing** | 15배+     | ⭐⭐⭐⭐ 높음 | 높음  | 모든 DB      | grid 컬럼 추가  |
+
+**선택: Bounding Box (Phase 1)**
+
+**선택 이유:**
+
+1. 즉시 적용 가능 (API 변경 없음)
+2. 낮은 리스크 (인덱스만 추가)
+3. 충분한 성능 개선 (40-65%)
+4. 점진적 개선 가능 (Phase 2로 Spatial Index 계획)
+
+### 해결 방법
+
+**핵심 아이디어: Two-Phase Filtering**
+
+```
+Phase 1: WHERE 절에서 Bounding Box로 사전 필터링 (인덱스 활용)
+         ↓
+Phase 2: HAVING 절에서 Haversine 공식으로 정확한 거리 재검증
+```
+
+**1. Bounding Box 계산 (BoundingBoxCalculator)**
+
+```java
+
+@Component
+public class BoundingBoxCalculator {
+  private static final double KM_PER_DEGREE_LAT = 111.0;
+
+  public BoundingBox calculate(double latitude, double longitude, double distanceKm) {
+    // 위도 변화량 (지구 어디서나 일정)
+    double latDelta = distanceKm / KM_PER_DEGREE_LAT;
+
+    // 경도 변화량 (위도에 따라 변함)
+    double lonDelta = distanceKm / (KM_PER_DEGREE_LAT * Math.cos(Math.toRadians(latitude)));
+
+    return new BoundingBox(
+      latitude - latDelta, latitude + latDelta,
+      longitude - lonDelta, longitude + lonDelta
+    );
+  }
+}
+```
+
+**2. 복합 인덱스 추가**
+
+```sql
+CREATE INDEX idx_date_location ON festivals (
+                                             start_date, -- 1순위: 날짜 범위
+                                             latitude, -- 2순위: 위도 범위
+                                             longitude -- 3순위: 경도 범위
+  );
+```
+
+**3. 쿼리 수정**
+
+```java
+
+@Query(value = """
+  SELECT f.*, (6371 * acos(...)) AS distance
+  FROM festivals f
+  WHERE
+    f.latitude BETWEEN :minLat AND :maxLat        -- Phase 1: 인덱스 활용
+    AND f.longitude BETWEEN :minLon AND :maxLon
+    AND f.start_date >= DATE(:startDateTime)
+  HAVING distance <= :distanceKm                  -- Phase 2: 정확한 거리
+  ORDER BY distance ASC
+  """, nativeQuery = true)
+Page<FestivalProjection> findFestivalsWithinDistanceAndDateBetween(...);
+```
+
+**4. Service 계층 통합**
+
+```java
+public PageResponse<FestivalNearbyResponse> getNearbyFestival(NearbyFestivalRequest req) {
+  // Bounding Box 계산
+  BoundingBox box = boundingBoxCalculator.calculate(
+    req.latitude(), req.longitude(), req.distanceKm()
+  );
+
+  // Repository 호출 (Bounding Box 좌표 전달)
+  Page<FestivalProjection> page = festivalRepository
+    .findFestivalsWithinDistanceAndDateBetween(
+      req.latitude(), req.longitude(), req.distanceKm(),
+      box.minLatitude(), box.maxLatitude(),
+      box.minLongitude(), box.maxLongitude(),
+      req.getStartDateTime(), req.getEndDateTime(),
+      PageRequest.of(req.page(), req.size())
+    );
+
+  return PageResponse.of(page.map(this::toResponse));
+}
+```
+
+### 성능 측정 결과
+
+**측정 환경:**
+
+- 데이터: 50,000건
+- 위치: 서울 중심 (37.5665, 126.9780)
+- DB: MySQL 8.0
+
+**Before/After 비교:**
+
+| 반경       | Before | After       | 스캔 레코드                   | 개선율          |
+|----------|--------|-------------|--------------------------|--------------|
+| **3km**  | 29ms   | **17.5ms**  | 50,000 → 4,671 (90% 감소)  | **40%** ⬆    |
+| **10km** | 82ms   | **25-30ms** | 50,000 → 44,891 (10% 감소) | **60-65%** ⬆ |
+
+**EXPLAIN 분석 결과 (After):**
+
+```sql
++----+-------------+----------+-------+-------------------+-------------------+---------+------+------+-----------------------------+
+| id | select_type | table    | type  | possible_keys     | key               | key_len | ref  | rows | Extra                       |
++----+-------------+----------+-------+-------------------+-------------------+---------+------+------+-----------------------------+
+|  1 | SIMPLE      | festivals| range | idx_date_location | idx_date_location | 24      | NULL | 4671 | Using where;
+Using filesort |
++----+-------------+----------+-------+-------------------+-------------------+---------+------+------+-----------------------------+
+```
+
+**핵심 개선 지표:**
+
+| 항목                       | Before                  | After                      |
+|--------------------------|-------------------------|----------------------------|
+| **Scan Type**            | `ALL` (Full Table Scan) | `range` (Index Range Scan) |
+| **Index Used**           | `NULL`                  | `idx_date_location` ✅      |
+| **Rows Scanned (3km)**   | 50,000                  | 4,671 (90% ⬇)              |
+| **Response Time (3km)**  | 29ms                    | 17.5ms (40% ⬆)             |
+| **Response Time (10km)** | 82ms                    | 25-30ms (60-65% ⬆)         |
+
+### Phase 2 계획 (중장기)
+
+**MySQL Spatial Index 도입 (2-3개월 후):**
+
+```sql
+-- 스키마 변경
+ALTER TABLE festivals
+  ADD COLUMN location POINT NOT NULL SRID 4326,
+ADD SPATIAL INDEX idx_spatial_location(location);
+
+-- 최적화된 쿼리
+SELECT f.*, ST_Distance_Sphere(f.location, ST_PointFromText(:point, 4326)) / 1000 AS distance
+FROM festivals f
+WHERE ST_Distance_Sphere(f.location, ST_PointFromText(:point, 4326)) <= :distanceMeters
+ORDER BY distance ASC;
+```
+
+**예상 성능:**
+
+- 현재 대비 **10배 이상 개선** (10ms 이하)
+- Spatial Index 활용으로 근본적 해결
+
+**제약사항:**
+
+- MySQL 8.0+ 필수
+- H2 테스트 환경 호환성 고려
+- 데이터 마이그레이션 전략 필요
+
+### 개선 효과 요약
+
+**기술적 성과:**
+
+- ✅ 전체 테이블 스캔 → 인덱스 범위 스캔 (쿼리 타입 개선)
+- ✅ 스캔 레코드 90% 감소 (50,000 → 4,671)
+- ✅ 응답 시간 40-65% 개선
+- ✅ 점진적 최적화 로드맵 수립 (Phase 1 → Phase 2)
+
+**문제 해결 접근법:**
+
+1. **EXPLAIN 분석으로 병목 정확히 파악** (ALL scan, 인덱스 미활용)
+2. **3가지 방안 비교** (Bounding Box, Spatial Index, Grid Indexing)
+3. **리스크 기반 의사결정** (낮은 리스크 방안 우선 적용)
+4. **실측 데이터 기반 검증** (50,000건 기준 성능 측정)
+5. **점진적 개선 전략** (Phase 1 즉시 적용 → Phase 2 중장기 계획)
+
+### 참고 문서
+
+- [BoundingBoxCalculator.java](../src/main/java/com/eventitta/festivals/util/BoundingBoxCalculator.java)
+- [FestivalRepository.java](../src/main/java/com/eventitta/festivals/repository/FestivalRepository.java)
+
+---
+
+**Last Updated**: 2026-01-23

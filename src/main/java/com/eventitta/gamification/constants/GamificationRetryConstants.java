@@ -16,5 +16,10 @@ public final class GamificationRetryConstants {
 
     // 실패 이벤트 재처리 스케줄 주기 (ms 단위)
     public static final long FAILED_EVENT_RETRY_FIXED_DELAY_MS = 60_000L;
-}
 
+    // PROCESSING 상태 스턱 감지 타임아웃 (분)
+    public static final int STUCK_PROCESSING_TIMEOUT_MINUTES = 5;
+
+    // PROCESSING 상태 스턱 복구 스케줄 주기 (ms 단위)
+    public static final long STUCK_PROCESSING_RECOVERY_FIXED_DELAY_MS = 300_000L;
+}

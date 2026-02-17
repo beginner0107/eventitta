@@ -9,7 +9,7 @@ graph TB
     end
 
     subgraph "API Layer"
-        B[Spring Security<br/>JWT Filter]
+        B[Spring Security<br>JWT Filter]
         C[REST Controllers]
         D[Global Exception Handler]
     end
@@ -17,15 +17,15 @@ graph TB
     subgraph "Service Layer"
         E[Domain Services]
         F[Event Publisher]
-        G[Event Listeners<br/>@Async]
-        AP[ActivityPostProcessor<br/>@Async]
+        G["Event Listeners<br>@Async"]
+        AP["ActivityPostProcessor<br>@Async"]
     end
 
     subgraph "Data Layer"
         H[Spring Data JPA]
-        I[QueryDSL<br/>Custom Repositories]
+        I[QueryDSL<br>Custom Repositories]
         J[(MySQL)]
-        RD[(Redis<br/>Sorted Set)]
+        RD[(Redis<br>Sorted Set)]
     end
 
     subgraph "External Layer"
@@ -37,7 +37,7 @@ graph TB
 
     subgraph "Infrastructure"
         O[Caffeine Cache]
-        P[ShedLock<br/>Distributed Lock]
+        P[ShedLock<br>Distributed Lock]
         Q[Schedulers]
         R[Rate Limiter]
     end
@@ -392,8 +392,8 @@ graph LR
     end
 
     subgraph "Data Store"
-        C[(Redis<br/>Sorted Set)]
-        D[(MySQL<br/>Fallback)]
+        C[(Redis<br>Sorted Set)]
+        D[(MySQL<br>Fallback)]
     end
 
     subgraph "Background"
@@ -422,12 +422,12 @@ graph LR
 
 ```mermaid
 graph LR
-    A[위치 + 반경 입력] --> B[BoundingBox<br/>계산]
-    B --> C{Phase 1:<br/>WHERE 절}
+    A[위치 + 반경 입력] --> B[BoundingBox<br>계산]
+    B --> C{Phase 1:<br>WHERE 절}
     C -->|latitude BETWEEN| D[인덱스 스캔]
     C -->|longitude BETWEEN| D
-    D --> E{Phase 2:<br/>HAVING 절}
-    E -->|Haversine<br/>distance ≤ radius| F[정확한 결과]
+    D --> E{Phase 2:<br>HAVING 절}
+    E -->|Haversine<br>distance ≤ radius| F[정확한 결과]
 
     style B fill:#e1f5ff
     style D fill:#ffe1e1

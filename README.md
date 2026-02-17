@@ -33,79 +33,44 @@
 
 ## ERD
 
-### 커뮤니티 핵심 엔티티
+### 커뮤니티 (게시글 / 댓글 / 좋아요)
 
 ```mermaid
 erDiagram
-  users ||--o{ posts: "작성"
-  users ||--o{ comments: "작성"
-  users ||--o{ post_likes: "좋아요"
-  users ||--o{ refresh_tokens: "인증"
-  posts ||--o{ post_images: "포함"
-  posts ||--o{ post_likes: "받음"
-  posts ||--o{ comments: "달림"
-  posts }o--|| regions: "속함"
-  comments }o--o| comments: "parent(계층)"
-  regions }o--o| regions: "parent(계층)"
+  users ||--o{ posts : "작성"
+  users ||--o{ comments : "작성"
+  users ||--o{ post_likes : "좋아요"
+  posts ||--o{ comments : "댓글"
+  posts ||--o{ post_images : "포함 이미지"
+  posts ||--o{ post_likes : "좋아요"
+  posts }o--|| regions : "지역"
 
   users {
     bigint id PK
-    varchar email UK
-    varchar password
-    varchar nickname
-    int points
-    enum role
-    enum provider
-    datetime created_at
   }
-
   posts {
     bigint id PK
     bigint user_id FK
     varchar region_code FK
-    varchar title
-    text content
-    int like_count
-    boolean deleted
-    datetime created_at
   }
-
   comments {
     bigint id PK
     bigint post_id FK
     bigint user_id FK
     bigint parent_comment_id FK
-    varchar content
-    boolean deleted
-    datetime created_at
   }
-
   post_images {
     bigint id PK
     bigint post_id FK
-    varchar file_path
-    int display_order
   }
-
   post_likes {
     bigint id PK
     bigint post_id FK
     bigint user_id FK
-    datetime created_at
   }
-
   regions {
     varchar code PK
-    varchar name
     varchar parent_code FK
-    int level
-  }
-
-  refresh_tokens {
-    bigint id PK
-    bigint user_id FK
-    varchar token_hash
-    datetime expires_at
   }
 ```
 
@@ -113,97 +78,54 @@ erDiagram
 
 ```mermaid
 erDiagram
-  users ||--o{ meetings: "생성(leader)"
-  users ||--o{ meeting_participants: "참가"
-  users ||--o{ user_activities: "활동기록"
-  users ||--o{ user_badges: "획득"
-  users ||--o{ failed_activity_events: "실패이벤트"
-  users ||--o{ activity_outbox: "Outbox"
-  meetings ||--o{ meeting_participants: "포함"
-  badges ||--o{ user_badges: "수여됨"
-  badges ||--o{ badge_rules: "평가규칙"
+  users ||--o{ meetings : "생성"
+  users ||--o{ meeting_participants : "참가"
+  users ||--o{ user_activities : "활동"
+  users ||--o{ user_badges : "획득"
+  meetings ||--o{ meeting_participants : "포함"
+  badges ||--o{ user_badges : "획득"
+  badges ||--o{ badge_rules : "규칙"
 
   users {
     bigint id PK
-    varchar email UK
-    varchar nickname
-    int points
   }
-
   meetings {
     bigint id PK
     bigint leader_id FK
-    varchar title
-    text description
-    datetime start_time
-    datetime end_time
-    int max_members
-    int current_members
     enum status
   }
-
   meeting_participants {
     bigint id PK
     bigint meeting_id FK
     bigint user_id FK
     enum status
-    datetime created_at
   }
-
   user_activities {
     bigint id PK
     bigint user_id FK
     enum activity_type
-    enum resource_type
-    bigint target_id
     int points_earned
-    datetime created_at
   }
-
   badges {
     bigint id PK
     varchar name UK
-    varchar description
-    varchar image_url
   }
-
   user_badges {
     bigint id PK
     bigint user_id FK
     bigint badge_id FK
-    datetime awarded_at
   }
-
   badge_rules {
     bigint id PK
     bigint badge_id FK
     enum activity_type
-    enum evaluation_type
     int threshold
-    boolean enabled
   }
-
   activity_outbox {
     bigint id PK
     varchar idempotency_key UK
     bigint user_id FK
-    enum activity_type
-    enum operation_type
-    bigint target_id
     enum status
-    int retry_count
-    datetime processed_at
-  }
-
-  failed_activity_events {
-    bigint id PK
-    bigint user_id FK
-    enum activity_type
-    enum operation_type
-    bigint target_id
-    int retry_count
-    enum status
-    text error_message
   }
 ```
 

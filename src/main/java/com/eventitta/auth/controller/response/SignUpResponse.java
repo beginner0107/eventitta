@@ -1,6 +1,6 @@
-package com.eventitta.auth.dto.response;
+package com.eventitta.auth.controller.response;
 
-import com.eventitta.user.domain.User;
+import com.eventitta.auth.service.dto.SignUpResult;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "회원가입 응답")
@@ -10,10 +10,10 @@ public record SignUpResponse(
     @Schema(description = "닉네임", example = "johndoe")
     String nickname
 ) {
-    public static SignUpResponse of(User user) {
+    public static SignUpResponse of(SignUpResult result) {
         return new SignUpResponse(
-            user.getEmail(),
-            user.getNickname()
+            result.email(),
+            result.nickname()
         );
     }
 }

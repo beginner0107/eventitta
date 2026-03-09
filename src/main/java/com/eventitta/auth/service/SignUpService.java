@@ -1,6 +1,6 @@
 package com.eventitta.auth.service;
 
-import com.eventitta.auth.dto.request.SignUpRequest;
+import com.eventitta.auth.service.dto.SignUpCommand;
 import com.eventitta.user.domain.User;
 import com.eventitta.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,9 +18,9 @@ public class SignUpService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public User register(SignUpRequest req) {
-        if (userRepository.existsByEmail(req.email())) throw CONFLICTED_EMAIL.defaultException();
-        if (userRepository.existsByNickname(req.nickname())) throw CONFLICTED_NICKNAME.defaultException();
-        return userRepository.save(req.toEntity(passwordEncoder));
+    public User register(SignUpCommand command) {
+        if (userRepository.existsByEmail(command.email())) throw CONFLICTED_EMAIL.defaultException();
+        if (userRepository.existsByNickname(command.nickname())) throw CONFLICTED_NICKNAME.defaultException();
+        return userRepository.save(command.toEntity(passwordEncoder));
     }
 }

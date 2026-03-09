@@ -1,8 +1,8 @@
 package com.eventitta.auth.controller;
 
+import com.eventitta.auth.controller.request.SignUpRequest;
+import com.eventitta.auth.controller.response.SignUpResponse;
 import com.eventitta.auth.dto.request.SignInRequest;
-import com.eventitta.auth.dto.request.SignUpRequest;
-import com.eventitta.auth.dto.response.SignUpResponse;
 import com.eventitta.auth.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -29,8 +29,8 @@ public class AuthController {
     @Operation(summary = "회원가입", description = "회원 정보를 받아 회원가입을 수행합니다.")
     @PostMapping("/signup")
     public ResponseEntity<SignUpResponse> signUp(@Valid @RequestBody SignUpRequest request) {
-        var user = authService.signUp(request);
-        return ResponseEntity.ok(SignUpResponse.of(user));
+        var result = authService.signUp(request.toCommand());
+        return ResponseEntity.ok(SignUpResponse.of(result));
     }
 
     @Operation(summary = "로그인", description = "회원 정보를 받아 로그인을 수행합니다.")
@@ -73,4 +73,3 @@ public class AuthController {
         return ResponseEntity.noContent().build();
     }
 }
-

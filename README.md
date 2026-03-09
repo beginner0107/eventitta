@@ -159,6 +159,8 @@ erDiagram
 | **실시간 랭킹** | Redis Sorted Set + MySQL Fallback | O(log N) 업데이트, 장애 시 자동 전환 |
 
 → 상세: [TECHNICAL_CHALLENGES.md](docs/TECHNICAL_CHALLENGES.md)
+  
+→ DTO 규칙: [DTO_GUIDELINES.md](docs/DTO_GUIDELINES.md)
 
 ---
 

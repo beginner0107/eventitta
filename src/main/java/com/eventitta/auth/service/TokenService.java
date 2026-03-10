@@ -1,9 +1,9 @@
 package com.eventitta.auth.service;
 
 import com.eventitta.auth.domain.RefreshToken;
-import com.eventitta.auth.dto.response.TokenResponse;
 import com.eventitta.auth.jwt.JwtTokenProvider;
 import com.eventitta.auth.repository.RefreshTokenRepository;
+import com.eventitta.auth.service.dto.TokenResult;
 import com.eventitta.user.domain.User;
 import com.eventitta.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,14 +24,14 @@ public class TokenService {
     private final Pbkdf2PasswordEncoder pbkdf2PasswordEncoder;
     private final UserRepository userRepository;
 
-    public TokenResponse issueTokens(Long userId) {
+    public TokenResult issueTokens(Long userId) {
         User user = userRepository.findById(userId)
             .orElseThrow(NOT_FOUND_USER_ID::defaultException);
 
         String at = tokenProvider.createAccessToken(userId, user.getEmail(), user.getRole().name());
         String rt = tokenProvider.createRefreshToken();
         persistRefreshToken(userId, rt);
-        return new TokenResponse(at, rt);
+        return new TokenResult(at, rt);
     }
 
     private void persistRefreshToken(Long userId, String rawRt) {

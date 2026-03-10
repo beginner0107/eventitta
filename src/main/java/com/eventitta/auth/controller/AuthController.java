@@ -1,9 +1,11 @@
 package com.eventitta.auth.controller;
 
+import com.eventitta.auth.controller.request.SignInRequest;
 import com.eventitta.auth.controller.request.SignUpRequest;
 import com.eventitta.auth.controller.response.SignUpResponse;
-import com.eventitta.auth.dto.request.SignInRequest;
 import com.eventitta.auth.service.AuthService;
+import com.eventitta.auth.service.dto.LogoutCommand;
+import com.eventitta.auth.service.dto.RefreshCommand;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -39,7 +41,7 @@ public class AuthController {
     })
     @PostMapping("/login")
     public ResponseEntity<Void> login(@Valid @RequestBody SignInRequest request, HttpServletResponse response) {
-        authService.login(request, response);
+        authService.login(request.toCommand(), response);
         return ResponseEntity.ok().build();
     }
 
@@ -53,7 +55,7 @@ public class AuthController {
         @CookieValue(name = REFRESH_TOKEN, required = false) String refreshToken,
         HttpServletResponse response
     ) {
-        authService.refresh(accessToken, refreshToken, response);
+        authService.refresh(new RefreshCommand(accessToken, refreshToken), response);
         return ResponseEntity.ok().build();
     }
 
@@ -69,7 +71,7 @@ public class AuthController {
         @CookieValue(name = REFRESH_TOKEN, required = false) String refreshToken,
         HttpServletResponse response
     ) {
-        authService.logout(accessToken, response);
+        authService.logout(new LogoutCommand(accessToken), response);
         return ResponseEntity.noContent().build();
     }
 }

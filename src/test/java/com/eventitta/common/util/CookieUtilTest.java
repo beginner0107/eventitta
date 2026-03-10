@@ -1,7 +1,7 @@
 package com.eventitta.common.util;
 
-import com.eventitta.auth.dto.response.TokenResponse;
 import com.eventitta.auth.jwt.JwtTokenProvider;
+import com.eventitta.auth.service.dto.TokenResult;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,9 +43,9 @@ class CookieUtilTest {
 
     @Test
     @DisplayName("응답 헤더에 두 개의 엑세스/리프레시 토큰 쿠키를 추가한다")
-    void givenTokenResponse_whenAddTokenCookies_thenTwoSetCookieHeadersAreAppended() {
+    void givenTokenResult_whenAddTokenCookies_thenTwoSetCookieHeadersAreAppended() {
         // given
-        TokenResponse tokens = new TokenResponse("at-xyz", "rt-abc");
+        TokenResult tokens = new TokenResult("at-xyz", "rt-abc");
         JwtTokenProvider mockProvider = org.mockito.Mockito.mock(JwtTokenProvider.class);
         given(mockProvider.getAccessTokenValidityMs()).willReturn(1_000L);
         given(mockProvider.getRefreshTokenValidityMs()).willReturn(2_000L);

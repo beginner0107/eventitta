@@ -1,11 +1,13 @@
 package com.eventitta.auth.service;
 
-import com.eventitta.auth.dto.request.SignInRequest;
-import com.eventitta.auth.dto.response.TokenResponse;
 import com.eventitta.auth.exception.AuthException;
 import com.eventitta.auth.jwt.JwtTokenProvider;
+import com.eventitta.auth.service.dto.LogoutCommand;
+import com.eventitta.auth.service.dto.RefreshCommand;
+import com.eventitta.auth.service.dto.SignInCommand;
 import com.eventitta.auth.service.dto.SignUpCommand;
 import com.eventitta.auth.service.dto.SignUpResult;
+import com.eventitta.auth.service.dto.TokenResult;
 import com.eventitta.common.util.CookieUtil;
 import com.eventitta.user.domain.User;
 import jakarta.servlet.http.HttpServletResponse;
@@ -40,36 +42,36 @@ public class AuthService {
         return SignUpResult.of(user);
     }
 
-    public void login(SignInRequest request, HttpServletResponse response) {
-        log.info("[로그인 시도] email={}", request.email());
+    public void login(SignInCommand command, HttpServletResponse response) {
+        log.info("[로그인 시도] email={}", command.email());
 
         try {
-            Long userId = loginService.authenticate(request.email(), request.password());
-            TokenResponse tokens = tokenService.issueTokens(userId);
+            Long userId = loginService.authenticate(command.email(), command.password());
+            TokenResult tokens = tokenService.issueTokens(userId);
             CookieUtil.addTokenCookies(response, tokens, jwtTokenProvider);
 
-            log.info("[로그인 성공] userId={}, email={}", userId, request.email());
+            log.info("[로그인 성공] userId={}, email={}", userId, command.email());
         } catch (AuthenticationException e) {
-            log.warn("[로그인 실패] email={}, reason={}", request.email(), "잘못된 인증 정보");
+            log.warn("[로그인 실패] email={}, reason={}", command.email(), "잘못된 인증 정보");
             throw INVALID_CREDENTIALS.defaultException(e);
         }
     }
 
-    public void refresh(String accessToken, String refreshToken, HttpServletResponse resp) {
+    public void refresh(RefreshCommand command, HttpServletResponse resp) {
         log.info("[토큰 갱신 시작]");
 
-        TokenResponse tokens = refreshService.refresh(accessToken, refreshToken);
+        TokenResult tokens = refreshService.refresh(command);
         CookieUtil.addTokenCookies(resp, tokens, jwtTokenProvider);
 
         log.info("[토큰 갱신 완료]");
     }
 
-    public void logout(String accessToken, HttpServletResponse response) {
+    public void logout(LogoutCommand command, HttpServletResponse response) {
         log.info("[로그아웃 시작]");
 
-        if (StringUtils.hasText(accessToken)) {
+        if (StringUtils.hasText(command.accessToken())) {
             try {
-                refreshService.invalidateByAccessToken(accessToken);
+                refreshService.invalidateByAccessToken(command.accessToken());
             } catch (AuthException e) {
                 log.debug("[로그아웃] 토큰 검증 오류 무시", e);
             }

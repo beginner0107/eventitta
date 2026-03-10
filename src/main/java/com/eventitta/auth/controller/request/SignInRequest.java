@@ -1,5 +1,6 @@
-package com.eventitta.auth.dto.request;
+package com.eventitta.auth.controller.request;
 
+import com.eventitta.auth.service.dto.SignInCommand;
 import com.eventitta.common.constants.RegexPattern;
 import com.eventitta.common.constants.ValidationMessage;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -17,4 +18,7 @@ public record SignInRequest(
     @Pattern(regexp = RegexPattern.PASSWORD, message = ValidationMessage.PASSWORD)
     String password
 ) {
+    public SignInCommand toCommand() {
+        return new SignInCommand(email, password);
+    }
 }

@@ -43,18 +43,9 @@ public class AuthService {
     }
 
     public void login(SignInCommand command, HttpServletResponse response) {
-        log.info("[로그인 시도] email={}", command.email());
-
-        try {
-            Long userId = loginService.authenticate(command.email(), command.password());
-            TokenResult tokens = tokenService.issueTokens(userId);
-            CookieUtil.addTokenCookies(response, tokens, jwtTokenProvider);
-
-            log.info("[로그인 성공] userId={}, email={}", userId, command.email());
-        } catch (AuthenticationException e) {
-            log.warn("[로그인 실패] email={}, reason={}", command.email(), "잘못된 인증 정보");
-            throw INVALID_CREDENTIALS.defaultException(e);
-        }
+        Long userId = loginService.authenticate(command.email(), command.password());
+        TokenResult tokens = tokenService.issueTokens(userId);
+        CookieUtil.addTokenCookies(response, tokens, jwtTokenProvider);
     }
 
     public void refresh(RefreshCommand command, HttpServletResponse resp) {

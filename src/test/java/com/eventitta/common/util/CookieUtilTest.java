@@ -43,7 +43,7 @@ class CookieUtilTest {
 
     @Test
     @DisplayName("응답 헤더에 두 개의 엑세스/리프레시 토큰 쿠키를 추가한다")
-    void givenTokenResponse_whenAddTokenCookies_thenTwoSetCookieHeadersAreAppended() {
+    void givenTokenResult_whenAddTokenCookies_thenTwoSetCookieHeadersAreAppended() {
         // given
         TokenResult tokens = new TokenResult("at-xyz", "rt-abc");
         JwtTokenProvider mockProvider = org.mockito.Mockito.mock(JwtTokenProvider.class);

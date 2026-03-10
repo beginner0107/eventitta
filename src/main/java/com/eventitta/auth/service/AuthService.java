@@ -2,25 +2,18 @@ package com.eventitta.auth.service;
 
 import com.eventitta.auth.exception.AuthException;
 import com.eventitta.auth.jwt.JwtTokenProvider;
-import com.eventitta.auth.service.dto.LogoutCommand;
-import com.eventitta.auth.service.dto.RefreshCommand;
-import com.eventitta.auth.service.dto.SignInCommand;
-import com.eventitta.auth.service.dto.SignUpCommand;
-import com.eventitta.auth.service.dto.SignUpResult;
-import com.eventitta.auth.service.dto.TokenResult;
+import com.eventitta.auth.service.dto.*;
 import com.eventitta.common.util.CookieUtil;
 import com.eventitta.user.domain.User;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import static com.eventitta.auth.constants.AuthConstants.ACCESS_TOKEN;
 import static com.eventitta.auth.constants.AuthConstants.REFRESH_TOKEN;
-import static com.eventitta.auth.exception.AuthErrorCode.INVALID_CREDENTIALS;
 
 @Slf4j
 @Service

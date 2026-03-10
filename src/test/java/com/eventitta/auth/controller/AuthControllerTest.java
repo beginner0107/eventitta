@@ -375,4 +375,35 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.error").value("REFRESH_TOKEN_INVALID"));
         }
     }
+
+    @Nested
+    @DisplayName("로그아웃")
+    class Logout {
+        @Test
+        @DisplayName("로그아웃 요청 시 204 응답을 반환한다")
+        void logout_success_when_access_token_exists() throws Exception {
+            // when
+            mockMvc.perform(
+                    post("/api/v1/auth/logout")
+                        .cookie(new Cookie(ACCESS_TOKEN, "valid-access-token"))
+                )
+                .andExpect(status().isNoContent());
+
+            // then
+            then(authService).should()
+                .logout(eq("valid-access-token"), any(HttpServletResponse.class));
+        }
+
+        @Test
+        @DisplayName("엑세스 토큰이 없어도 로그아웃 요청 시 204 응답을 반환한다")
+        void logout_success_when_access_token_is_missing() throws Exception {
+            // when
+            mockMvc.perform(post("/api/v1/auth/logout"))
+                .andExpect(status().isNoContent());
+
+            // then
+            then(authService).should()
+                .logout(isNull(), any(HttpServletResponse.class));
+        }
+    }
 }

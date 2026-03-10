@@ -1,9 +1,10 @@
 package com.eventitta.auth.service;
 
 import com.eventitta.auth.domain.RefreshToken;
-import com.eventitta.auth.dto.response.TokenResponse;
 import com.eventitta.auth.jwt.JwtTokenProvider;
 import com.eventitta.auth.repository.RefreshTokenRepository;
+import com.eventitta.auth.service.dto.RefreshCommand;
+import com.eventitta.auth.service.dto.TokenResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.Pbkdf2PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,19 +23,19 @@ public class RefreshTokenService {
     private final Pbkdf2PasswordEncoder rtEncoder;
     private final TokenService tokenService;
 
-    public TokenResponse refresh(String accessToken, String refreshToken) {
-        if (accessToken == null || accessToken.isBlank()) {
+    public TokenResult refresh(RefreshCommand command) {
+        if (command.accessToken() == null || command.accessToken().isBlank()) {
             throw ACCESS_TOKEN_INVALID.defaultException();
         }
-        if (refreshToken == null || refreshToken.isBlank()) {
+        if (command.refreshToken() == null || command.refreshToken().isBlank()) {
             throw REFRESH_TOKEN_MISSING.defaultException();
         }
 
-        Long userId = tokenProvider.getUserIdFromExpiredToken(accessToken);
+        Long userId = tokenProvider.getUserIdFromExpiredToken(command.accessToken());
 
         RefreshToken entity = rtRepo.findAllByUserId(userId)
             .stream()
-            .filter(token -> rtEncoder.matches(refreshToken, token.getTokenHash()))
+            .filter(token -> rtEncoder.matches(command.refreshToken(), token.getTokenHash()))
             .findFirst()
             .orElseThrow(REFRESH_TOKEN_INVALID::defaultException);
 

@@ -1,9 +1,12 @@
 package com.eventitta.auth.controller;
 
+import com.eventitta.auth.controller.request.SignInRequest;
 import com.eventitta.auth.controller.request.SignUpRequest;
-import com.eventitta.auth.dto.request.SignInRequest;
 import com.eventitta.auth.jwt.service.UserInfoService;
 import com.eventitta.auth.service.AuthService;
+import com.eventitta.auth.service.dto.LogoutCommand;
+import com.eventitta.auth.service.dto.RefreshCommand;
+import com.eventitta.auth.service.dto.SignInCommand;
 import com.eventitta.auth.service.dto.SignUpCommand;
 import com.eventitta.auth.service.dto.SignUpResult;
 import com.eventitta.notification.resolver.AlertLevelResolver;
@@ -213,7 +216,7 @@ class AuthControllerTest {
 
             // then
             result.andExpect(status().isOk());
-            then(authService).should().login(any(SignInRequest.class), any(HttpServletResponse.class));
+            then(authService).should().login(any(SignInCommand.class), any(HttpServletResponse.class));
         }
 
         @Test
@@ -304,7 +307,7 @@ class AuthControllerTest {
 
             willThrow(INVALID_CREDENTIALS.defaultException())
                 .given(authService)
-                .login(any(SignInRequest.class), any(HttpServletResponse.class));
+                .login(any(SignInCommand.class), any(HttpServletResponse.class));
 
             // when & then
             mockMvc.perform(
@@ -335,7 +338,7 @@ class AuthControllerTest {
 
             // when & then
             then(authService).should()
-                .refresh(eq("expired-access-token"), eq("valid-refresh-token"), any(HttpServletResponse.class));
+                .refresh(eq(new RefreshCommand("expired-access-token", "valid-refresh-token")), any(HttpServletResponse.class));
         }
 
         @Test
@@ -344,7 +347,7 @@ class AuthControllerTest {
             // given
             willThrow(REFRESH_TOKEN_MISSING.defaultException())
                 .given(authService)
-                .refresh(any(), any(), any(HttpServletResponse.class));
+                .refresh(any(RefreshCommand.class), any(HttpServletResponse.class));
 
             // when & then
             mockMvc.perform(
@@ -361,7 +364,7 @@ class AuthControllerTest {
             // given
             willThrow(REFRESH_TOKEN_INVALID.defaultException())
                 .given(authService)
-                .refresh(any(), any(), any(HttpServletResponse.class));
+                .refresh(any(RefreshCommand.class), any(HttpServletResponse.class));
 
             // when & then
             mockMvc.perform(
@@ -391,7 +394,7 @@ class AuthControllerTest {
 
             // then
             then(authService).should()
-                .logout(eq("valid-access-token"), any(HttpServletResponse.class));
+                .logout(eq(new LogoutCommand("valid-access-token")), any(HttpServletResponse.class));
         }
 
         @Test
@@ -403,7 +406,7 @@ class AuthControllerTest {
 
             // then
             then(authService).should()
-                .logout(isNull(), any(HttpServletResponse.class));
+                .logout(eq(new LogoutCommand(null)), any(HttpServletResponse.class));
         }
     }
 }

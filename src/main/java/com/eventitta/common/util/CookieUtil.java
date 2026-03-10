@@ -1,7 +1,7 @@
 package com.eventitta.common.util;
 
-import com.eventitta.auth.dto.response.TokenResponse;
 import com.eventitta.auth.jwt.JwtTokenProvider;
+import com.eventitta.auth.service.dto.TokenResult;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -40,7 +40,7 @@ public final class CookieUtil {
 
     public static void addTokenCookies(
         HttpServletResponse resp,
-        TokenResponse tokens,
+        TokenResult tokens,
         JwtTokenProvider prov) {
 
         resp.addHeader(

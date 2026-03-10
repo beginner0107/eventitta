@@ -22,19 +22,25 @@ public class RefreshTokenService {
     private final Pbkdf2PasswordEncoder rtEncoder;
     private final TokenService tokenService;
 
-    public TokenResponse refresh(String expiredAt, String rawRt) {
-        if (rawRt == null) throw REFRESH_TOKEN_MISSING.defaultException();
+    public TokenResponse refresh(String accessToken, String refreshToken) {
+        if (accessToken == null || accessToken.isBlank()) {
+            throw ACCESS_TOKEN_INVALID.defaultException();
+        }
+        if (refreshToken == null || refreshToken.isBlank()) {
+            throw REFRESH_TOKEN_MISSING.defaultException();
+        }
 
-        Long userId = tokenProvider.getUserIdFromExpiredToken(expiredAt);
+        Long userId = tokenProvider.getUserIdFromExpiredToken(accessToken);
 
         RefreshToken entity = rtRepo.findAllByUserId(userId)
             .stream()
-            .filter(token -> rtEncoder.matches(rawRt, token.getTokenHash()))
+            .filter(token -> rtEncoder.matches(refreshToken, token.getTokenHash()))
             .findFirst()
             .orElseThrow(REFRESH_TOKEN_INVALID::defaultException);
 
-        if (entity.getExpiresAt().isBefore(LocalDateTime.now()))
+        if (entity.getExpiresAt().isBefore(LocalDateTime.now())) {
             throw REFRESH_TOKEN_EXPIRED.defaultException();
+        }
 
         rtRepo.delete(entity);
         return tokenService.issueTokens(userId);

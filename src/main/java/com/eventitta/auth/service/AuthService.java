@@ -1,10 +1,11 @@
 package com.eventitta.auth.service;
 
 import com.eventitta.auth.dto.request.SignInRequest;
-import com.eventitta.auth.dto.request.SignUpRequest;
 import com.eventitta.auth.dto.response.TokenResponse;
 import com.eventitta.auth.exception.AuthException;
 import com.eventitta.auth.jwt.JwtTokenProvider;
+import com.eventitta.auth.service.dto.SignUpCommand;
+import com.eventitta.auth.service.dto.SignUpResult;
 import com.eventitta.common.util.CookieUtil;
 import com.eventitta.user.domain.User;
 import jakarta.servlet.http.HttpServletResponse;
@@ -30,13 +31,13 @@ public class AuthService {
     private final RefreshTokenService refreshService;
     private final JwtTokenProvider jwtTokenProvider;
 
-    public User signUp(SignUpRequest signUpRequest) {
-        log.info("[회원가입 시작] email={}, nickname={}", signUpRequest.email(), signUpRequest.nickname());
+    public SignUpResult signUp(SignUpCommand signUpCommand) {
+        log.info("[회원가입 시작] email={}, nickname={}", signUpCommand.email(), signUpCommand.nickname());
 
-        User user = signUpService.register(signUpRequest);
+        User user = signUpService.register(signUpCommand);
 
         log.info("[회원가입 완료] userId={}, email={}", user.getId(), user.getEmail());
-        return user;
+        return SignUpResult.of(user);
     }
 
     public void login(SignInRequest request, HttpServletResponse response) {

@@ -9,6 +9,7 @@ import com.eventitta.auth.service.dto.SignUpResult;
 import com.eventitta.notification.resolver.AlertLevelResolver;
 import com.eventitta.notification.service.DiscordNotificationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -19,7 +20,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static com.eventitta.auth.exception.AuthErrorCode.INVALID_CREDENTIALS;
+import static com.eventitta.auth.constants.AuthConstants.ACCESS_TOKEN;
+import static com.eventitta.auth.constants.AuthConstants.REFRESH_TOKEN;
+import static com.eventitta.auth.exception.AuthErrorCode.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -311,6 +314,65 @@ class AuthControllerTest {
                 )
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.error").value("INVALID_CREDENTIALS"));
+        }
+    }
+
+    @Nested
+    @DisplayName("토큰재발급")
+    class TokenRefresh {
+        @Test
+        @DisplayName("유효한 토큰 재발급 요청이면 200 응답을 반환한다")
+        void refresh_success() throws Exception {
+            // given
+            mockMvc.perform(
+                    post("/api/v1/auth/refresh")
+                        .cookie(
+                            new Cookie(ACCESS_TOKEN, "expired-access-token"),
+                            new Cookie(REFRESH_TOKEN, "valid-refresh-token")
+                        )
+                )
+                .andExpect(status().isOk());
+
+            // when & then
+            then(authService).should()
+                .refresh(eq("expired-access-token"), eq("valid-refresh-token"), any(HttpServletResponse.class));
+        }
+
+        @Test
+        @DisplayName("리프레시 토큰이 없으면 400 에러 응답을 반환한다")
+        void refresh_fail_when_refresh_token_is_missing() throws Exception {
+            // given
+            willThrow(REFRESH_TOKEN_MISSING.defaultException())
+                .given(authService)
+                .refresh(any(), any(), any(HttpServletResponse.class));
+
+            // when & then
+            mockMvc.perform(
+                    post("/api/v1/auth/refresh")
+                        .cookie(new Cookie(ACCESS_TOKEN, "expired-access-token"))
+                )
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("REFRESH_TOKEN_MISSING"));
+        }
+
+        @Test
+        @DisplayName("리프레시 토큰이 유효하지 않으면 401 에러 응답을 반환한다")
+        void refresh_fail_when_refresh_token_is_invalid() throws Exception {
+            // given
+            willThrow(REFRESH_TOKEN_INVALID.defaultException())
+                .given(authService)
+                .refresh(any(), any(), any(HttpServletResponse.class));
+
+            // when & then
+            mockMvc.perform(
+                    post("/api/v1/auth/refresh")
+                        .cookie(
+                            new Cookie(ACCESS_TOKEN, "expired-access-token"),
+                            new Cookie(REFRESH_TOKEN, "invalid-refresh-token")
+                        )
+                )
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("REFRESH_TOKEN_INVALID"));
         }
     }
 }

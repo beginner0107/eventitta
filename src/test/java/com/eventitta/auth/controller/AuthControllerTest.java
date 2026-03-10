@@ -1,6 +1,7 @@
 package com.eventitta.auth.controller;
 
 import com.eventitta.auth.controller.request.SignUpRequest;
+import com.eventitta.auth.dto.request.SignInRequest;
 import com.eventitta.auth.jwt.service.UserInfoService;
 import com.eventitta.auth.service.AuthService;
 import com.eventitta.auth.service.dto.SignUpCommand;
@@ -8,6 +9,7 @@ import com.eventitta.auth.service.dto.SignUpResult;
 import com.eventitta.notification.resolver.AlertLevelResolver;
 import com.eventitta.notification.service.DiscordNotificationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -187,6 +189,108 @@ class AuthControllerTest {
                 )
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("INVALID_JSON"));
+        }
+    }
+
+    @Nested
+    @DisplayName("로그인")
+    class Login {
+        @Test
+        @DisplayName("유효한 로그인 요청이면 200 응답을 반환한다")
+        void login_success() throws Exception {
+            // given
+            SignInRequest request = new SignInRequest("test@gmail.com", "password1234!@@");
+
+            // when
+            var result = mockMvc.perform(
+                post("/api/v1/auth/login")
+                    .contentType(APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request))
+            );
+
+            // then
+            result.andExpect(status().isOk());
+            then(authService).should().login(any(SignInRequest.class), any(HttpServletResponse.class));
+        }
+
+        @Test
+        @DisplayName("로그인 시 이메일이 비어 있으면 400 에러 응답을 반환한다")
+        void login_fail_when_email_is_blank() throws Exception {
+            // given
+            SignInRequest request = new SignInRequest("", "password1234!@@");
+
+            // when & then
+            mockMvc.perform(
+                    post("/api/v1/auth/login")
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                )
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("INVALID_INPUT"));
+
+            then(authService).shouldHaveNoInteractions();
+        }
+
+        @Test
+        @DisplayName("로그인 시 비밀번호가 비어 있으면 400 에러 응답을 반환한다")
+        void login_fail_when_password_is_blank() throws Exception {
+            SignInRequest request = new SignInRequest("test@gmail.com", "");
+
+            mockMvc.perform(
+                    post("/api/v1/auth/login")
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                )
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("INVALID_INPUT"));
+
+            then(authService).shouldHaveNoInteractions();
+        }
+
+        @Test
+        @DisplayName("로그인 시 이메일 형식이 올바르지 않으면 400 에러 응답을 반환한다")
+        void login_fail_when_email_format_is_invalid() throws Exception {
+            SignInRequest request = new SignInRequest("invalid-email", "password1234!@@");
+
+            mockMvc.perform(
+                    post("/api/v1/auth/login")
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                )
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("INVALID_INPUT"));
+
+            then(authService).shouldHaveNoInteractions();
+        }
+
+        @Test
+        @DisplayName("로그인 시 비밀번호 형식이 올바르지 않으면 400 에러 응답을 반환한다")
+        void login_fail_when_password_format_is_invalid() throws Exception {
+            SignInRequest request = new SignInRequest("test@gmail.com", "1234");
+
+            mockMvc.perform(
+                    post("/api/v1/auth/login")
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                )
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("INVALID_INPUT"));
+
+            then(authService).shouldHaveNoInteractions();
+        }
+
+        @Test
+        @DisplayName("로그인 시 잘못된 JSON 요청이면 400 에러 응답을 반환한다")
+        void login_fail_when_request_body_is_invalid_json() throws Exception {
+            mockMvc.perform(
+                    post("/api/v1/auth/login")
+                        .contentType(APPLICATION_JSON)
+                        .content("{\"invalid-json\"}")
+                )
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("INVALID_JSON"));
+
+            then(authService).shouldHaveNoInteractions();
         }
     }
 }

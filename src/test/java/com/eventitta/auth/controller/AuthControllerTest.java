@@ -19,9 +19,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static com.eventitta.auth.exception.AuthErrorCode.INVALID_CREDENTIALS;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -291,6 +291,26 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.error").value("INVALID_JSON"));
 
             then(authService).shouldHaveNoInteractions();
+        }
+
+        @Test
+        @DisplayName("로그인 시 인증 정보가 올바르지 않으면 401 에러 응답을 반환한다")
+        void login_fail_when_credentials_are_invalid() throws Exception {
+            // given
+            SignInRequest request = new SignInRequest("test@gmail.com", "password1234!@@");
+
+            willThrow(INVALID_CREDENTIALS.defaultException())
+                .given(authService)
+                .login(any(SignInRequest.class), any(HttpServletResponse.class));
+
+            // when & then
+            mockMvc.perform(
+                    post("/api/v1/auth/login")
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                )
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("INVALID_CREDENTIALS"));
         }
     }
 }

@@ -92,33 +92,101 @@ class AuthControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("INVALID_INPUT"));
         }
-    }
 
-    @Test
-    @DisplayName("비밀번호가 비어 있으면 400 에러 응답을 반환한다")
-    void signUp_fail_when_password_is_blank() throws Exception {
-        SignUpRequest signupReq = new SignUpRequest("test@gmail.com", "", "test123");
+        @Test
+        @DisplayName("비밀번호가 비어 있으면 400 에러 응답을 반환한다")
+        void signUp_fail_when_password_is_blank() throws Exception {
+            SignUpRequest signupReq = new SignUpRequest("test@gmail.com", "", "test123");
 
-        mockMvc.perform(
-                post("/api/v1/auth/signup")
-                    .contentType(APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(signupReq))
-            )
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.error").value("INVALID_INPUT"));
-    }
+            mockMvc.perform(
+                    post("/api/v1/auth/signup")
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(signupReq))
+                )
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("INVALID_INPUT"));
+        }
 
-    @Test
-    @DisplayName("닉네임이 비어 있으면 400 에러 응답을 반환한다")
-    void signUp_fail_when_nickname_is_blank() throws Exception {
-        SignUpRequest signupReq = new SignUpRequest("test@gmail.com", "password1234!@@", "");
+        @Test
+        @DisplayName("닉네임이 비어 있으면 400 에러 응답을 반환한다")
+        void signUp_fail_when_nickname_is_blank() throws Exception {
+            SignUpRequest signupReq = new SignUpRequest("test@gmail.com", "password1234!@@", "");
 
-        mockMvc.perform(
-                post("/api/v1/auth/signup")
-                    .contentType(APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(signupReq))
-            )
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.error").value("INVALID_INPUT"));
+            mockMvc.perform(
+                    post("/api/v1/auth/signup")
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(signupReq))
+                )
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("INVALID_INPUT"));
+        }
+
+        @Test
+        @DisplayName("이메일 형식이 올바르지 않으면 400 에러 응답을 반환한다")
+        void signUp_fail_when_email_format_is_invalid() throws Exception {
+            SignUpRequest signupReq = new SignUpRequest("invalid-email", "password1234!@@", "test123");
+
+            mockMvc.perform(
+                    post("/api/v1/auth/signup")
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(signupReq))
+                )
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("INVALID_INPUT"));
+        }
+
+        @Test
+        @DisplayName("비밀번호 형식이 올바르지 않으면 400 에러 응답을 반환한다")
+        void signUp_fail_when_password_format_is_invalid() throws Exception {
+            SignUpRequest signupReq = new SignUpRequest("test@gmail.com", "1234", "test123");
+
+            mockMvc.perform(
+                    post("/api/v1/auth/signup")
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(signupReq))
+                )
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("INVALID_INPUT"));
+        }
+
+        @Test
+        @DisplayName("닉네임 형식이 올바르지 않으면 400 에러 응답을 반환한다")
+        void signUp_fail_when_nickname_format_is_invalid() throws Exception {
+            SignUpRequest signupReq = new SignUpRequest("test@gmail.com", "password1234!@@", "@@@");
+
+            mockMvc.perform(
+                    post("/api/v1/auth/signup")
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(signupReq))
+                )
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("INVALID_INPUT"));
+        }
+
+        @Test
+        @DisplayName("이메일 길이가 3자 미만이면 400 에러 응답을 반환한다")
+        void signUp_fail_when_email_length_is_too_short() throws Exception {
+            SignUpRequest signupReq = new SignUpRequest("a@", "password1234!@@", "test123");
+
+            mockMvc.perform(
+                    post("/api/v1/auth/signup")
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(signupReq))
+                )
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("INVALID_INPUT"));
+        }
+
+        @Test
+        @DisplayName("잘못된 JSON 요청이면 400 에러 응답을 반환한다")
+        void signUp_fail_when_request_body_is_invalid_json() throws Exception {
+            mockMvc.perform(
+                    post("/api/v1/auth/signup")
+                        .contentType(APPLICATION_JSON)
+                        .content("{\"invalid-json\"}")
+                )
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("INVALID_JSON"));
+        }
     }
 }

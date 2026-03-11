@@ -30,15 +30,14 @@ public class TokenService {
 
         String at = tokenProvider.createAccessToken(userId, user.getEmail(), user.getRole().name());
         String rt = tokenProvider.createRefreshToken();
-        persistRefreshToken(userId, rt);
+        persistRefreshToken(user, rt);
         return new TokenResult(at, rt);
     }
 
-    private void persistRefreshToken(Long userId, String rawRt) {
+    private void persistRefreshToken(User user, String rawRt) {
         String hash = pbkdf2PasswordEncoder.encode(rawRt);
         Instant expiresAt = tokenProvider.getRefreshTokenExpiry();
 
-        User u = userRepository.getReferenceById(userId);
-        refreshTokenRepository.save(new RefreshToken(u, hash, expiresAt));
+        refreshTokenRepository.save(new RefreshToken(user, hash, expiresAt));
     }
 }

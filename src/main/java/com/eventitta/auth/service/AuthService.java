@@ -3,7 +3,6 @@ package com.eventitta.auth.service;
 import com.eventitta.auth.exception.AuthException;
 import com.eventitta.auth.jwt.JwtTokenProvider;
 import com.eventitta.auth.service.dto.*;
-import com.eventitta.common.util.CookieUtil;
 import com.eventitta.user.domain.User;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +24,7 @@ public class AuthService {
     private final TokenService tokenService;
     private final RefreshTokenService refreshService;
     private final JwtTokenProvider jwtTokenProvider;
+    private final CookieManager cookieManager;
 
     public SignUpResult signUp(SignUpCommand signUpCommand) {
         log.info("[회원가입 시작] email={}, nickname={}", signUpCommand.email(), signUpCommand.nickname());
@@ -38,14 +38,14 @@ public class AuthService {
     public void login(SignInCommand command, HttpServletResponse response) {
         Long userId = loginService.authenticate(command.email(), command.password());
         TokenResult tokens = tokenService.issueTokens(userId);
-        CookieUtil.addTokenCookies(response, tokens, jwtTokenProvider);
+        cookieManager.addTokenCookies(response, tokens);
     }
 
     public void refresh(RefreshCommand command, HttpServletResponse resp) {
         log.info("[토큰 갱신 시작]");
 
         TokenResult tokens = refreshService.refresh(command);
-        CookieUtil.addTokenCookies(resp, tokens, jwtTokenProvider);
+        cookieManager.addTokenCookies(resp, tokens);
 
         log.info("[토큰 갱신 완료]");
     }
@@ -53,15 +53,17 @@ public class AuthService {
     public void logout(LogoutCommand command, HttpServletResponse response) {
         log.info("[로그아웃 시작]");
 
-        if (StringUtils.hasText(command.accessToken())) {
+        if (StringUtils.hasText(command.accessToken())
+            && StringUtils.hasText(command.refreshToken())) {
             try {
-                refreshService.invalidateByAccessToken(command.accessToken());
+                refreshService.invalidateByToken(command.accessToken(), command.refreshToken());
             } catch (AuthException e) {
                 log.debug("[로그아웃] 토큰 검증 오류 무시", e);
             }
         }
-        CookieUtil.deleteCookie(response, ACCESS_TOKEN);
-        CookieUtil.deleteCookie(response, REFRESH_TOKEN);
+
+        cookieManager.deleteCookie(response, ACCESS_TOKEN);
+        cookieManager.deleteCookie(response, REFRESH_TOKEN);
 
         log.info("[로그아웃 완료]");
     }

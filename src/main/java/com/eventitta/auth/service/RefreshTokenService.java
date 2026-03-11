@@ -51,4 +51,14 @@ public class RefreshTokenService {
         Long userId = tokenProvider.getUserIdFromExpiredToken(accessToken);
         rtRepo.deleteByUserId(userId);
     }
+
+    public void invalidateByToken(String accessToken, String refreshToken) {
+        Long userId = tokenProvider.getUserIdFromExpiredToken(accessToken);
+
+        rtRepo.findAllByUserId(userId)
+            .stream()
+            .filter(token -> rtEncoder.matches(refreshToken, token.getTokenHash()))
+            .findFirst()
+            .ifPresent(rtRepo::delete);
+    }
 }

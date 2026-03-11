@@ -388,13 +388,16 @@ class AuthControllerTest {
             // when
             mockMvc.perform(
                     post("/api/v1/auth/logout")
-                        .cookie(new Cookie(ACCESS_TOKEN, "valid-access-token"))
+                        .cookie(
+                            new Cookie(ACCESS_TOKEN, "valid-access-token"),
+                            new Cookie(REFRESH_TOKEN, "valid-refresh-token")
+                        )
                 )
                 .andExpect(status().isNoContent());
 
             // then
             then(authService).should()
-                .logout(eq(new LogoutCommand("valid-access-token")), any(HttpServletResponse.class));
+                .logout(eq(new LogoutCommand("valid-access-token", "valid-refresh-token")), any(HttpServletResponse.class));
         }
 
         @Test
@@ -406,7 +409,7 @@ class AuthControllerTest {
 
             // then
             then(authService).should()
-                .logout(eq(new LogoutCommand(null)), any(HttpServletResponse.class));
+                .logout(eq(new LogoutCommand(null, null)), any(HttpServletResponse.class));
         }
     }
 }

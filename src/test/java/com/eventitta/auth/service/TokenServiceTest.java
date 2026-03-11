@@ -21,6 +21,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 import static com.eventitta.user.domain.Role.USER;
 import static java.util.Optional.empty;
@@ -64,7 +65,10 @@ class TokenServiceTest {
                 .willReturn("access-token");
             given(tokenProvider.createRefreshToken()).willReturn("raw-refresh-token");
             given(pbkdf2PasswordEncoder.encode("raw-refresh-token")).willReturn("encoded-refresh-token");
-            given(tokenProvider.getRefreshTokenExpiry()).willReturn(Instant.parse("2026-03-11T14:59:00Z"));
+
+            Instant expectedExpiry = Instant.parse("2026-03-11T14:59:00Z");
+            given(tokenProvider.getRefreshTokenExpiry()).willReturn(expectedExpiry);
+
             // when
             TokenResult result = tokenService.issueTokens(userId);
 
@@ -76,7 +80,8 @@ class TokenServiceTest {
 
             RefreshToken savedToken = refreshTokenCaptor.getValue();
             assertThat(savedToken.getTokenHash()).isEqualTo("encoded-refresh-token");
-            assertThat(savedToken.getExpiresAt()).isEqualTo(LocalDateTime.of(2026, 3, 11, 23, 59));
+            assertThat(savedToken.getExpiresAt())
+                .isEqualTo(LocalDateTime.ofInstant(expectedExpiry, ZoneId.systemDefault()));
         }
 
         @Test

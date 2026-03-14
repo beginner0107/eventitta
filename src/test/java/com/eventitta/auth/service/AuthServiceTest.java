@@ -4,14 +4,20 @@ import com.eventitta.auth.exception.AuthException;
 import com.eventitta.auth.jwt.JwtTokenProvider;
 import com.eventitta.auth.service.dto.*;
 import com.eventitta.user.domain.User;
+import com.eventitta.user.exception.UserException;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.stream.Stream;
 
 import static com.eventitta.auth.constants.AuthConstants.ACCESS_TOKEN;
 import static com.eventitta.auth.constants.AuthConstants.REFRESH_TOKEN;
@@ -47,7 +53,7 @@ class AuthServiceTest {
     class SignUp {
 
         @Test
-        @DisplayName("회원가입에 성공하면 사용자 정보를 SignUpResult로 변환해 반환한다")
+        @DisplayName("회원가입 서비스가 사용자를 반환하면 사용자 정보를 SignUpResult로 변환해 반환한다")
         void signUpSuccess() {
             // given
             SignUpCommand command = new SignUpCommand(
@@ -85,7 +91,7 @@ class AuthServiceTest {
                 "tanuki"
             );
 
-            AuthException exception = CONFLICTED_EMAIL.defaultException();
+            UserException exception = com.eventitta.user.exception.UserErrorCode.CONFLICTED_EMAIL.defaultException();
             given(signUpService.register(command)).willThrow(exception);
 
             // when // then
@@ -105,7 +111,7 @@ class AuthServiceTest {
                 "duplicatedNickname"
             );
 
-            AuthException exception = CONFLICTED_NICKNAME.defaultException();
+            UserException exception = com.eventitta.user.exception.UserErrorCode.CONFLICTED_NICKNAME.defaultException();
             given(signUpService.register(command)).willThrow(exception);
 
             // when // then
@@ -121,7 +127,7 @@ class AuthServiceTest {
     class Login {
 
         @Test
-        @DisplayName("로그인에 성공하면 토큰을 발급하고 쿠키에 저장한다")
+        @DisplayName("인증에 성공해 사용자 id를 반환하면 토큰을 발급하고 쿠키에 저장한다")
         void loginSuccess() {
             // given
             SignInCommand command = new SignInCommand("test@test.com", "password123!");
@@ -166,7 +172,7 @@ class AuthServiceTest {
     class TokenRefresh {
 
         @Test
-        @DisplayName("토큰 갱신에 성공하면 새 토큰을 쿠키에 저장한다")
+        @DisplayName("토큰 갱신 서비스가 새 토큰을 반환하면 새 토큰을 쿠키에 저장한다")
         void refreshSuccess() {
             // given
             RefreshCommand command = new RefreshCommand("expired-access-token", "valid-refresh-token");
@@ -237,11 +243,16 @@ class AuthServiceTest {
             then(cookieManager).should().deleteCookie(response, REFRESH_TOKEN);
         }
 
-        @Test
-        @DisplayName("accessToken이 없으면 무효화 없이 쿠키만 삭제한다")
-        void logoutSuccessWithoutAccessToken() {
+        @ParameterizedTest(name = "{0}")
+        @MethodSource("missingOrBlankTokenCases")
+        @DisplayName("accessToken 또는 refreshToken이 없으면 무효화 없이 쿠키만 삭제한다")
+        void logoutSuccessWithoutInvalidationWhenAnyTokenIsMissingOrBlank(
+            String description,
+            String accessToken,
+            String refreshToken
+        ) {
             // given
-            LogoutCommand command = new LogoutCommand(null, "valid-refresh-token");
+            LogoutCommand command = new LogoutCommand(accessToken, refreshToken);
 
             // when
             authService.logout(command, response);
@@ -252,49 +263,13 @@ class AuthServiceTest {
             then(cookieManager).should().deleteCookie(response, REFRESH_TOKEN);
         }
 
-        @Test
-        @DisplayName("refreshToken이 없으면 무효화 없이 쿠키만 삭제한다")
-        void logoutSuccessWithoutRefreshToken() {
-            // given
-            LogoutCommand command = new LogoutCommand("valid-access-token", null);
-
-            // when
-            authService.logout(command, response);
-
-            // then
-            then(refreshService).shouldHaveNoInteractions();
-            then(cookieManager).should().deleteCookie(response, ACCESS_TOKEN);
-            then(cookieManager).should().deleteCookie(response, REFRESH_TOKEN);
-        }
-
-        @Test
-        @DisplayName("accessToken이 blank면 무효화 없이 쿠키만 삭제한다")
-        void logoutSuccessWithoutAccessTokenWhenBlank() {
-            // given
-            LogoutCommand command = new LogoutCommand("   ", "valid-refresh-token");
-
-            // when
-            authService.logout(command, response);
-
-            // then
-            then(refreshService).shouldHaveNoInteractions();
-            then(cookieManager).should().deleteCookie(response, ACCESS_TOKEN);
-            then(cookieManager).should().deleteCookie(response, REFRESH_TOKEN);
-        }
-
-        @Test
-        @DisplayName("refreshToken이 blank면 무효화 없이 쿠키만 삭제한다")
-        void logoutSuccessWithoutRefreshTokenWhenBlank() {
-            // given
-            LogoutCommand command = new LogoutCommand("valid-access-token", "   ");
-
-            // when
-            authService.logout(command, response);
-
-            // then
-            then(refreshService).shouldHaveNoInteractions();
-            then(cookieManager).should().deleteCookie(response, ACCESS_TOKEN);
-            then(cookieManager).should().deleteCookie(response, REFRESH_TOKEN);
+        private static Stream<Arguments> missingOrBlankTokenCases() {
+            return Stream.of(
+                Arguments.of("accessToken이 null이면 무효화 없이 쿠키만 삭제한다", null, "valid-refresh-token"),
+                Arguments.of("refreshToken이 null이면 무효화 없이 쿠키만 삭제한다", "valid-access-token", null),
+                Arguments.of("accessToken이 blank면 무효화 없이 쿠키만 삭제한다", "   ", "valid-refresh-token"),
+                Arguments.of("refreshToken이 blank면 무효화 없이 쿠키만 삭제한다", "valid-access-token", "   ")
+            );
         }
     }
 }

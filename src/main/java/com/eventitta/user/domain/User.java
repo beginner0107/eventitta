@@ -15,11 +15,18 @@ import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 import static lombok.AccessLevel.PROTECTED;
 
 @Entity
-@Table(name = "users")
+@Table(
+    name = "users",
+    uniqueConstraints = {
+        @UniqueConstraint(name = "uk_users_email", columnNames = "email"),
+        @UniqueConstraint(name = "uk_users_nickname", columnNames = "nickname")
+    }
+)
 @Getter
 @NoArgsConstructor(access = PROTECTED)
 @AllArgsConstructor
@@ -33,12 +40,10 @@ public class User extends BaseEntity {
     @Email
     @NotBlank
     @Size(max = 255)
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String email;
 
-    @NotBlank
-    @Size(min = 8, max = 255)
-    @Column(nullable = false)
+    @Column
     private String password;
 
     @NotBlank
@@ -106,7 +111,21 @@ public class User extends BaseEntity {
     }
 
     public void delete() {
+        String token = generateDeletedToken();
+        this.nickname = token;
+        this.email = token + "@deleted.local";
+        this.password = null;
+        this.profilePictureUrl = null;
+        this.selfIntro = null;
+        this.interests = null;
+        this.address = null;
+        this.latitude = null;
+        this.longitude = null;
         this.deleted = true;
+    }
+
+    private String generateDeletedToken() {
+        return "__deleted_user_" + this.id + "_" + UUID.randomUUID().toString().replace("-", "");
     }
 
     public void earnPoints(int amount) {

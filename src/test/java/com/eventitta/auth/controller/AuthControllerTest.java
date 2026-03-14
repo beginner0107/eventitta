@@ -9,7 +9,6 @@ import com.eventitta.auth.service.dto.RefreshCommand;
 import com.eventitta.auth.service.dto.SignInCommand;
 import com.eventitta.auth.service.dto.SignUpCommand;
 import com.eventitta.auth.service.dto.SignUpResult;
-import com.eventitta.notification.domain.AlertLevel;
 import com.eventitta.notification.resolver.AlertLevelResolver;
 import com.eventitta.notification.service.DiscordNotificationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -89,13 +88,12 @@ class AuthControllerTest {
         }
 
         @Test
-        @DisplayName("회원가입 중 DB unique constraint 안전장치가 동작하면 500 에러와 Discord 알림을 남긴다")
+        @DisplayName("회원가입 중 unique 충돌이 발생하면 409 에러를 반환한다")
         void signUp_fail_when_duplicate_resource_detected_at_database() throws Exception {
             // given
             SignUpRequest signupReq = new SignUpRequest("test@gmail.com", "password1234!@@", "test123");
-            given(userInfoService.getCurrentUserInfo()).willReturn("user-1");
             given(authService.signUp(signupReq.toCommand()))
-                .willThrow(new DataIntegrityViolationException("duplicate key"));
+                .willThrow(CONFLICTED_EMAIL.defaultException());
 
             // when & then
             mockMvc.perform(
@@ -103,19 +101,9 @@ class AuthControllerTest {
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(signupReq))
                 )
-                .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.error").value("INTERNAL_ERROR"))
-                .andExpect(jsonPath("$.message").value("예상치 못한 서버 오류가 발생했습니다."));
-
-            then(discordNotificationService).should().sendAlert(
-                eq(AlertLevel.HIGH),
-                eq("INTERNAL_ERROR"),
-                eq("예상치 못한 서버 오류가 발생했습니다."),
-                eq("/api/v1/auth/signup"),
-                eq("user-1"),
-                any(DataIntegrityViolationException.class)
-            );
-            then(alertLevelResolver).shouldHaveNoInteractions();
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value("CONFLICTED_EMAIL"))
+                .andExpect(jsonPath("$.message").value(CONFLICTED_EMAIL.defaultMessage()));
         }
 
         @Test

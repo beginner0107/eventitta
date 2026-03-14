@@ -86,6 +86,9 @@ jwt:
   access-token-validity-ms: ${JWT_ACCESS_TOKEN_VALIDITY:3600000}
   refresh-token-validity-ms: ${JWT_REFRESH_TOKEN_VALIDITY:86400000}
 
+cookie:
+  secure: true
+
 file:
   storage:
     location: ${FILE_STORAGE_LOCATION:/app/uploads}

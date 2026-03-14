@@ -49,3 +49,7 @@ notification:
 monitoring:
   log:
     enabled: false
+
+cookie:
+  secure: false
+  access-token-refresh-buffer-ms: 300000

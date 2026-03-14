@@ -10,5 +10,6 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationProperties(prefix = "cookie")
 public class CookieProperties {
-    private boolean secure = false;  // 기본값
+    private boolean secure = false;
+    private long accessTokenRefreshBufferMs = 300_000L;
 }

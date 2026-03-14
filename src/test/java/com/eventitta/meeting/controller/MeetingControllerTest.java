@@ -2,6 +2,7 @@ package com.eventitta.meeting.controller;
 
 import com.eventitta.WithMockCustomUser;
 import com.eventitta.auth.config.SecurityConfig;
+import com.eventitta.auth.jwt.JwtAccessDeniedHandler;
 import com.eventitta.auth.jwt.service.UserInfoService;
 import com.eventitta.notification.resolver.AlertLevelResolver;
 import com.eventitta.notification.service.DiscordNotificationService;
@@ -54,6 +55,8 @@ class MeetingControllerTest {
     CustomUserDetailsService customUserDetailsService;
     @MockitoBean
     JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    @MockitoBean
+    JwtAccessDeniedHandler jwtAccessDeniedHandler;
     @MockitoBean
     protected DiscordNotificationService discordNotificationService;
     @MockitoBean

@@ -4,6 +4,8 @@ import com.eventitta.notification.constants.AlertConstants;
 import com.eventitta.common.exception.CustomException;
 import com.eventitta.notification.domain.AlertLevel;
 import org.springframework.dao.DataAccessException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Component;
 
 import java.net.ConnectException;
@@ -47,6 +49,9 @@ public class AlertLevelResolver {
     }
 
     private boolean isMediumLevelException(Exception exception) {
+        if (exception instanceof AuthenticationException || exception instanceof AccessDeniedException) {
+            return true;
+        }
         if (!(exception instanceof CustomException customEx)) {
             return false;
         }

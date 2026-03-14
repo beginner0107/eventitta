@@ -1,6 +1,7 @@
 package com.eventitta.auth.config;
 
 import com.eventitta.auth.jwt.JwtTokenProvider;
+import com.eventitta.auth.jwt.JwtAccessDeniedHandler;
 import com.eventitta.auth.jwt.filter.JwtAuthenticationFilter;
 import com.eventitta.auth.jwt.service.CustomUserDetailsService;
 import com.eventitta.auth.jwt.JwtAuthenticationEntryPoint;
@@ -36,6 +37,7 @@ public class SecurityConfig {
     private final JwtTokenProvider tokenProvider;
     private final CustomUserDetailsService customUserDetailsService;
     private final JwtAuthenticationEntryPoint authenticationEntryPoint;
+    private final JwtAccessDeniedHandler accessDeniedHandler;
 
     @Bean
     @Primary
@@ -82,7 +84,10 @@ public class SecurityConfig {
                     .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())
-            .exceptionHandling(ex -> ex.authenticationEntryPoint(authenticationEntryPoint))
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint(authenticationEntryPoint)
+                .accessDeniedHandler(accessDeniedHandler)
+            )
             .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -114,7 +119,10 @@ public class SecurityConfig {
                     .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())
-            .exceptionHandling(ex -> ex.authenticationEntryPoint(authenticationEntryPoint))
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint(authenticationEntryPoint)
+                .accessDeniedHandler(accessDeniedHandler)
+            )
             .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

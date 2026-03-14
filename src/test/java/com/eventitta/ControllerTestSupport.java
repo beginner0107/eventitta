@@ -1,6 +1,7 @@
 package com.eventitta;
 
 import com.eventitta.auth.controller.AuthController;
+import com.eventitta.auth.jwt.JwtAccessDeniedHandler;
 import com.eventitta.auth.jwt.JwtAuthenticationEntryPoint;
 import com.eventitta.auth.jwt.JwtTokenProvider;
 import com.eventitta.auth.config.SecurityConfig;
@@ -62,6 +63,8 @@ public abstract class ControllerTestSupport {
     protected RefreshTokenService refreshService;
     @MockitoBean
     protected JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    @MockitoBean
+    protected JwtAccessDeniedHandler jwtAccessDeniedHandler;
     @MockitoBean
     protected PostService postService;
     @MockitoBean

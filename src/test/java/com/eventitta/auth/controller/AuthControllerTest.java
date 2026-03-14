@@ -9,6 +9,7 @@ import com.eventitta.auth.service.dto.RefreshCommand;
 import com.eventitta.auth.service.dto.SignInCommand;
 import com.eventitta.auth.service.dto.SignUpCommand;
 import com.eventitta.auth.service.dto.SignUpResult;
+import com.eventitta.notification.domain.AlertLevel;
 import com.eventitta.notification.resolver.AlertLevelResolver;
 import com.eventitta.notification.service.DiscordNotificationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -27,6 +29,7 @@ import static com.eventitta.auth.constants.AuthConstants.ACCESS_TOKEN;
 import static com.eventitta.auth.constants.AuthConstants.REFRESH_TOKEN;
 import static com.eventitta.auth.exception.AuthErrorCode.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -83,6 +86,58 @@ class AuthControllerTest {
             result.andExpect(jsonPath("$.email").value(email));
             result.andExpect(jsonPath("$.nickname").value(nickname));
             then(authService).should().signUp(any(SignUpCommand.class));
+        }
+
+        @Test
+        @DisplayName("회원가입 중 DB unique constraint 안전장치가 동작하면 500 에러와 Discord 알림을 남긴다")
+        void signUp_fail_when_duplicate_resource_detected_at_database() throws Exception {
+            // given
+            SignUpRequest signupReq = new SignUpRequest("test@gmail.com", "password1234!@@", "test123");
+            given(userInfoService.getCurrentUserInfo()).willReturn("user-1");
+            given(authService.signUp(signupReq.toCommand()))
+                .willThrow(new DataIntegrityViolationException("duplicate key"));
+
+            // when & then
+            mockMvc.perform(
+                    post("/api/v1/auth/signup")
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(signupReq))
+                )
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.error").value("INTERNAL_ERROR"))
+                .andExpect(jsonPath("$.message").value("예상치 못한 서버 오류가 발생했습니다."));
+
+            then(discordNotificationService).should().sendAlert(
+                eq(AlertLevel.HIGH),
+                eq("INTERNAL_ERROR"),
+                eq("예상치 못한 서버 오류가 발생했습니다."),
+                eq("/api/v1/auth/signup"),
+                eq("user-1"),
+                any(DataIntegrityViolationException.class)
+            );
+            then(alertLevelResolver).shouldHaveNoInteractions();
+        }
+
+        @Test
+        @DisplayName("예외 알림 경로에서 추가 예외가 발생해도 원래 500 응답은 유지한다")
+        void signUp_fail_when_notification_path_breaks_then_response_is_preserved() throws Exception {
+            // given
+            SignUpRequest signupReq = new SignUpRequest("test@gmail.com", "password1234!@@", "test123");
+            given(userInfoService.getCurrentUserInfo()).willThrow(new IllegalStateException("user-info-failed"));
+            given(authService.signUp(signupReq.toCommand()))
+                .willThrow(new DataIntegrityViolationException("duplicate key"));
+
+            // when & then
+            mockMvc.perform(
+                    post("/api/v1/auth/signup")
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(signupReq))
+                )
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.error").value("INTERNAL_ERROR"))
+                .andExpect(jsonPath("$.message").value("예상치 못한 서버 오류가 발생했습니다."));
+
+            then(discordNotificationService).shouldHaveNoInteractions();
         }
 
         @Test

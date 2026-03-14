@@ -17,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -42,6 +43,12 @@ class UserServiceTest {
             .email("u" + id + "@test.com")
             .password("encoded")
             .nickname("nick" + id)
+            .profilePictureUrl("https://example.com/pic.jpg")
+            .selfIntro("Hello")
+            .interests(List.of("music", "sports"))
+            .address("Seoul")
+            .latitude(new BigDecimal("37.123456"))
+            .longitude(new BigDecimal("127.123456"))
             .role(Role.USER)
             .provider(Provider.LOCAL)
             .build();
@@ -90,6 +97,55 @@ class UserServiceTest {
             .isInstanceOf(UserException.class)
             .extracting("errorCode")
             .isEqualTo(UserErrorCode.CONFLICTED_NICKNAME);
+    }
+
+    @Test
+    @DisplayName("프로필 수정이 성공하면 변경 내용을 반영하고 저장 경계를 flush 한다")
+    void updateProfile_success() {
+        User user = createUser(1L);
+        UpdateProfileRequest req = new UpdateProfileRequest(
+            "newNick",
+            "https://example.com/new.jpg",
+            "Updated intro",
+            List.of("travel"),
+            "Busan",
+            new BigDecimal("35.179554"),
+            new BigDecimal("129.075642")
+        );
+        given(userRepository.findActiveById(1L)).willReturn(Optional.of(user));
+        given(userRepository.existsByNickname("newNick")).willReturn(false);
+
+        userService.updateProfile(1L, req);
+
+        assertThat(user.getNickname()).isEqualTo("newNick");
+        assertThat(user.getProfilePictureUrl()).isEqualTo("https://example.com/new.jpg");
+        assertThat(user.getSelfIntro()).isEqualTo("Updated intro");
+        assertThat(user.getInterests()).containsExactly("travel");
+        assertThat(user.getAddress()).isEqualTo("Busan");
+        assertThat(user.getLatitude()).isEqualByComparingTo("35.179554");
+        assertThat(user.getLongitude()).isEqualByComparingTo("129.075642");
+        verify(userRepository).flush();
+    }
+
+    @Test
+    @DisplayName("회원 탈퇴 시 식별 정보를 변조하고 개인정보를 초기화한다")
+    void deleteUser_mutatesIdentifiersAndClearsPersonalData() {
+        User user = createUser(1L);
+        given(userRepository.findActiveById(1L)).willReturn(Optional.of(user));
+
+        userService.deleteUser(1L);
+
+        assertThat(user.isDeleted()).isTrue();
+        assertThat(user.getNickname()).startsWith("__deleted_user_1_");
+        assertThat(user.getEmail()).startsWith("__deleted_user_1_");
+        assertThat(user.getEmail()).endsWith("@deleted.local");
+        assertThat(user.getPassword()).isNull();
+        assertThat(user.getProfilePictureUrl()).isNull();
+        assertThat(user.getSelfIntro()).isNull();
+        assertThat(user.getInterests()).isNull();
+        assertThat(user.getAddress()).isNull();
+        assertThat(user.getLatitude()).isNull();
+        assertThat(user.getLongitude()).isNull();
     }
 
     @Test

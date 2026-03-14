@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum UserErrorCode implements ErrorCode {
     NOT_FOUND_USER_ID("사용자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    CONFLICTED_EMAIL("이미 사용 중인 이메일입니다.", HttpStatus.CONFLICT),
     INVALID_CURRENT_PASSWORD("현재 비밀번호가 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
     CONFLICTED_NICKNAME("이미 사용 중인 닉네임입니다.", HttpStatus.CONFLICT),
 

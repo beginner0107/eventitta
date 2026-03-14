@@ -8,8 +8,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import static com.eventitta.auth.exception.AuthErrorCode.CONFLICTED_EMAIL;
-import static com.eventitta.auth.exception.AuthErrorCode.CONFLICTED_NICKNAME;
+import static com.eventitta.user.exception.UserErrorCode.CONFLICTED_EMAIL;
+import static com.eventitta.user.exception.UserErrorCode.CONFLICTED_NICKNAME;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +21,7 @@ public class SignUpService {
     public User register(SignUpCommand command) {
         if (userRepository.existsByEmail(command.email())) throw CONFLICTED_EMAIL.defaultException();
         if (userRepository.existsByNickname(command.nickname())) throw CONFLICTED_NICKNAME.defaultException();
-        return userRepository.save(command.toEntity(passwordEncoder));
+        User user = command.toEntity(passwordEncoder);
+        return userRepository.save(user);
     }
 }

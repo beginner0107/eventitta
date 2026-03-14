@@ -1,8 +1,11 @@
 package com.eventitta.auth.service;
 
-import com.eventitta.auth.exception.AuthException;
 import com.eventitta.auth.service.dto.SignUpCommand;
+import com.eventitta.user.domain.Provider;
+import com.eventitta.user.domain.Role;
 import com.eventitta.user.domain.User;
+import com.eventitta.user.exception.UserErrorCode;
+import com.eventitta.user.exception.UserException;
 import com.eventitta.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,9 +15,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
-import static com.eventitta.auth.exception.AuthErrorCode.CONFLICTED_EMAIL;
-import static com.eventitta.auth.exception.AuthErrorCode.CONFLICTED_NICKNAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.BDDAssertions.catchThrowable;
 import static org.mockito.ArgumentMatchers.any;
@@ -60,6 +60,10 @@ class SignUpServiceTest {
         assertThat(user.getEmail()).isEqualTo(command.email());
         assertThat(user.getNickname()).isEqualTo(command.nickname());
         assertThat(user.getPassword()).isEqualTo("encoded-password");
+        assertThat(user.getRole()).isEqualTo(Role.USER);
+        assertThat(user.getProvider()).isEqualTo(Provider.LOCAL);
+        assertThat(user.getPoints()).isZero();
+        assertThat(user.isDeleted()).isFalse();
         assertThat(result).isEqualTo(savedUser);
     }
 
@@ -79,8 +83,8 @@ class SignUpServiceTest {
         Throwable thrown = catchThrowable(() -> signUpService.register(command));
 
         // then
-        assertThat(thrown).isInstanceOf(AuthException.class);
-        assertThat(((AuthException) thrown).getErrorCode()).isEqualTo(CONFLICTED_EMAIL);
+        assertThat(thrown).isInstanceOf(UserException.class);
+        assertThat(((UserException) thrown).getErrorCode()).isEqualTo(UserErrorCode.CONFLICTED_EMAIL);
 
         verify(userRepository, never()).existsByNickname(anyString());
         verify(userRepository, never()).save(any(User.class));
@@ -103,8 +107,8 @@ class SignUpServiceTest {
         Throwable thrown = catchThrowable(() -> signUpService.register(command));
 
         // then
-        assertThat(thrown).isInstanceOf(AuthException.class);
-        assertThat(((AuthException) thrown).getErrorCode()).isEqualTo(CONFLICTED_NICKNAME);
+        assertThat(thrown).isInstanceOf(UserException.class);
+        assertThat(((UserException) thrown).getErrorCode()).isEqualTo(UserErrorCode.CONFLICTED_NICKNAME);
 
         verify(userRepository, never()).save(any(User.class));
     }

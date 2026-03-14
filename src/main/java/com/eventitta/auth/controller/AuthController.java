@@ -71,7 +71,7 @@ public class AuthController {
         @CookieValue(name = REFRESH_TOKEN, required = false) String refreshToken,
         HttpServletResponse response
     ) {
-        authService.logout(new LogoutCommand(accessToken), response);
+        authService.logout(new LogoutCommand(accessToken, refreshToken), response);
         return ResponseEntity.noContent().build();
     }
 }

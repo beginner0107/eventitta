@@ -10,6 +10,7 @@ import org.springframework.security.crypto.password.Pbkdf2PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 
 import static com.eventitta.auth.exception.AuthErrorCode.*;
@@ -22,6 +23,7 @@ public class RefreshTokenService {
     private final RefreshTokenRepository rtRepo;
     private final Pbkdf2PasswordEncoder rtEncoder;
     private final TokenService tokenService;
+    private final Clock clock;
 
     public TokenResult refresh(RefreshCommand command) {
         if (command.accessToken() == null || command.accessToken().isBlank()) {
@@ -39,7 +41,7 @@ public class RefreshTokenService {
             .findFirst()
             .orElseThrow(REFRESH_TOKEN_INVALID::defaultException);
 
-        if (entity.getExpiresAt().isBefore(LocalDateTime.now())) {
+        if (entity.getExpiresAt().isBefore(LocalDateTime.now(clock))) {
             throw REFRESH_TOKEN_EXPIRED.defaultException();
         }
 
@@ -47,8 +49,13 @@ public class RefreshTokenService {
         return tokenService.issueTokens(userId);
     }
 
-    public void invalidateByAccessToken(String accessToken) {
+    public void invalidateByToken(String accessToken, String refreshToken) {
         Long userId = tokenProvider.getUserIdFromExpiredToken(accessToken);
-        rtRepo.deleteByUserId(userId);
+
+        rtRepo.findAllByUserId(userId)
+            .stream()
+            .filter(token -> rtEncoder.matches(refreshToken, token.getTokenHash()))
+            .findFirst()
+            .ifPresent(rtRepo::delete);
     }
 }

@@ -41,6 +41,7 @@ public class UserService {
             req.latitude(),
             req.longitude()
         );
+        userRepository.flush();
     }
 
     @Transactional
@@ -48,6 +49,10 @@ public class UserService {
         User user = userRepository.findActiveById(userId)
             .orElseThrow(UserErrorCode.NOT_FOUND_USER_ID::defaultException);
         user.delete();
+        // TODO: 탈퇴 정책 후처리 반영 필요
+        // - 리프레시 토큰 전체 삭제
+        // - 사용자가 리더인 모임의 리더 위임 또는 종료 처리
+        // - 랭킹/캐시에서 사용자 제거
     }
 
     @Transactional

@@ -11,6 +11,8 @@ import java.util.List;
 
 @Getter
 public class UserPrincipal implements UserDetails {
+    private static final String ROLE_PREFIX = "ROLE_";
+
     private final Long id;
     private final String email;
     private final String password;
@@ -20,14 +22,14 @@ public class UserPrincipal implements UserDetails {
         this.id = user.getId();
         this.email = user.getEmail();
         this.password = user.getPassword();
-        this.authorities = List.of(new SimpleGrantedAuthority(user.getRole().name()));
+        this.authorities = List.of(new SimpleGrantedAuthority(normalizeRole(user.getRole().name())));
     }
 
     public UserPrincipal(Long id, String email, String role) {
         this.id = id;
         this.email = email;
         this.password = null;
-        this.authorities = List.of(new SimpleGrantedAuthority(role));
+        this.authorities = List.of(new SimpleGrantedAuthority(normalizeRole(role)));
     }
 
     @Override
@@ -63,5 +65,12 @@ public class UserPrincipal implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
+    }
+
+    private String normalizeRole(String role) {
+        if (role.startsWith(ROLE_PREFIX)) {
+            return role;
+        }
+        return ROLE_PREFIX + role;
     }
 }

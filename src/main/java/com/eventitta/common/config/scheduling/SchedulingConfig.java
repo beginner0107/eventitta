@@ -19,7 +19,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * <p>모든 스케줄러는 기본적으로 활성화되어 있으며 ({@code matchIfMissing = true}),
  * 특정 스케줄러만 비활성화하려면 해당 설정을 {@code false}로 지정하세요.
  *
- * @see com.eventitta.auth.scheduler.RefreshTokenCleanupTask
+ * @see com.eventitta.auth.scheduler.RefreshTokenCleanupScheduler
  * @see com.eventitta.festivals.scheduler.FestivalScheduler
  * @see com.eventitta.meeting.scheduler.MeetingStatusScheduler
  * @see com.eventitta.post.scheduler.PostImageFileScheduler

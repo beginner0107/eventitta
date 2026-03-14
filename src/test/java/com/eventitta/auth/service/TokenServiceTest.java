@@ -19,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.Pbkdf2PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -45,6 +46,8 @@ class TokenServiceTest {
     private Pbkdf2PasswordEncoder pbkdf2PasswordEncoder;
     @Mock
     private UserRepository userRepository;
+    @Mock
+    private Clock clock;
 
     @Captor
     private ArgumentCaptor<RefreshToken> refreshTokenCaptor;
@@ -67,6 +70,8 @@ class TokenServiceTest {
             given(pbkdf2PasswordEncoder.encode("raw-refresh-token")).willReturn("encoded-refresh-token");
 
             Instant expectedExpiry = Instant.parse("2026-03-11T14:59:00Z");
+            ZoneId applicationZone = ZoneId.of("Asia/Seoul");
+            given(clock.getZone()).willReturn(applicationZone);
             given(tokenProvider.getRefreshTokenExpiry()).willReturn(expectedExpiry);
 
             // when
@@ -81,7 +86,7 @@ class TokenServiceTest {
             RefreshToken savedToken = refreshTokenCaptor.getValue();
             assertThat(savedToken.getTokenHash()).isEqualTo("encoded-refresh-token");
             assertThat(savedToken.getExpiresAt())
-                .isEqualTo(LocalDateTime.ofInstant(expectedExpiry, ZoneId.systemDefault()));
+                .isEqualTo(LocalDateTime.ofInstant(expectedExpiry, applicationZone));
         }
 
         @Test

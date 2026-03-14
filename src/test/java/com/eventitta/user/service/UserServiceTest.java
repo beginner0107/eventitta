@@ -1,5 +1,6 @@
 package com.eventitta.user.service;
 
+import com.eventitta.auth.repository.RefreshTokenRepository;
 import com.eventitta.user.domain.Provider;
 import com.eventitta.user.domain.Role;
 import com.eventitta.user.domain.User;
@@ -31,6 +32,8 @@ class UserServiceTest {
 
     @Mock
     UserRepository userRepository;
+    @Mock
+    RefreshTokenRepository refreshTokenRepository;
     @Mock
     PasswordEncoder passwordEncoder;
 
@@ -146,6 +149,7 @@ class UserServiceTest {
         assertThat(user.getAddress()).isNull();
         assertThat(user.getLatitude()).isNull();
         assertThat(user.getLongitude()).isNull();
+        verify(refreshTokenRepository).deleteByUserId(1L);
     }
 
     @Test

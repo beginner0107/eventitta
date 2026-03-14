@@ -2,7 +2,7 @@ package com.eventitta.scheduler;
 
 import com.eventitta.IntegrationTestSupport;
 import com.eventitta.auth.repository.RefreshTokenRepository;
-import com.eventitta.auth.scheduler.RefreshTokenCleanupTask;
+import com.eventitta.auth.scheduler.RefreshTokenCleanupScheduler;
 import com.eventitta.festivals.scheduler.FestivalScheduler;
 import com.eventitta.festivals.service.FestivalService;
 import com.eventitta.meeting.repository.MeetingRepository;
@@ -52,7 +52,7 @@ class ShedLockIntegrationTest extends IntegrationTestSupport {
     private MeetingStatusScheduler meetingStatusScheduler;
 
     @Autowired
-    private RefreshTokenCleanupTask refreshTokenCleanupTask;
+    private RefreshTokenCleanupScheduler refreshTokenCleanupScheduler;
 
     @MockitoBean
     private FestivalService festivalService;
@@ -176,7 +176,7 @@ class ShedLockIntegrationTest extends IntegrationTestSupport {
                 return 5L;
             });
 
-        runConcurrently(() -> refreshTokenCleanupTask.removeExpiredRefreshTokens());
+        runConcurrently(() -> refreshTokenCleanupScheduler.removeExpiredRefreshTokens());
 
         Thread.sleep(100); // 락 row 생성 대기
 

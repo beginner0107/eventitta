@@ -8,9 +8,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 
 @Entity
 @Getter
@@ -33,14 +31,14 @@ public class RefreshToken extends BaseTimeEntity {
     @Column(name = "expires_at", nullable = false)
     private LocalDateTime expiresAt;
 
-    public RefreshToken(User user, String tokenHash, Instant expiresAt) {
+    public RefreshToken(User user, String tokenHash, LocalDateTime expiresAt) {
         this.user = user;
         this.tokenHash = tokenHash;
-        this.expiresAt = LocalDateTime.ofInstant(expiresAt, ZoneId.systemDefault());
+        this.expiresAt = expiresAt;
     }
 
-    public void updateToken(String newHash, Instant newExpiresAt) {
+    public void updateToken(String newHash, LocalDateTime newExpiresAt) {
         this.tokenHash = newHash;
-        this.expiresAt = LocalDateTime.ofInstant(newExpiresAt, ZoneId.systemDefault());
+        this.expiresAt = newExpiresAt;
     }
 }

@@ -11,7 +11,9 @@ import org.springframework.security.crypto.password.Pbkdf2PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 import static com.eventitta.user.exception.UserErrorCode.NOT_FOUND_USER_ID;
 
@@ -23,6 +25,7 @@ public class TokenService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final Pbkdf2PasswordEncoder pbkdf2PasswordEncoder;
     private final UserRepository userRepository;
+    private final Clock clock;
 
     public TokenResult issueTokens(Long userId) {
         User user = userRepository.findById(userId)
@@ -37,7 +40,8 @@ public class TokenService {
     private void persistRefreshToken(User user, String rawRt) {
         String hash = pbkdf2PasswordEncoder.encode(rawRt);
         Instant expiresAt = tokenProvider.getRefreshTokenExpiry();
+        LocalDateTime expiresAtInAppZone = LocalDateTime.ofInstant(expiresAt, clock.getZone());
 
-        refreshTokenRepository.save(new RefreshToken(user, hash, expiresAt));
+        refreshTokenRepository.save(new RefreshToken(user, hash, expiresAtInAppZone));
     }
 }

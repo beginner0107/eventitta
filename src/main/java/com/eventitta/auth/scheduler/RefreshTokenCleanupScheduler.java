@@ -9,6 +9,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 
 @Slf4j
@@ -19,8 +20,9 @@ import java.time.LocalDateTime;
     havingValue = "true",
     matchIfMissing = true
 )
-public class RefreshTokenCleanupTask {
+public class RefreshTokenCleanupScheduler {
 
+    private final Clock clock;
     private final RefreshTokenRepository refreshTokenRepository;
 
     @Scheduled(cron = "0 0 * * * *", zone = "Asia/Seoul")
@@ -30,7 +32,7 @@ public class RefreshTokenCleanupTask {
         log.info("[Scheduler] 만료된 리프레시 토큰 정리 시작");
 
         try {
-            long deleted = refreshTokenRepository.deleteByExpiresAtBefore(LocalDateTime.now());
+            long deleted = refreshTokenRepository.deleteByExpiresAtBefore(LocalDateTime.now(clock));
             log.info("[Scheduler] 만료된 리프레시 토큰 정리 완료 - 삭제 건수: {}", deleted);
         } catch (Exception e) {
             log.error("[Scheduler] 만료된 리프레시 토큰 정리 실패", e);

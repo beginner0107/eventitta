@@ -4,9 +4,10 @@ import com.eventitta.auth.annotation.CurrentUser;
 import com.eventitta.common.response.ApiErrorResponse;
 import com.eventitta.gamification.dto.response.ActivitySummaryResponse;
 import com.eventitta.gamification.service.UserActivityService;
-import com.eventitta.user.dto.ChangePasswordRequest;
-import com.eventitta.user.dto.UpdateProfileRequest;
-import com.eventitta.user.dto.UserProfileResponse;
+import com.eventitta.user.controller.request.ChangePasswordRequest;
+import com.eventitta.user.controller.request.UpdateProfileRequest;
+import com.eventitta.user.controller.response.UserProfileResponse;
+import com.eventitta.user.mapper.UserMapper;
 import com.eventitta.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -28,6 +29,7 @@ import java.util.List;
 public class UserController {
     private final UserService userService;
     private final UserActivityService userActivityService;
+    private final UserMapper userMapper;
 
     @Operation(summary = "내 프로필 조회", description = "인증된 사용자의 프로필 정보를 조회합니다.")
     @ApiResponses({
@@ -36,8 +38,8 @@ public class UserController {
     })
     @GetMapping("/me")
     public ResponseEntity<UserProfileResponse> getMyProfile(@CurrentUser Long userId) {
-        UserProfileResponse resp = userService.getProfile(userId);
-        return ResponseEntity.ok(resp);
+        var result = userService.getProfile(userId);
+        return ResponseEntity.ok(userMapper.toUserProfileResponse(result));
     }
 
     @Operation(summary = "내 프로필 수정", description = "인증된 사용자의 프로필 정보를 수정합니다.")
@@ -52,7 +54,7 @@ public class UserController {
         @CurrentUser Long userId,
         @RequestBody @Valid UpdateProfileRequest request
     ) {
-        userService.updateProfile(userId, request);
+        userService.updateProfile(userId, userMapper.toUpdateProfileCommand(request));
         return ResponseEntity.noContent().build();
     }
 
@@ -78,7 +80,7 @@ public class UserController {
         @CurrentUser Long userId,
         @Valid @RequestBody ChangePasswordRequest request
     ) {
-        userService.changePassword(userId, request);
+        userService.changePassword(userId, userMapper.toChangePasswordCommand(request));
         return ResponseEntity.noContent().build();
     }
 

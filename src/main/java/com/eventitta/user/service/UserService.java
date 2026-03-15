@@ -2,11 +2,12 @@ package com.eventitta.user.service;
 
 import com.eventitta.auth.repository.RefreshTokenRepository;
 import com.eventitta.user.domain.User;
-import com.eventitta.user.dto.ChangePasswordRequest;
-import com.eventitta.user.dto.UpdateProfileRequest;
-import com.eventitta.user.dto.UserProfileResponse;
 import com.eventitta.user.exception.UserErrorCode;
+import com.eventitta.user.mapper.UserMapper;
 import com.eventitta.user.repository.UserRepository;
+import com.eventitta.user.service.dto.ChangePasswordCommand;
+import com.eventitta.user.service.dto.UpdateProfileCommand;
+import com.eventitta.user.service.dto.UserProfileResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -19,29 +20,30 @@ public class UserService {
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserMapper userMapper;
 
-    public UserProfileResponse getProfile(Long userId) {
+    public UserProfileResult getProfile(Long userId) {
         User user = userRepository.findActiveById(userId)
             .orElseThrow(UserErrorCode.NOT_FOUND_USER_ID::defaultException);
-        return UserProfileResponse.from(user);
+        return userMapper.toUserProfileResult(user);
     }
 
     @Transactional
-    public void updateProfile(Long userId, UpdateProfileRequest req) {
+    public void updateProfile(Long userId, UpdateProfileCommand command) {
         User user = userRepository.findActiveById(userId)
             .orElseThrow(UserErrorCode.NOT_FOUND_USER_ID::defaultException);
-        if (!user.getNickname().equals(req.nickname()) &&
-            userRepository.existsByNickname(req.nickname())) {
+        if (!user.getNickname().equals(command.nickname()) &&
+            userRepository.existsByNickname(command.nickname())) {
             throw UserErrorCode.CONFLICTED_NICKNAME.defaultException();
         }
         user.updateProfile(
-            req.nickname(),
-            req.profilePictureUrl(),
-            req.selfIntro(),
-            req.interests(),
-            req.address(),
-            req.latitude(),
-            req.longitude()
+            command.nickname(),
+            command.profilePictureUrl(),
+            command.selfIntro(),
+            command.interests(),
+            command.address(),
+            command.latitude(),
+            command.longitude()
         );
         userRepository.flush();
     }
@@ -58,12 +60,12 @@ public class UserService {
     }
 
     @Transactional
-    public void changePassword(Long userId, ChangePasswordRequest req) {
+    public void changePassword(Long userId, ChangePasswordCommand command) {
         User user = userRepository.findActiveById(userId)
             .orElseThrow(UserErrorCode.NOT_FOUND_USER_ID::defaultException);
-        if (!passwordEncoder.matches(req.currentPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(command.currentPassword(), user.getPassword())) {
             throw UserErrorCode.INVALID_CURRENT_PASSWORD.defaultException();
         }
-        user.changePassword(passwordEncoder.encode(req.newPassword()));
+        user.changePassword(passwordEncoder.encode(command.newPassword()));
     }
 }

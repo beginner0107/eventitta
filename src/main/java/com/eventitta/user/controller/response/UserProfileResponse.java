@@ -1,6 +1,5 @@
-package com.eventitta.user.dto;
+package com.eventitta.user.controller.response;
 
-import com.eventitta.user.domain.User;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.math.BigDecimal;
@@ -36,19 +35,5 @@ public record UserProfileResponse(
         address = Objects.requireNonNullElse(address, "");
         latitude = Objects.requireNonNullElse(latitude, BigDecimal.ZERO);
         longitude = Objects.requireNonNullElse(longitude, BigDecimal.ZERO);
-    }
-
-    public static UserProfileResponse from(User user) {
-        return new UserProfileResponse(
-            user.getId(),
-            user.getEmail(),
-            user.getNickname(),
-            user.getProfilePictureUrl(),
-            user.getSelfIntro(),
-            user.getInterests(),
-            user.getAddress(),
-            user.getLatitude(),
-            user.getLongitude()
-        );
     }
 }

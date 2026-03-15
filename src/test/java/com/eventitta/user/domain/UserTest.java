@@ -1,5 +1,7 @@
 package com.eventitta.user.domain;
 
+import com.eventitta.user.exception.UserErrorCode;
+import com.eventitta.user.exception.UserException;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
@@ -10,6 +12,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class UserTest {
 
@@ -66,5 +69,71 @@ class UserTest {
             var violations = validator.validateProperty(user, "email");
             assertThat(violations).isEmpty();
         }
+    }
+
+    @Test
+    @DisplayName("earnPoints 는 양수 포인트를 누적한다")
+    void earnPoints_addsPositiveAmount() {
+        User user = createUser(10);
+
+        user.earnPoints(5);
+
+        assertThat(user.getPoints()).isEqualTo(15);
+    }
+
+    @Test
+    @DisplayName("earnPoints 는 0 이하 포인트를 거부한다")
+    void earnPoints_nonPositiveAmount_throws() {
+        User user = createUser(10);
+
+        assertThatThrownBy(() -> user.earnPoints(0))
+            .isInstanceOf(UserException.class)
+            .extracting("errorCode")
+            .isEqualTo(UserErrorCode.INVALID_POINTS_AMOUNT);
+    }
+
+    @Test
+    @DisplayName("deductPoints 는 보유 포인트가 충분하면 차감한다")
+    void deductPoints_subtractsWhenEnoughPoints() {
+        User user = createUser(10);
+
+        user.deductPoints(4);
+
+        assertThat(user.getPoints()).isEqualTo(6);
+    }
+
+    @Test
+    @DisplayName("deductPoints 는 0 이하 포인트를 거부한다")
+    void deductPoints_nonPositiveAmount_throws() {
+        User user = createUser(10);
+
+        assertThatThrownBy(() -> user.deductPoints(-1))
+            .isInstanceOf(UserException.class)
+            .extracting("errorCode")
+            .isEqualTo(UserErrorCode.INVALID_POINTS_AMOUNT);
+    }
+
+    @Test
+    @DisplayName("deductPoints 는 보유 포인트보다 큰 차감을 거부한다")
+    void deductPoints_insufficientPoints_throws() {
+        User user = createUser(3);
+
+        assertThatThrownBy(() -> user.deductPoints(4))
+            .isInstanceOf(UserException.class)
+            .extracting("errorCode")
+            .isEqualTo(UserErrorCode.INSUFFICIENT_POINTS);
+    }
+
+    private User createUser(int points) {
+        return User.builder()
+            .id(1L)
+            .email("user@test.com")
+            .password("encodedPassword")
+            .nickname("nick")
+            .points(points)
+            .role(Role.USER)
+            .provider(Provider.LOCAL)
+            .deleted(false)
+            .build();
     }
 }

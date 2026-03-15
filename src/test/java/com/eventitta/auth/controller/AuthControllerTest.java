@@ -21,6 +21,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -32,6 +34,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -62,7 +65,7 @@ class AuthControllerTest {
     class SignUp {
 
         @Test
-        @DisplayName("유효한 회원가입 요청이면 200과 회원 정보를 반환한다")
+        @DisplayName("유효한 회원가입 요청이면 회원 정보와 함께 200 응답을 반환한다")
         void signUp_success() throws Exception {
             // given
             String email = "test@gmail.com";
@@ -88,7 +91,7 @@ class AuthControllerTest {
         }
 
         @Test
-        @DisplayName("회원가입 중 unique 충돌이 발생하면 409 에러를 반환한다")
+        @DisplayName("회원가입 시 이메일 중복 예외가 발생하면 409 응답을 반환한다")
         void signUp_fail_when_duplicate_resource_detected_at_database() throws Exception {
             // given
             SignUpRequest signupReq = new SignUpRequest("test@gmail.com", "password1234!@@", "test123");
@@ -245,10 +248,19 @@ class AuthControllerTest {
     @DisplayName("로그인")
     class Login {
         @Test
-        @DisplayName("유효한 로그인 요청이면 200 응답을 반환한다")
+        @DisplayName("유효한 로그인 요청이면 토큰 쿠키와 함께 200 응답을 반환한다")
         void login_success() throws Exception {
             // given
             SignInRequest request = new SignInRequest("test@gmail.com", "password1234!@@");
+            SignInCommand command = request.toCommand();
+            willAnswer(invocation -> {
+                HttpServletResponse response = invocation.getArgument(1);
+                response.addHeader(HttpHeaders.SET_COOKIE, tokenCookie(ACCESS_TOKEN, "access-token"));
+                response.addHeader(HttpHeaders.SET_COOKIE, tokenCookie(REFRESH_TOKEN, "refresh-token"));
+                return null;
+            })
+                .given(authService)
+                .login(eq(command), any(HttpServletResponse.class));
 
             // when
             var result = mockMvc.perform(
@@ -259,7 +271,9 @@ class AuthControllerTest {
 
             // then
             result.andExpect(status().isOk());
-            then(authService).should().login(any(SignInCommand.class), any(HttpServletResponse.class));
+            result.andExpect(cookie().value(ACCESS_TOKEN, "access-token"));
+            result.andExpect(cookie().value(REFRESH_TOKEN, "refresh-token"));
+            then(authService).should().login(eq(command), any(HttpServletResponse.class));
         }
 
         @Test
@@ -364,12 +378,21 @@ class AuthControllerTest {
     }
 
     @Nested
-    @DisplayName("토큰재발급")
+    @DisplayName("토큰 재발급")
     class TokenRefresh {
         @Test
-        @DisplayName("유효한 토큰 재발급 요청이면 200 응답을 반환한다")
+        @DisplayName("유효한 토큰 재발급 요청이면 새 토큰 쿠키와 함께 200 응답을 반환한다")
         void refresh_success() throws Exception {
             // given
+            willAnswer(invocation -> {
+                HttpServletResponse response = invocation.getArgument(1);
+                response.addHeader(HttpHeaders.SET_COOKIE, tokenCookie(ACCESS_TOKEN, "new-access-token"));
+                response.addHeader(HttpHeaders.SET_COOKIE, tokenCookie(REFRESH_TOKEN, "new-refresh-token"));
+                return null;
+            })
+                .given(authService)
+                .refresh(any(RefreshCommand.class), any(HttpServletResponse.class));
+
             mockMvc.perform(
                     post("/api/v1/auth/refresh")
                         .cookie(
@@ -377,7 +400,9 @@ class AuthControllerTest {
                             new Cookie(REFRESH_TOKEN, "valid-refresh-token")
                         )
                 )
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(cookie().value(ACCESS_TOKEN, "new-access-token"))
+                .andExpect(cookie().value(REFRESH_TOKEN, "new-refresh-token"));
 
             // when & then
             then(authService).should()
@@ -444,8 +469,18 @@ class AuthControllerTest {
     @DisplayName("로그아웃")
     class Logout {
         @Test
-        @DisplayName("로그아웃 요청 시 204 응답을 반환한다")
+        @DisplayName("로그아웃 요청이면 토큰 쿠키를 비우고 204 응답을 반환한다")
         void logout_success_when_access_token_exists() throws Exception {
+            // given
+            willAnswer(invocation -> {
+                HttpServletResponse response = invocation.getArgument(1);
+                response.addHeader(HttpHeaders.SET_COOKIE, deleteCookie(ACCESS_TOKEN));
+                response.addHeader(HttpHeaders.SET_COOKIE, deleteCookie(REFRESH_TOKEN));
+                return null;
+            })
+                .given(authService)
+                .logout(any(LogoutCommand.class), any(HttpServletResponse.class));
+
             // when
             mockMvc.perform(
                     post("/api/v1/auth/logout")
@@ -454,7 +489,9 @@ class AuthControllerTest {
                             new Cookie(REFRESH_TOKEN, "valid-refresh-token")
                         )
                 )
-                .andExpect(status().isNoContent());
+                .andExpect(status().isNoContent())
+                .andExpect(cookie().value(ACCESS_TOKEN, ""))
+                .andExpect(cookie().value(REFRESH_TOKEN, ""));
 
             // then
             then(authService).should()
@@ -462,15 +499,80 @@ class AuthControllerTest {
         }
 
         @Test
-        @DisplayName("엑세스 토큰이 없어도 로그아웃 요청 시 204 응답을 반환한다")
+        @DisplayName("토큰 쿠키가 없어도 로그아웃 요청이면 204 응답을 반환한다")
         void logout_success_when_access_token_is_missing() throws Exception {
+            // given
+            willAnswer(invocation -> {
+                HttpServletResponse response = invocation.getArgument(1);
+                response.addHeader(HttpHeaders.SET_COOKIE, deleteCookie(ACCESS_TOKEN));
+                response.addHeader(HttpHeaders.SET_COOKIE, deleteCookie(REFRESH_TOKEN));
+                return null;
+            })
+                .given(authService)
+                .logout(any(LogoutCommand.class), any(HttpServletResponse.class));
+
             // when
             mockMvc.perform(post("/api/v1/auth/logout"))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isNoContent())
+                .andExpect(cookie().value(ACCESS_TOKEN, ""))
+                .andExpect(cookie().value(REFRESH_TOKEN, ""));
 
             // then
             then(authService).should()
                 .logout(eq(new LogoutCommand(null, null)), any(HttpServletResponse.class));
         }
+
+        @Test
+        @DisplayName("access token 쿠키만 있어도 해당 값이 로그아웃 명령으로 전달된다")
+        void logout_success_when_only_access_token_exists() throws Exception {
+            // when
+            mockMvc.perform(
+                    post("/api/v1/auth/logout")
+                        .cookie(new Cookie(ACCESS_TOKEN, "valid-access-token"))
+                )
+                .andExpect(status().isNoContent());
+
+            // then
+            then(authService).should()
+                .logout(eq(new LogoutCommand("valid-access-token", null)), any(HttpServletResponse.class));
+        }
+
+        @Test
+        @DisplayName("refresh token 쿠키만 있어도 해당 값이 로그아웃 명령으로 전달된다")
+        void logout_success_when_only_refresh_token_exists() throws Exception {
+            // when
+            mockMvc.perform(
+                    post("/api/v1/auth/logout")
+                        .cookie(new Cookie(REFRESH_TOKEN, "valid-refresh-token"))
+                )
+                .andExpect(status().isNoContent());
+
+            // then
+            then(authService).should()
+                .logout(eq(new LogoutCommand(null, "valid-refresh-token")), any(HttpServletResponse.class));
+        }
     }
+
+    private static String tokenCookie(String name, String value) {
+        return ResponseCookie.from(name, value)
+            .httpOnly(true)
+            .secure(false)
+            .path("/")
+            .sameSite("Strict")
+            .maxAge(86_400)
+            .build()
+            .toString();
+    }
+
+    private static String deleteCookie(String name) {
+        return ResponseCookie.from(name, "")
+            .httpOnly(true)
+            .secure(false)
+            .path("/")
+            .sameSite("Strict")
+            .maxAge(0)
+            .build()
+            .toString();
+    }
+
 }

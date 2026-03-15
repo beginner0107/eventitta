@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class UserPrincipalTest {
 
     @Test
-    @DisplayName("role prefix가 없으면 ROLE_ 접두어를 붙여 권한을 만든다")
+    @DisplayName("ROLE_ 접두어가 없는 역할명은 ROLE_ 권한으로 변환한다")
     void constructor_addsRolePrefixWhenMissing() {
         UserPrincipal principal = new UserPrincipal(1L, "user@test.com", "USER");
 
@@ -19,7 +19,7 @@ class UserPrincipalTest {
     }
 
     @Test
-    @DisplayName("이미 ROLE_ prefix가 있으면 그대로 유지한다")
+    @DisplayName("이미 ROLE_ 접두어가 있는 역할명은 그대로 권한으로 사용한다")
     void constructor_keepsExistingRolePrefix() {
         UserPrincipal principal = new UserPrincipal(1L, "admin@test.com", "ROLE_ADMIN");
 

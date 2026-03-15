@@ -48,6 +48,37 @@ class JwtTokenProviderTest {
             .isEqualTo(AuthErrorCode.ACCESS_TOKEN_INVALID);
     }
 
+    @Test
+    @DisplayName("유효한 access token 에서 email 과 role claim 을 추출한다")
+    void getEmailAndRole_returnsClaimsFromValidToken() {
+        JwtTokenProvider provider = new JwtTokenProvider(
+            jwtProperties(),
+            Clock.fixed(Instant.parse("2026-03-15T00:00:00Z"), ZoneOffset.UTC)
+        );
+        String accessToken = provider.createAccessToken(1L, "spring@test.com", "USER");
+
+        assertThat(provider.getEmail(accessToken)).isEqualTo("spring@test.com");
+        assertThat(provider.getRole(accessToken)).isEqualTo("USER");
+    }
+
+    @Test
+    @DisplayName("만료된 access token 을 검증하면 ACCESS_TOKEN_EXPIRED 예외를 던진다")
+    void validateAccessToken_throwsExpiredExceptionForExpiredToken() {
+        Instant issuedAt = Instant.parse("2026-03-15T00:00:00Z");
+        JwtTokenProvider issuer = new JwtTokenProvider(jwtProperties(), Clock.fixed(issuedAt, ZoneOffset.UTC));
+        String expiredAccessToken = issuer.createAccessToken(1L, "spring@test.com", "USER");
+
+        JwtTokenProvider validator = new JwtTokenProvider(
+            jwtProperties(),
+            Clock.fixed(issuedAt.plusSeconds(2), ZoneOffset.UTC)
+        );
+
+        assertThatThrownBy(() -> validator.validateAccessToken(expiredAccessToken))
+            .isInstanceOf(AuthException.class)
+            .extracting("errorCode")
+            .isEqualTo(AuthErrorCode.ACCESS_TOKEN_EXPIRED);
+    }
+
     private JwtProperties jwtProperties() {
         JwtProperties properties = new JwtProperties();
         properties.setSecret("0123456789abcdef0123456789abcdef0123456789abcdef");

@@ -385,6 +385,24 @@ class AuthControllerTest {
         }
 
         @Test
+        @DisplayName("access token 쿠키가 없으면 401 에러 응답을 반환한다")
+        void refresh_fail_when_access_token_is_missing() throws Exception {
+            willThrow(REFRESH_TOKEN_INVALID.defaultException())
+                .given(authService)
+                .refresh(any(RefreshCommand.class), any(HttpServletResponse.class));
+
+            mockMvc.perform(
+                    post("/api/v1/auth/refresh")
+                        .cookie(new Cookie(REFRESH_TOKEN, "valid-refresh-token"))
+                )
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("REFRESH_TOKEN_INVALID"));
+
+            then(authService).should()
+                .refresh(eq(new RefreshCommand(null, "valid-refresh-token")), any(HttpServletResponse.class));
+        }
+
+        @Test
         @DisplayName("리프레시 토큰이 없으면 400 에러 응답을 반환한다")
         void refresh_fail_when_refresh_token_is_missing() throws Exception {
             // given

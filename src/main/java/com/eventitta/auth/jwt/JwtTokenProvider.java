@@ -87,6 +87,8 @@ public class JwtTokenProvider {
             return getUserId(token);
         } catch (ExpiredJwtException e) {
             return Long.parseLong(e.getClaims().getSubject());
+        } catch (JwtException | IllegalArgumentException e) {
+            throw ACCESS_TOKEN_INVALID.defaultException(e);
         }
     }
 

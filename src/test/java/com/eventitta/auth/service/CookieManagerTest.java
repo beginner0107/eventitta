@@ -29,14 +29,12 @@ class CookieManagerTest {
     void setUp() {
         CookieProperties cookieProperties = new CookieProperties();
         cookieProperties.setSecure(true);
-        cookieProperties.setAccessTokenRefreshBufferMs(300_000L);
         cookieManager = new CookieManager(tokenProvider, cookieProperties);
     }
 
     @Test
-    @DisplayName("토큰 쿠키를 저장할 때 운영 보안 속성과 access token refresh 버퍼를 적용한다")
-    void addTokenCookies_appliesSecureFlagAndAccessTokenBuffer() {
-        given(tokenProvider.getAccessTokenValidityMs()).willReturn(3_600_000L);
+    @DisplayName("토큰 쿠키를 저장할 때 access token 쿠키도 refresh token 수명만큼 유지한다")
+    void addTokenCookies_usesRefreshTokenLifetimeForBothCookies() {
         given(tokenProvider.getRefreshTokenValidityMs()).willReturn(86_400_000L);
 
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -47,7 +45,7 @@ class CookieManagerTest {
         assertThat(cookies).hasSize(2);
         assertThat(cookies).anySatisfy(cookie -> {
             assertThat(cookie).contains("access_token=access-token");
-            assertThat(cookie).contains("Max-Age=3900");
+            assertThat(cookie).contains("Max-Age=86400");
             assertThat(cookie).contains("Secure");
             assertThat(cookie).contains("HttpOnly");
             assertThat(cookie).contains("SameSite=Strict");

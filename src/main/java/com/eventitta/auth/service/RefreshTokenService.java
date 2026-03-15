@@ -26,27 +26,19 @@ public class RefreshTokenService {
     private final Clock clock;
 
     public TokenResult refresh(RefreshCommand command) {
-        if (command.accessToken() == null || command.accessToken().isBlank()) {
-            throw ACCESS_TOKEN_INVALID.defaultException();
-        }
         if (command.refreshToken() == null || command.refreshToken().isBlank()) {
             throw REFRESH_TOKEN_MISSING.defaultException();
         }
 
-        Long userId = tokenProvider.getUserIdFromExpiredToken(command.accessToken());
+        LocalDateTime now = LocalDateTime.now(clock);
+        RefreshToken entity = resolveRefreshToken(command);
 
-        RefreshToken entity = rtRepo.findAllByUserId(userId)
-            .stream()
-            .filter(token -> rtEncoder.matches(command.refreshToken(), token.getTokenHash()))
-            .findFirst()
-            .orElseThrow(REFRESH_TOKEN_INVALID::defaultException);
-
-        if (entity.getExpiresAt().isBefore(LocalDateTime.now(clock))) {
+        if (entity.getExpiresAt().isBefore(now)) {
             throw REFRESH_TOKEN_EXPIRED.defaultException();
         }
 
         rtRepo.delete(entity);
-        return tokenService.issueTokens(userId);
+        return tokenService.issueTokens(entity.getUser().getId());
     }
 
     public void invalidateByToken(String accessToken, String refreshToken) {
@@ -57,5 +49,18 @@ public class RefreshTokenService {
             .filter(token -> rtEncoder.matches(refreshToken, token.getTokenHash()))
             .findFirst()
             .ifPresent(rtRepo::delete);
+    }
+
+    private RefreshToken resolveRefreshToken(RefreshCommand command) {
+        if (command.accessToken() == null || command.accessToken().isBlank()) {
+            throw REFRESH_TOKEN_INVALID.defaultException();
+        }
+
+        Long userId = tokenProvider.getUserIdFromExpiredToken(command.accessToken());
+        return rtRepo.findAllByUserId(userId)
+            .stream()
+            .filter(token -> rtEncoder.matches(command.refreshToken(), token.getTokenHash()))
+            .findFirst()
+            .orElseThrow(REFRESH_TOKEN_INVALID::defaultException);
     }
 }

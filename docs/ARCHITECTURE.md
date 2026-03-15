@@ -10,6 +10,7 @@ com.eventitta/
 │   ├── domain/
 │   ├── service/
 │   ├── controller/
+│   ├── mapper/        # Request/Command, Result/Response 변환
 │   ├── jwt/           # JWT 유틸리티, 필터
 │   └── exception/
 │
@@ -52,6 +53,14 @@ com.eventitta/
     ├── exception/     # GlobalExceptionHandler, CustomException
     └── util/          # CookieUtil
 ```
+
+### DTO 및 Mapper 원칙
+
+- DTO는 소유 계층 기준으로 배치한다.
+- 계층 간 변환은 기본적으로 각 도메인 패키지의 `mapper`에서 `MapStruct`로 처리한다.
+- Controller는 Request/Response를 직접 조립하지 않고 mapper를 통해 Service DTO와 연결한다.
+- Service도 단순 DTO 조립보다는 mapper를 사용하고, 도메인 규칙이나 계산 로직만 직접 가진다.
+- 자세한 규칙은 [DTO_GUIDELINES.md](./DTO_GUIDELINES.md)를 따른다.
 
 ## 엔티티 상속 구조
 

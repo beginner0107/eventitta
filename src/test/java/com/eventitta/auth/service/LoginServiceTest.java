@@ -29,7 +29,7 @@ class LoginServiceTest {
     private AuthenticationManager authManager;
 
     @Test
-    @DisplayName("이메일과 비밀번호가 올바르면 사용자 id를 반환한다.")
+    @DisplayName("인증에 성공하면 사용자 id를 반환한다")
     void authenticate_success() {
         // given
         String email = "test@example.com";
@@ -52,7 +52,7 @@ class LoginServiceTest {
     }
 
     @Test
-    @DisplayName("이메일 또는 비밀번호가 올바르지 않으면 INVALID_CREDENTIALS 예외를 던진다.")
+    @DisplayName("인증에 실패하면 INVALID_CREDENTIALS 예외를 던진다")
     void authenticate_fail() {
         // given
         String email = "test@example.com";

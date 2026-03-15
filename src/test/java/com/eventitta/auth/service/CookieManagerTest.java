@@ -33,7 +33,7 @@ class CookieManagerTest {
     }
 
     @Test
-    @DisplayName("토큰 쿠키를 저장할 때 access token 쿠키도 refresh token 수명만큼 유지한다")
+    @DisplayName("토큰 쿠키를 저장하면 access token 쿠키도 refresh token 수명에 맞춰 내려간다")
     void addTokenCookies_usesRefreshTokenLifetimeForBothCookies() {
         given(tokenProvider.getRefreshTokenValidityMs()).willReturn(86_400_000L);
 

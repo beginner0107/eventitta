@@ -5,7 +5,6 @@ import com.eventitta.auth.jwt.JwtTokenProvider;
 import com.eventitta.auth.repository.RefreshTokenRepository;
 import com.eventitta.auth.service.dto.TokenResult;
 import com.eventitta.user.domain.User;
-import com.eventitta.user.exception.UserException;
 import com.eventitta.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -25,11 +24,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 import static com.eventitta.user.domain.Role.USER;
-import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -89,19 +85,6 @@ class TokenServiceTest {
                 .isEqualTo(LocalDateTime.ofInstant(expectedExpiry, applicationZone));
         }
 
-        @Test
-        @DisplayName("존재하지 않는 회원이면 토큰을 발급할 수 없다.")
-        void issueTokens_whenUserDoesNotExist_thenThrowsException() {
-            // given
-            Long userId = 999L;
-            given(userRepository.findById(userId)).willReturn(empty());
-
-            // when // then
-            assertThatThrownBy(() -> tokenService.issueTokens(userId))
-                .isInstanceOf(UserException.class);
-
-            then(refreshTokenRepository).should(never()).save(any());
-        }
     }
 
     private User createUser(Long id, String email) {

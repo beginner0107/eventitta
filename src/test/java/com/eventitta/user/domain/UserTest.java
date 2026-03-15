@@ -1,6 +1,5 @@
 package com.eventitta.user.domain;
 
-import com.eventitta.user.exception.UserErrorCode;
 import com.eventitta.user.exception.UserException;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -11,6 +10,8 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.util.List;
 
+import static com.eventitta.user.exception.UserErrorCode.INSUFFICIENT_POINTS;
+import static com.eventitta.user.exception.UserErrorCode.INVALID_POINTS_AMOUNT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -89,7 +90,7 @@ class UserTest {
         assertThatThrownBy(() -> user.earnPoints(0))
             .isInstanceOf(UserException.class)
             .extracting("errorCode")
-            .isEqualTo(UserErrorCode.INVALID_POINTS_AMOUNT);
+            .isEqualTo(INVALID_POINTS_AMOUNT);
     }
 
     @Test
@@ -110,7 +111,7 @@ class UserTest {
         assertThatThrownBy(() -> user.deductPoints(-1))
             .isInstanceOf(UserException.class)
             .extracting("errorCode")
-            .isEqualTo(UserErrorCode.INVALID_POINTS_AMOUNT);
+            .isEqualTo(INVALID_POINTS_AMOUNT);
     }
 
     @Test
@@ -121,7 +122,7 @@ class UserTest {
         assertThatThrownBy(() -> user.deductPoints(4))
             .isInstanceOf(UserException.class)
             .extracting("errorCode")
-            .isEqualTo(UserErrorCode.INSUFFICIENT_POINTS);
+            .isEqualTo(INSUFFICIENT_POINTS);
     }
 
     private User createUser(int points) {

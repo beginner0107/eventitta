@@ -3,10 +3,7 @@ package com.eventitta.user.service;
 import com.eventitta.IntegrationTestSupport;
 import com.eventitta.auth.domain.RefreshToken;
 import com.eventitta.auth.repository.RefreshTokenRepository;
-import com.eventitta.user.domain.Provider;
-import com.eventitta.user.domain.Role;
 import com.eventitta.user.domain.User;
-import com.eventitta.user.exception.UserErrorCode;
 import com.eventitta.user.exception.UserException;
 import com.eventitta.user.repository.UserRepository;
 import com.eventitta.user.service.dto.ChangePasswordCommand;
@@ -22,6 +19,9 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static com.eventitta.user.domain.Provider.LOCAL;
+import static com.eventitta.user.domain.Role.USER;
+import static com.eventitta.user.exception.UserErrorCode.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -78,7 +78,7 @@ class UserServiceIntegrationTest extends IntegrationTestSupport {
         assertThatThrownBy(() -> userService.getProfile(user.getId()))
             .isInstanceOf(UserException.class)
             .extracting("errorCode")
-            .isEqualTo(UserErrorCode.NOT_FOUND_USER_ID);
+            .isEqualTo(NOT_FOUND_USER_ID);
     }
 
     @Test
@@ -177,7 +177,7 @@ class UserServiceIntegrationTest extends IntegrationTestSupport {
         ))
             .isInstanceOf(UserException.class)
             .extracting("errorCode")
-            .isEqualTo(UserErrorCode.CONFLICTED_NICKNAME);
+            .isEqualTo(CONFLICTED_NICKNAME);
     }
 
     @Test
@@ -223,7 +223,7 @@ class UserServiceIntegrationTest extends IntegrationTestSupport {
         assertThatThrownBy(() -> userService.deleteUser(9999L))
             .isInstanceOf(UserException.class)
             .extracting("errorCode")
-            .isEqualTo(UserErrorCode.NOT_FOUND_USER_ID);
+            .isEqualTo(NOT_FOUND_USER_ID);
     }
 
     @Test
@@ -264,7 +264,7 @@ class UserServiceIntegrationTest extends IntegrationTestSupport {
         ))
             .isInstanceOf(UserException.class)
             .extracting("errorCode")
-            .isEqualTo(UserErrorCode.INVALID_CURRENT_PASSWORD);
+            .isEqualTo(INVALID_CURRENT_PASSWORD);
     }
 
     @Test
@@ -277,7 +277,7 @@ class UserServiceIntegrationTest extends IntegrationTestSupport {
         ))
             .isInstanceOf(UserException.class)
             .extracting("errorCode")
-            .isEqualTo(UserErrorCode.NOT_FOUND_USER_ID);
+            .isEqualTo(NOT_FOUND_USER_ID);
     }
 
     private User createUser(String email, String nickname, String rawPassword, int points) {
@@ -286,8 +286,8 @@ class UserServiceIntegrationTest extends IntegrationTestSupport {
             .password(passwordEncoder.encode(rawPassword))
             .nickname(nickname)
             .points(points)
-            .role(Role.USER)
-            .provider(Provider.LOCAL)
+            .role(USER)
+            .provider(LOCAL)
             .deleted(false)
             .build();
     }

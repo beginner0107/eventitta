@@ -29,15 +29,14 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.math.BigDecimal;
 import java.util.List;
 
+import static com.eventitta.user.exception.UserErrorCode.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.doThrow;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -105,13 +104,13 @@ class UserControllerTest {
     @DisplayName("존재하지 않는 사용자의 프로필 조회는 404를 반환한다")
     void getMyProfile_userNotFound_returnsNotFound() throws Exception {
         // given
-        given(userService.getProfile(42L)).willThrow(com.eventitta.user.exception.UserErrorCode.NOT_FOUND_USER_ID.defaultException());
+        given(userService.getProfile(42L)).willThrow(NOT_FOUND_USER_ID.defaultException());
 
         // when & then
         mockMvc.perform(get("/api/v1/users/me"))
             .andExpect(status().isNotFound())
-            .andExpect(jsonPath("$.error").value(com.eventitta.user.exception.UserErrorCode.NOT_FOUND_USER_ID.name()))
-            .andExpect(jsonPath("$.message").value(com.eventitta.user.exception.UserErrorCode.NOT_FOUND_USER_ID.defaultMessage()));
+            .andExpect(jsonPath("$.error").value(NOT_FOUND_USER_ID.name()))
+            .andExpect(jsonPath("$.message").value(NOT_FOUND_USER_ID.defaultMessage()));
     }
 
     @Test
@@ -185,7 +184,7 @@ class UserControllerTest {
             null,
             null
         );
-        doThrow(com.eventitta.user.exception.UserErrorCode.CONFLICTED_NICKNAME.defaultException())
+        doThrow(CONFLICTED_NICKNAME.defaultException())
             .when(userService)
             .updateProfile(eq(42L), org.mockito.ArgumentMatchers.any(UpdateProfileCommand.class));
 
@@ -194,8 +193,8 @@ class UserControllerTest {
                 .contentType(APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isConflict())
-            .andExpect(jsonPath("$.error").value(com.eventitta.user.exception.UserErrorCode.CONFLICTED_NICKNAME.name()))
-            .andExpect(jsonPath("$.message").value(com.eventitta.user.exception.UserErrorCode.CONFLICTED_NICKNAME.defaultMessage()));
+            .andExpect(jsonPath("$.error").value(CONFLICTED_NICKNAME.name()))
+            .andExpect(jsonPath("$.message").value(CONFLICTED_NICKNAME.defaultMessage()));
     }
 
     @Test
@@ -214,15 +213,15 @@ class UserControllerTest {
     @DisplayName("존재하지 않는 사용자의 회원 탈퇴는 404를 반환한다")
     void deleteMe_userNotFound_returnsNotFound() throws Exception {
         // given
-        doThrow(com.eventitta.user.exception.UserErrorCode.NOT_FOUND_USER_ID.defaultException())
+        doThrow(NOT_FOUND_USER_ID.defaultException())
             .when(userService)
             .deleteUser(42L);
 
         // when & then
         mockMvc.perform(delete("/api/v1/users/me"))
             .andExpect(status().isNotFound())
-            .andExpect(jsonPath("$.error").value(com.eventitta.user.exception.UserErrorCode.NOT_FOUND_USER_ID.name()))
-            .andExpect(jsonPath("$.message").value(com.eventitta.user.exception.UserErrorCode.NOT_FOUND_USER_ID.defaultMessage()));
+            .andExpect(jsonPath("$.error").value(NOT_FOUND_USER_ID.name()))
+            .andExpect(jsonPath("$.message").value(NOT_FOUND_USER_ID.defaultMessage()));
     }
 
     @Test
@@ -267,7 +266,7 @@ class UserControllerTest {
     void changePassword_wrongCurrentPassword_returnsBadRequest() throws Exception {
         // given
         ChangePasswordRequest request = new ChangePasswordRequest("oldPw123!", "NewPw123!");
-        doThrow(com.eventitta.user.exception.UserErrorCode.INVALID_CURRENT_PASSWORD.defaultException())
+        doThrow(INVALID_CURRENT_PASSWORD.defaultException())
             .when(userService)
             .changePassword(eq(42L), org.mockito.ArgumentMatchers.any(ChangePasswordCommand.class));
 
@@ -276,8 +275,8 @@ class UserControllerTest {
                 .contentType(APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.error").value(com.eventitta.user.exception.UserErrorCode.INVALID_CURRENT_PASSWORD.name()))
-            .andExpect(jsonPath("$.message").value(com.eventitta.user.exception.UserErrorCode.INVALID_CURRENT_PASSWORD.defaultMessage()));
+            .andExpect(jsonPath("$.error").value(INVALID_CURRENT_PASSWORD.name()))
+            .andExpect(jsonPath("$.message").value(INVALID_CURRENT_PASSWORD.defaultMessage()));
     }
 
     @Test

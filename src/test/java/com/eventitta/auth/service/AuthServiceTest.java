@@ -1,6 +1,8 @@
 package com.eventitta.auth.service;
 
 import com.eventitta.auth.exception.AuthException;
+import com.eventitta.auth.mapper.AuthMapper;
+import com.eventitta.auth.mapper.AuthMapperImpl;
 import com.eventitta.auth.service.dto.*;
 import com.eventitta.user.domain.User;
 import com.eventitta.user.exception.UserException;
@@ -14,6 +16,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.stream.Stream;
@@ -44,6 +47,8 @@ class AuthServiceTest {
     private HttpServletResponse response;
     @Mock
     private CookieManager cookieManager;
+    @Spy
+    private AuthMapper authMapper = new AuthMapperImpl();
 
     @Nested
     @DisplayName("회원가입")

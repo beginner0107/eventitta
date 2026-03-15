@@ -1,6 +1,4 @@
 package com.eventitta.auth.controller.request;
-
-import com.eventitta.auth.service.dto.SignUpCommand;
 import com.eventitta.common.constants.RegexPattern;
 import com.eventitta.common.constants.ValidationMessage;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -23,9 +21,5 @@ public record SignUpRequest(
     @NotBlank(message = ValidationMessage.NICKNAME)
     @Pattern(regexp = RegexPattern.NICKNAME, message = ValidationMessage.NICKNAME)
     String nickname
-
 ) {
-    public SignUpCommand toCommand() {
-        return new SignUpCommand(email, password, nickname);
-    }
 }

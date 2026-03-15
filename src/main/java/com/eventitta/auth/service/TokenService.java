@@ -2,6 +2,7 @@ package com.eventitta.auth.service;
 
 import com.eventitta.auth.domain.RefreshToken;
 import com.eventitta.auth.jwt.JwtTokenProvider;
+import com.eventitta.auth.mapper.AuthMapper;
 import com.eventitta.auth.repository.RefreshTokenRepository;
 import com.eventitta.auth.service.dto.TokenResult;
 import com.eventitta.user.domain.User;
@@ -26,6 +27,7 @@ public class TokenService {
     private final Pbkdf2PasswordEncoder pbkdf2PasswordEncoder;
     private final UserRepository userRepository;
     private final Clock clock;
+    private final AuthMapper authMapper;
 
     public TokenResult issueTokens(Long userId) {
         User user = userRepository.findById(userId)
@@ -34,7 +36,7 @@ public class TokenService {
         String at = tokenProvider.createAccessToken(userId, user.getEmail(), user.getRole().name());
         String rt = tokenProvider.createRefreshToken();
         persistRefreshToken(user, rt);
-        return new TokenResult(at, rt);
+        return authMapper.toTokenResult(at, rt);
     }
 
     private void persistRefreshToken(User user, String rawRt) {

@@ -2,6 +2,7 @@ package com.eventitta.auth.controller;
 
 import com.eventitta.auth.controller.request.SignInRequest;
 import com.eventitta.auth.controller.request.SignUpRequest;
+import com.eventitta.auth.mapper.AuthMapperImpl;
 import com.eventitta.auth.jwt.service.UserInfoService;
 import com.eventitta.auth.service.AuthService;
 import com.eventitta.auth.service.dto.LogoutCommand;
@@ -24,6 +25,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static com.eventitta.auth.constants.AuthConstants.ACCESS_TOKEN;
@@ -40,6 +42,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(AuthController.class)
 @AutoConfigureMockMvc(addFilters = false)
+@Import(AuthMapperImpl.class)
 class AuthControllerTest {
 
     @Autowired
@@ -72,9 +75,10 @@ class AuthControllerTest {
             String nickname = "test123";
             String password = "password1234!@@";
             SignUpRequest signupReq = new SignUpRequest(email, password, nickname);
+            SignUpCommand signUpCommand = new SignUpCommand(email, password, nickname);
 
             SignUpResult signUpResult = new SignUpResult(email, nickname);
-            given(authService.signUp(signupReq.toCommand())).willReturn(signUpResult);
+            given(authService.signUp(signUpCommand)).willReturn(signUpResult);
 
             // when
             var result = mockMvc.perform(
@@ -95,7 +99,7 @@ class AuthControllerTest {
         void signUp_fail_when_duplicate_resource_detected_at_database() throws Exception {
             // given
             SignUpRequest signupReq = new SignUpRequest("test@gmail.com", "password1234!@@", "test123");
-            given(authService.signUp(signupReq.toCommand()))
+            given(authService.signUp(new SignUpCommand("test@gmail.com", "password1234!@@", "test123")))
                 .willThrow(CONFLICTED_EMAIL.defaultException());
 
             // when & then
@@ -115,7 +119,7 @@ class AuthControllerTest {
             // given
             SignUpRequest signupReq = new SignUpRequest("test@gmail.com", "password1234!@@", "test123");
             given(userInfoService.getCurrentUserInfo()).willThrow(new IllegalStateException("user-info-failed"));
-            given(authService.signUp(signupReq.toCommand()))
+            given(authService.signUp(new SignUpCommand("test@gmail.com", "password1234!@@", "test123")))
                 .willThrow(new DataIntegrityViolationException("duplicate key"));
 
             // when & then
@@ -252,7 +256,7 @@ class AuthControllerTest {
         void login_success() throws Exception {
             // given
             SignInRequest request = new SignInRequest("test@gmail.com", "password1234!@@");
-            SignInCommand command = request.toCommand();
+            SignInCommand command = new SignInCommand("test@gmail.com", "password1234!@@");
             willAnswer(invocation -> {
                 HttpServletResponse response = invocation.getArgument(1);
                 response.addHeader(HttpHeaders.SET_COOKIE, tokenCookie(ACCESS_TOKEN, "access-token"));

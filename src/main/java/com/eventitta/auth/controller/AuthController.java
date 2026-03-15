@@ -3,6 +3,7 @@ package com.eventitta.auth.controller;
 import com.eventitta.auth.controller.request.SignInRequest;
 import com.eventitta.auth.controller.request.SignUpRequest;
 import com.eventitta.auth.controller.response.SignUpResponse;
+import com.eventitta.auth.mapper.AuthMapper;
 import com.eventitta.auth.service.AuthService;
 import com.eventitta.auth.service.dto.LogoutCommand;
 import com.eventitta.auth.service.dto.RefreshCommand;
@@ -27,12 +28,13 @@ import static com.eventitta.auth.constants.AuthConstants.REFRESH_TOKEN;
 @Tag(name = "인증 API", description = "회원가입, 로그인 등의 인증 관련 API")
 public class AuthController {
     private final AuthService authService;
+    private final AuthMapper authMapper;
 
     @Operation(summary = "회원가입", description = "회원 정보를 받아 회원가입을 수행합니다.")
     @PostMapping("/signup")
     public ResponseEntity<SignUpResponse> signUp(@Valid @RequestBody SignUpRequest request) {
-        var result = authService.signUp(request.toCommand());
-        return ResponseEntity.ok(SignUpResponse.of(result));
+        var result = authService.signUp(authMapper.toSignUpCommand(request));
+        return ResponseEntity.ok(authMapper.toSignUpResponse(result));
     }
 
     @Operation(summary = "로그인", description = "회원 정보를 받아 로그인을 수행합니다.")
@@ -41,7 +43,7 @@ public class AuthController {
     })
     @PostMapping("/login")
     public ResponseEntity<Void> login(@Valid @RequestBody SignInRequest request, HttpServletResponse response) {
-        authService.login(request.toCommand(), response);
+        authService.login(authMapper.toSignInCommand(request), response);
         return ResponseEntity.ok().build();
     }
 
@@ -55,7 +57,8 @@ public class AuthController {
         @CookieValue(name = REFRESH_TOKEN, required = false) String refreshToken,
         HttpServletResponse response
     ) {
-        authService.refresh(new RefreshCommand(accessToken, refreshToken), response);
+        RefreshCommand command = authMapper.toRefreshCommand(accessToken, refreshToken);
+        authService.refresh(command, response);
         return ResponseEntity.ok().build();
     }
 
@@ -71,7 +74,8 @@ public class AuthController {
         @CookieValue(name = REFRESH_TOKEN, required = false) String refreshToken,
         HttpServletResponse response
     ) {
-        authService.logout(new LogoutCommand(accessToken, refreshToken), response);
+        LogoutCommand command = authMapper.toLogoutCommand(accessToken, refreshToken);
+        authService.logout(command, response);
         return ResponseEntity.noContent().build();
     }
 }

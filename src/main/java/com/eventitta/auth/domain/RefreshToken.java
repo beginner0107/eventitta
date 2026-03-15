@@ -36,9 +36,4 @@ public class RefreshToken extends BaseTimeEntity {
         this.tokenHash = tokenHash;
         this.expiresAt = expiresAt;
     }
-
-    public void updateToken(String newHash, LocalDateTime newExpiresAt) {
-        this.tokenHash = newHash;
-        this.expiresAt = newExpiresAt;
-    }
 }

@@ -64,15 +64,6 @@ public class JwtTokenProvider {
         return clock.instant().plusMillis(refreshTokenValidityMs);
     }
 
-    public boolean validateToken(String token) {
-        try {
-            parser().parseClaimsJws(token);
-            return true;
-        } catch (JwtException | IllegalArgumentException e) {
-            return false;
-        }
-    }
-
     public Long getUserId(String token) {
         try {
             Claims claims = parser().parseClaimsJws(token).getBody();
@@ -92,10 +83,9 @@ public class JwtTokenProvider {
         }
     }
 
-    public boolean validateAccessToken(String token) {
+    public void validateAccessToken(String token) {
         try {
             parser().parseClaimsJws(token);
-            return true;
         } catch (ExpiredJwtException e) {
             throw ACCESS_TOKEN_EXPIRED.defaultException(e);
         } catch (JwtException | IllegalArgumentException e) {

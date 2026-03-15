@@ -1,6 +1,7 @@
 package com.eventitta.auth.service;
 
 import com.eventitta.auth.exception.AuthException;
+import com.eventitta.auth.mapper.AuthMapper;
 import com.eventitta.auth.service.dto.*;
 import com.eventitta.user.domain.User;
 import jakarta.servlet.http.HttpServletResponse;
@@ -23,6 +24,7 @@ public class AuthService {
     private final TokenService tokenService;
     private final RefreshTokenService refreshService;
     private final CookieManager cookieManager;
+    private final AuthMapper authMapper;
 
     public SignUpResult signUp(SignUpCommand signUpCommand) {
         log.info("[회원가입 시작] email={}, nickname={}", signUpCommand.email(), signUpCommand.nickname());
@@ -30,7 +32,7 @@ public class AuthService {
         User user = signUpService.register(signUpCommand);
 
         log.info("[회원가입 완료] userId={}, email={}", user.getId(), user.getEmail());
-        return SignUpResult.of(user);
+        return authMapper.toSignUpResult(user);
     }
 
     public void login(SignInCommand command, HttpServletResponse response) {

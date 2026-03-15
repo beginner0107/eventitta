@@ -1,7 +1,6 @@
 package com.eventitta.auth.service;
 
 import com.eventitta.auth.exception.AuthException;
-import com.eventitta.auth.jwt.JwtTokenProvider;
 import com.eventitta.auth.service.dto.*;
 import com.eventitta.user.domain.User;
 import jakarta.servlet.http.HttpServletResponse;
@@ -23,7 +22,6 @@ public class AuthService {
     private final SignUpService signUpService;
     private final TokenService tokenService;
     private final RefreshTokenService refreshService;
-    private final JwtTokenProvider jwtTokenProvider;
     private final CookieManager cookieManager;
 
     public SignUpResult signUp(SignUpCommand signUpCommand) {

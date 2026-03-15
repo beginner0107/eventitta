@@ -1,7 +1,6 @@
 package com.eventitta.auth.service;
 
 import com.eventitta.auth.exception.AuthException;
-import com.eventitta.auth.jwt.JwtTokenProvider;
 import com.eventitta.auth.service.dto.*;
 import com.eventitta.user.domain.User;
 import com.eventitta.user.exception.UserException;
@@ -41,8 +40,6 @@ class AuthServiceTest {
     private TokenService tokenService;
     @Mock
     private RefreshTokenService refreshService;
-    @Mock
-    private JwtTokenProvider jwtTokenProvider;
     @Mock
     private HttpServletResponse response;
     @Mock

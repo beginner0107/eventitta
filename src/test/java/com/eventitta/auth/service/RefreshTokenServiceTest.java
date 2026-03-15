@@ -16,6 +16,7 @@ import com.eventitta.auth.jwt.JwtTokenProvider;
 import com.eventitta.auth.repository.RefreshTokenRepository;
 import com.eventitta.auth.service.dto.RefreshCommand;
 import com.eventitta.auth.service.dto.TokenResult;
+import com.eventitta.user.domain.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -50,14 +51,20 @@ class RefreshTokenServiceTest {
         private static final LocalDateTime FIXED_NOW = LocalDateTime.ofInstant(FIXED_INSTANT, FIXED_ZONE);
 
         @Test
-        @DisplayName("액세스 토큰이 비어 있으면 토큰을 재발급할 수 없다.")
-        void refresh_whenAccessTokenIsBlank_thenThrowsException() {
+        @DisplayName("액세스 토큰이 null 이면 토큰을 재발급할 수 없다.")
+        void refresh_whenAccessTokenIsNull_thenThrowsException() {
             // given
-            RefreshCommand command = new RefreshCommand(" ", "refresh-token");
+            RefreshCommand command = new RefreshCommand(null, "refresh-token");
 
             // when // then
             assertThatThrownBy(() -> refreshTokenService.refresh(command))
-                .isInstanceOf(AuthException.class);
+                .isInstanceOf(AuthException.class)
+                .extracting("errorCode")
+                .isEqualTo(com.eventitta.auth.exception.AuthErrorCode.ACCESS_TOKEN_INVALID);
+
+            then(tokenProvider).shouldHaveNoInteractions();
+            then(rtRepo).shouldHaveNoInteractions();
+            then(tokenService).shouldHaveNoInteractions();
         }
 
         @Test
@@ -68,7 +75,9 @@ class RefreshTokenServiceTest {
 
             // when // then
             assertThatThrownBy(() -> refreshTokenService.refresh(command))
-                .isInstanceOf(AuthException.class);
+                .isInstanceOf(AuthException.class)
+                .extracting("errorCode")
+                .isEqualTo(com.eventitta.auth.exception.AuthErrorCode.REFRESH_TOKEN_MISSING);
         }
 
         @Test
@@ -90,6 +99,22 @@ class RefreshTokenServiceTest {
 
             then(rtRepo).should(never()).delete(tokenEntity);
             then(tokenService).should(never()).issueTokens(anyLong());
+        }
+
+        @Test
+        @DisplayName("액세스 토큰이 손상되면 토큰을 재발급할 수 없다.")
+        void refresh_whenAccessTokenIsInvalid_thenThrowsException() {
+            // given
+            RefreshCommand command = new RefreshCommand("malformed-access-token", "refresh-token");
+            given(tokenProvider.getUserIdFromExpiredToken(command.accessToken()))
+                .willThrow(com.eventitta.auth.exception.AuthErrorCode.ACCESS_TOKEN_INVALID.defaultException());
+
+            // when // then
+            assertThatThrownBy(() -> refreshTokenService.refresh(command))
+                .isInstanceOf(AuthException.class);
+
+            then(rtRepo).shouldHaveNoInteractions();
+            then(tokenService).shouldHaveNoInteractions();
         }
 
         @Test
@@ -123,6 +148,7 @@ class RefreshTokenServiceTest {
             Long userId = 1L;
             RefreshCommand command = new RefreshCommand("expired-access-token", "refresh-token");
             RefreshToken tokenEntity = mock(RefreshToken.class);
+            User user = mock(User.class);
             TokenResult reissuedTokens = new TokenResult("new-access-token", "new-refresh-token");
             given(clock.instant()).willReturn(FIXED_INSTANT);
             given(clock.getZone()).willReturn(FIXED_ZONE);
@@ -132,6 +158,8 @@ class RefreshTokenServiceTest {
             given(tokenEntity.getTokenHash()).willReturn("stored-hash");
             given(rtEncoder.matches(command.refreshToken(), "stored-hash")).willReturn(true);
             given(tokenEntity.getExpiresAt()).willReturn(FIXED_NOW.plusMinutes(30));
+            given(tokenEntity.getUser()).willReturn(user);
+            given(user.getId()).willReturn(userId);
             given(tokenService.issueTokens(userId)).willReturn(reissuedTokens);
 
             // when
@@ -150,6 +178,7 @@ class RefreshTokenServiceTest {
             Long userId = 1L;
             RefreshCommand command = new RefreshCommand("expired-access-token", "refresh-token");
             RefreshToken tokenEntity = mock(RefreshToken.class);
+            User user = mock(User.class);
             TokenResult reissuedTokens = new TokenResult("new-access-token", "new-refresh-token");
             given(clock.instant()).willReturn(FIXED_INSTANT);
             given(clock.getZone()).willReturn(FIXED_ZONE);
@@ -159,6 +188,8 @@ class RefreshTokenServiceTest {
             given(tokenEntity.getTokenHash()).willReturn("stored-hash");
             given(rtEncoder.matches(command.refreshToken(), "stored-hash")).willReturn(true);
             given(tokenEntity.getExpiresAt()).willReturn(FIXED_NOW);
+            given(tokenEntity.getUser()).willReturn(user);
+            given(user.getId()).willReturn(userId);
             given(tokenService.issueTokens(userId)).willReturn(reissuedTokens);
 
             // when

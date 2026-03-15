@@ -51,8 +51,7 @@ public class CookieManager {
     }
 
     private ResponseCookie createAccessTokenCookie(String value) {
-        long validityMs = tokenProvider.getAccessTokenValidityMs() + cookieProperties.getAccessTokenRefreshBufferMs();
-        return createCookie(ACCESS_TOKEN, value, validityMs);
+        return createCookie(ACCESS_TOKEN, value, tokenProvider.getRefreshTokenValidityMs());
     }
 
     private ResponseCookie createRefreshTokenCookie(String value) {

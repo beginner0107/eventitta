@@ -35,9 +35,7 @@ Controller는 HTTP 계약을 다루는 어댑터다.
 권장 방식:
 
 - `@WebMvcTest` 기반으로 테스트한다.
-- 공통 구성이 필요하면 [
-  `ControllerTestSupport`](/Users/seungjooahn/dev/backend/eventitta/src/test/java/com/eventitta/ControllerTestSupport.java)
-  를 사용한다.
+- 공통 구성이 필요하면 [`ControllerTestSupport`](../src/test/java/com/eventitta/ControllerTestSupport.java)를 사용한다.
 - 비즈니스 로직은 Service mock에 위임하고, Controller 자체는 HTTP 계약만 검증한다.
 - 인증/인가 필터 자체가 테스트 대상이 아니라면 `addFilters = false`를 유지한다.
 - 인증/인가 시나리오가 핵심인 경우에만 필터 포함 테스트를 별도로 둔다.
@@ -66,9 +64,7 @@ Service는 유스케이스를 수행하는 중심 계층이다.
 권장 방식:
 
 - 기본적으로 `@SpringBootTest` 기반 통합 테스트를 사용한다.
-- 공통 설정이 필요하면 [
-  `IntegrationTestSupport`](/Users/seungjooahn/dev/backend/eventitta/src/test/java/com/eventitta/IntegrationTestSupport.java)
-  를 사용한다.
+- 공통 설정이 필요하면 [`IntegrationTestSupport`](../src/test/java/com/eventitta/IntegrationTestSupport.java)를 사용한다.
 - DB, 트랜잭션, 엔티티 매핑, 스프링 빈 wiring은 실제 구성으로 검증한다.
 - 외부 시스템만 mock 또는 fake로 대체한다.
 - 다만 테스트 비용을 감안해, Service 유스케이스 검증에 필요한 범위만 실제로 띄운다.
@@ -130,8 +126,7 @@ Repository 테스트를 굳이 쓰지 않아도 되는 경우:
 
 현재 레포의 예시:
 
-- [
-  `PostRepositoryIntegrationTest`](/Users/seungjooahn/dev/backend/eventitta/src/test/java/com/eventitta/post/repository/PostRepositoryIntegrationTest.java)
+- [`PostRepositoryIntegrationTest`](../src/test/java/com/eventitta/post/repository/PostRepositoryIntegrationTest.java)
 
 이 예시는 이름은 `IntegrationTest`지만 역할상 Repository 슬라이스 테스트에 가깝다.
 
@@ -140,8 +135,7 @@ Repository 테스트를 굳이 쓰지 않아도 되는 경우:
 ### Controller
 
 - 애노테이션: `@WebMvcTest`
-- 기본 베이스: [
-  `ControllerTestSupport`](/Users/seungjooahn/dev/backend/eventitta/src/test/java/com/eventitta/ControllerTestSupport.java)
+- 기본 베이스: [`ControllerTestSupport`](../src/test/java/com/eventitta/ControllerTestSupport.java)
 - 대역: Service mock
 - 핵심 검증: 요청/응답 계약, validation, 예외 응답
 - 파일명: `*ControllerTest`
@@ -149,8 +143,7 @@ Repository 테스트를 굳이 쓰지 않아도 되는 경우:
 ### Service
 
 - 애노테이션: `@SpringBootTest`
-- 기본 베이스: [
-  `IntegrationTestSupport`](/Users/seungjooahn/dev/backend/eventitta/src/test/java/com/eventitta/IntegrationTestSupport.java)
+- 기본 베이스: [`IntegrationTestSupport`](../src/test/java/com/eventitta/IntegrationTestSupport.java)
 - 대역: 외부 시스템만 mock 또는 fake
 - 핵심 검증: 유스케이스 완결성, 상태 변화, 트랜잭션
 - 파일명: `*ServiceIntegrationTest`

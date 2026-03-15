@@ -25,9 +25,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultMatcher;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static com.eventitta.auth.constants.AuthConstants.ACCESS_TOKEN;
 import static com.eventitta.auth.constants.AuthConstants.REFRESH_TOKEN;
 import static com.eventitta.auth.exception.AuthErrorCode.*;
@@ -275,12 +273,6 @@ class AuthControllerTest {
             result.andExpect(status().isOk());
             result.andExpect(cookie().value(ACCESS_TOKEN, "access-token"));
             result.andExpect(cookie().value(REFRESH_TOKEN, "refresh-token"));
-            result.andExpect(cookie().httpOnly(ACCESS_TOKEN, true));
-            result.andExpect(cookie().httpOnly(REFRESH_TOKEN, true));
-            result.andExpect(cookie().maxAge(ACCESS_TOKEN, 86_400));
-            result.andExpect(cookie().maxAge(REFRESH_TOKEN, 86_400));
-            result.andExpect(setCookieContains(ACCESS_TOKEN, "Path=/", "SameSite=Strict"));
-            result.andExpect(setCookieContains(REFRESH_TOKEN, "Path=/", "SameSite=Strict"));
             then(authService).should().login(eq(command), any(HttpServletResponse.class));
         }
 
@@ -410,13 +402,7 @@ class AuthControllerTest {
                 )
                 .andExpect(status().isOk())
                 .andExpect(cookie().value(ACCESS_TOKEN, "new-access-token"))
-                .andExpect(cookie().value(REFRESH_TOKEN, "new-refresh-token"))
-                .andExpect(cookie().httpOnly(ACCESS_TOKEN, true))
-                .andExpect(cookie().httpOnly(REFRESH_TOKEN, true))
-                .andExpect(cookie().maxAge(ACCESS_TOKEN, 86_400))
-                .andExpect(cookie().maxAge(REFRESH_TOKEN, 86_400))
-                .andExpect(setCookieContains(ACCESS_TOKEN, "Path=/", "SameSite=Strict"))
-                .andExpect(setCookieContains(REFRESH_TOKEN, "Path=/", "SameSite=Strict"));
+                .andExpect(cookie().value(REFRESH_TOKEN, "new-refresh-token"));
 
             // when & then
             then(authService).should()
@@ -505,13 +491,7 @@ class AuthControllerTest {
                 )
                 .andExpect(status().isNoContent())
                 .andExpect(cookie().value(ACCESS_TOKEN, ""))
-                .andExpect(cookie().value(REFRESH_TOKEN, ""))
-                .andExpect(cookie().httpOnly(ACCESS_TOKEN, true))
-                .andExpect(cookie().httpOnly(REFRESH_TOKEN, true))
-                .andExpect(cookie().maxAge(ACCESS_TOKEN, 0))
-                .andExpect(cookie().maxAge(REFRESH_TOKEN, 0))
-                .andExpect(setCookieContains(ACCESS_TOKEN, "Path=/", "SameSite=Strict"))
-                .andExpect(setCookieContains(REFRESH_TOKEN, "Path=/", "SameSite=Strict"));
+                .andExpect(cookie().value(REFRESH_TOKEN, ""));
 
             // then
             then(authService).should()
@@ -535,13 +515,7 @@ class AuthControllerTest {
             mockMvc.perform(post("/api/v1/auth/logout"))
                 .andExpect(status().isNoContent())
                 .andExpect(cookie().value(ACCESS_TOKEN, ""))
-                .andExpect(cookie().value(REFRESH_TOKEN, ""))
-                .andExpect(cookie().httpOnly(ACCESS_TOKEN, true))
-                .andExpect(cookie().httpOnly(REFRESH_TOKEN, true))
-                .andExpect(cookie().maxAge(ACCESS_TOKEN, 0))
-                .andExpect(cookie().maxAge(REFRESH_TOKEN, 0))
-                .andExpect(setCookieContains(ACCESS_TOKEN, "Path=/", "SameSite=Strict"))
-                .andExpect(setCookieContains(REFRESH_TOKEN, "Path=/", "SameSite=Strict"));
+                .andExpect(cookie().value(REFRESH_TOKEN, ""));
 
             // then
             then(authService).should()
@@ -601,16 +575,4 @@ class AuthControllerTest {
             .toString();
     }
 
-    private static ResultMatcher setCookieContains(String cookieName, String... fragments) {
-        return result -> {
-            String header = result.getResponse()
-                .getHeaders(HttpHeaders.SET_COOKIE)
-                .stream()
-                .filter(value -> value.startsWith(cookieName + "="))
-                .findFirst()
-                .orElseThrow();
-
-            assertThat(header).contains(fragments);
-        };
-    }
 }

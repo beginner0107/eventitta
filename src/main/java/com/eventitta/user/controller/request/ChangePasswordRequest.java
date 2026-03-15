@@ -1,4 +1,4 @@
-package com.eventitta.user.dto;
+package com.eventitta.user.controller.request;
 
 import com.eventitta.common.constants.RegexPattern;
 import com.eventitta.common.constants.ValidationMessage;

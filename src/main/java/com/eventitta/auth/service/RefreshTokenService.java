@@ -30,15 +30,16 @@ public class RefreshTokenService {
             throw REFRESH_TOKEN_MISSING.defaultException();
         }
 
-        LocalDateTime now = LocalDateTime.now(clock);
         RefreshToken entity = resolveRefreshToken(command);
+        LocalDateTime now = LocalDateTime.now(clock);
 
         if (entity.getExpiresAt().isBefore(now)) {
             throw REFRESH_TOKEN_EXPIRED.defaultException();
         }
 
+        Long userId = entity.getUser().getId();
         rtRepo.delete(entity);
-        return tokenService.issueTokens(entity.getUser().getId());
+        return tokenService.issueTokens(userId);
     }
 
     public void invalidateByToken(String accessToken, String refreshToken) {
@@ -53,7 +54,7 @@ public class RefreshTokenService {
 
     private RefreshToken resolveRefreshToken(RefreshCommand command) {
         if (command.accessToken() == null || command.accessToken().isBlank()) {
-            throw REFRESH_TOKEN_INVALID.defaultException();
+            throw ACCESS_TOKEN_INVALID.defaultException();
         }
 
         Long userId = tokenProvider.getUserIdFromExpiredToken(command.accessToken());

@@ -55,12 +55,12 @@ class RefreshTokenServiceTest {
         void refresh_whenAccessTokenIsNull_thenThrowsException() {
             // given
             RefreshCommand command = new RefreshCommand(null, "refresh-token");
-            given(clock.instant()).willReturn(FIXED_INSTANT);
-            given(clock.getZone()).willReturn(FIXED_ZONE);
 
             // when // then
             assertThatThrownBy(() -> refreshTokenService.refresh(command))
-                .isInstanceOf(AuthException.class);
+                .isInstanceOf(AuthException.class)
+                .extracting("errorCode")
+                .isEqualTo(com.eventitta.auth.exception.AuthErrorCode.ACCESS_TOKEN_INVALID);
 
             then(tokenProvider).shouldHaveNoInteractions();
             then(rtRepo).shouldHaveNoInteractions();
@@ -75,7 +75,9 @@ class RefreshTokenServiceTest {
 
             // when // then
             assertThatThrownBy(() -> refreshTokenService.refresh(command))
-                .isInstanceOf(AuthException.class);
+                .isInstanceOf(AuthException.class)
+                .extracting("errorCode")
+                .isEqualTo(com.eventitta.auth.exception.AuthErrorCode.REFRESH_TOKEN_MISSING);
         }
 
         @Test
@@ -85,8 +87,6 @@ class RefreshTokenServiceTest {
             Long userId = 1L;
             RefreshCommand command = new RefreshCommand("expired-access-token", "refresh-token");
             RefreshToken tokenEntity = mock(RefreshToken.class);
-            given(clock.instant()).willReturn(FIXED_INSTANT);
-            given(clock.getZone()).willReturn(FIXED_ZONE);
 
             given(tokenProvider.getUserIdFromExpiredToken(command.accessToken())).willReturn(userId);
             given(rtRepo.findAllByUserId(userId)).willReturn(List.of(tokenEntity));
@@ -106,8 +106,6 @@ class RefreshTokenServiceTest {
         void refresh_whenAccessTokenIsInvalid_thenThrowsException() {
             // given
             RefreshCommand command = new RefreshCommand("malformed-access-token", "refresh-token");
-            given(clock.instant()).willReturn(FIXED_INSTANT);
-            given(clock.getZone()).willReturn(FIXED_ZONE);
             given(tokenProvider.getUserIdFromExpiredToken(command.accessToken()))
                 .willThrow(com.eventitta.auth.exception.AuthErrorCode.ACCESS_TOKEN_INVALID.defaultException());
 

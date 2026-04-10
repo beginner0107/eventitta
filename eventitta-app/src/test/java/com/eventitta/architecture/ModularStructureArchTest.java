@@ -70,6 +70,15 @@ class ModularStructureArchTest {
             .resideInAnyPackage("com.eventitta.infra..");
 
     @ArchTest
+    static final ArchRule apiMustNotDependOnDomainEntities =
+        noClasses()
+            .that()
+            .resideInAnyPackage("com.eventitta.api..")
+            .should()
+            .dependOnClassesThat()
+            .areAnnotatedWith(Entity.class);
+
+    @ArchTest
     static final ArchRule apiAuthMustNotContainBusinessServices =
         noClasses()
             .should()

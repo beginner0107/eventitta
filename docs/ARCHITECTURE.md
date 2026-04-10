@@ -1,58 +1,55 @@
 # 아키텍처 설계
 
-## 패키지 구조
+## 모듈 구조
 
-각 도메인은 독립적인 패키지 구조를 가지며, 명확한 책임 분리를 따릅니다:
+현재 백엔드는 4개 Gradle 모듈로 나뉜 modular monolith 구조를 사용합니다.
 
+실행하면서 구조를 따라가고 싶다면 [hands-on/README.md](./hands-on/README.md)의 실습형 가이드를 같이 열어두는 편이 빠릅니다.
+
+```text
+eventitta
+├── eventitta-app
+├── eventitta-api
+├── eventitta-domain
+└── eventitta-infra
 ```
-com.eventitta/
-├── auth/              # JWT 인증/인가
-│   ├── domain/
-│   ├── service/
-│   ├── controller/
-│   ├── mapper/        # Request/Command, Result/Response 변환
-│   ├── jwt/           # JWT 유틸리티, 필터
-│   └── exception/
-│
-├── post/              # 게시글 도메인
-│   ├── domain/        # Post 엔티티
-│   ├── repository/    # PostRepository + QueryDSL 구현
-│   ├── service/
-│   ├── controller/
-│   └── dto/
-│
-├── comment/           # 계층형 댓글
-│
-├── meeting/           # 모임 관리 (동시성 제어 적용)
-│   ├── domain/        # Meeting, MeetingParticipant
-│   ├── repository/    # 비관적 락 쿼리 포함
-│   └── ...
-│
-├── gamification/      # 게임화 시스템 (이벤트 기반 + Outbox)
-│   ├── domain/        # UserActivity, Badge, ActivityOutbox
-│   ├── event/         # UserActivityEventListener, ActivityPostProcessor
-│   ├── scheduler/     # OutboxRelayScheduler, FailedActivityEventRetryScheduler
-│   └── evaluator/     # BadgeEvaluator 구현체들
-│
-├── festivals/         # 축제 정보 + 외부 API
-│   ├── dto/external/  # SeoulFestival, NationalFestival, Geocoding DTO
-│   └── util/          # BoundingBoxCalculator
-│
-├── notification/      # Discord 알림 (Rate Limiting)
-│   ├── domain/        # AlertLevel
-│   ├── service/       # DiscordNotificationService
-│   └── service/ratelimit/  # Rate Limiter 구현체
-│
-└── common/            # 공통 설정/예외 처리
-    ├── config/
-    │   ├── async/         # AsyncConfig
-    │   ├── jpa/           # JpaAuditingConfig, QuerydslConfig
-    │   ├── scheduling/    # SchedulingConfig, ShedLockConfig
-    │   └── web/           # OpenApiConfig, RestClientConfig
-    ├── domain/        # BaseEntity, BaseTimeEntity
-    ├── exception/     # GlobalExceptionHandler, CustomException
-    └── util/          # CookieUtil
-```
+
+### 모듈 책임
+
+- `eventitta-app`
+  - Spring Boot 실행 조립
+  - ArchUnit
+  - 부트/조립 관점 테스트
+- `eventitta-api`
+  - controller
+  - security / auth web adapter
+  - cookie writer / state verifier
+  - request / response / mapper
+- `eventitta-domain`
+  - entity
+  - use case service
+  - repository port
+  - `api.internal` contract
+  - auth business logic
+- `eventitta-infra`
+  - JPA / Querydsl 구현
+  - Redis / S3 / scheduler / external HTTP client
+  - runtime config / properties
+  - Kakao REST adapter
+
+### 허용 의존 방향
+
+- `eventitta-app -> eventitta-api, eventitta-domain, eventitta-infra`
+- `eventitta-api -> eventitta-domain`
+- `eventitta-infra -> eventitta-domain`
+- `eventitta-domain ->` no dependency on `api/infra/app`
+
+### 도메인 경계 규칙
+
+- foreign domain 쓰기 경로는 `api.internal..` contract 를 통해서만 접근한다.
+- foreign entity / repository / service 직접 참조는 금지한다.
+- domain 안에서는 `MultipartFile`, `Resource`, `MediaType`, `@ConfigurationProperties`, `@GetExchange` 를 사용하지 않는다.
+- read-side 는 응답 호환성을 위해 당분간 infra query projection join 을 허용한다.
 
 ### DTO 및 Mapper 원칙
 
@@ -80,8 +77,8 @@ classDiagram
         +Long id
         +String title
         +String content
-        +User user
-        +Region region
+        +Long authorUserId
+        +String regionCode
         +int likeCount
     }
 
@@ -97,6 +94,7 @@ classDiagram
         +String title
         +int maxMembers
         +int currentMembers
+        +Long leaderId
     }
 
     BaseTimeEntity <|-- BaseEntity
@@ -110,6 +108,27 @@ classDiagram
 - **BaseTimeEntity**: `createdAt`, `updatedAt` (JPA Auditing)
 - **BaseEntity**: `BaseTimeEntity` 상속 + `createdBy`(String), `updatedBy`(String) 추가
 - 각 엔티티는 `@Id` 필드를 직접 선언
+
+## 게시글 좋아요/조회 계약
+
+- 게시글 목록/상세 조회는 공개 API를 유지하고, 인증 사용자가 호출하면 `likedByMe`를 함께 계산한다.
+- 좋아요 변경은 토글 API 대신 상태 명시형 API를 사용한다.
+  - `PUT /api/v1/posts/{postId}/like`
+  - `DELETE /api/v1/posts/{postId}/like`
+- 두 API는 모두 `PostLikeStateResponse`를 반환하며, 응답에는 `postId`, `likedByMe`, `likeCount`가 포함된다.
+- `PostSummaryResponse`, `PostDetailResponse`에는 `likedByMe`가 포함된다.
+- `Post.likeCount` 필드는 스키마 호환을 위해 남아 있지만, API 응답용 `likeCount`는 `post_likes`를 source of truth로 계산한다.
+
+## 테스트 소유권
+
+- `eventitta-api`
+  - controller / request validation / web adapter 테스트
+- `eventitta-domain`
+  - entity / use case / domain service 테스트
+- `eventitta-infra`
+  - repository / query / Redis / S3 / external adapter 테스트
+- `eventitta-app`
+  - boot smoke / ArchUnit / 조립 관점 테스트
 
 ## 인증/인가 아키텍처
 
@@ -138,6 +157,18 @@ sequenceDiagram
     end
 ```
 
+### Auth ownership
+
+- `eventitta-domain.auth..`
+  - signup/login/refresh/logout
+  - refresh token rotation / reuse detection
+  - Kakao login / link use case
+- `eventitta-api.auth..`
+  - controller, JWT filter, cookie 입출력, state cookie 검증, request/response mapping
+- `eventitta-infra.auth..`
+  - JPA 저장소 adapter
+  - Kakao token/user API adapter
+
 ### 토큰 재발급 플로우
 
 ```mermaid
@@ -148,18 +179,53 @@ sequenceDiagram
     participant DB
 
     Client->>Controller: POST /refresh + Cookie(refreshToken)
-    Controller->>Service: refresh(expiredAt, rawRt)
-    Service->>DB: findAllByUserId(userId)
-    Service->>Service: hash 비교 검증
+    Controller->>Service: refresh(accessToken, rawRt)
+    Service->>Service: parse tokenKey.secret
+    Service->>DB: findByTokenKey(tokenKey)
+    Service->>Service: secret hash 비교
     alt Valid Refresh Token
         Service->>DB: delete(기존 토큰)
-        Service->>DB: save(새 토큰 해시)
+        Service->>DB: save(새 tokenKey + secretHash)
         Service-->>Controller: New TokenResponse
         Controller-->>Client: Set-Cookie(새 토큰들)
     else Invalid/Expired
+        Service->>DB: delete(의심/만료 row)
         Service-->>Controller: Exception
         Controller-->>Client: 401 Unauthorized
     end
+```
+
+### Kakao social login 플로우
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Api as AuthController/UserController
+    participant Support as KakaoAuthorizationSupport
+    participant Domain as AuthService
+    participant Kakao as Kakao API
+    participant DB
+
+    Client->>Api: POST /auth/social/kakao/authorize {redirectUri}
+    Api->>Support: allowlist 검증 + state 생성
+    Api-->>Client: Set-Cookie(oauth_state), authorizeUrl
+
+    Client->>Api: POST /auth/social/kakao/login {code,state,redirectUri}
+    Api->>Support: state 검증
+    Api->>Domain: loginWithKakao(code, redirectUri)
+    Domain->>Kakao: code 교환 + 사용자 정보 조회
+    Domain->>Domain: verified email + provider user id 검증
+    Domain->>DB: auth_identity 조회
+    alt 기존 Kakao identity 존재
+        Domain-->>Api: TokenResult
+    else 신규 소셜 가입
+        Domain->>DB: user 생성
+        Domain->>DB: auth_identity 생성
+        Domain-->>Api: TokenResult
+    else 기존 로컬 이메일과 충돌
+        Domain-->>Api: SOCIAL_LINK_REQUIRED
+    end
+    Api-->>Client: Set-Cookie(access/refresh), delete oauth_state
 ```
 
 ### 토큰 관리 전략
@@ -168,15 +234,26 @@ sequenceDiagram
 |------|-------------|---------------|
 | **유효기간** | 1시간 | 24시간 |
 | **저장 위치** | HttpOnly Cookie | HttpOnly Cookie |
-| **서버 저장** | 없음 (Stateless) | PBKDF2 해시값 DB 저장 |
-| **보안** | XSS 방어 (HttpOnly) | 탈취 대응 (해시 저장) |
+| **서버 저장** | 없음 (Stateless) | `token_key + PBKDF2(secret)` DB 저장 |
+| **조회 방식** | JWT 자체 검증 | `findByTokenKey` 후 secret hash 검증 |
+| **보안** | XSS 방어 (HttpOnly) | 탈취 대응 (해시 저장), reuse 의심 row 제거 |
+
+### 소셜 계정 관리 전략
+
+- 소셜 로그인 식별자는 `users.provider/provider_id` 단일 필드가 아니라 `auth_identity(provider, provider_user_id)` 를 사용한다.
+- 신규 provider 추가를 위해 `auth_identity` 는 user 기준 1:N 구조를 가진다.
+- Kakao 로그인은 verified email 을 요구하지만, 이메일은 자동 링크 기준으로 사용하지 않는다.
+- 기존 로컬 계정과 이메일이 충돌하면 자동 병합하지 않고 `SOCIAL_LINK_REQUIRED` 를 반환한다.
+- 명시적 링크는 로그인된 로컬 세션에서만 허용하며, 현재 사용자 이메일과 Kakao verified email 이 같을 때만 수행한다.
 
 ### 보안 기능
 
 1. **JWT + HttpOnly Cookie + SameSite=Strict**: XSS + CSRF 방어
-2. **Refresh Token PBKDF2 해시 저장**: DB 탈취 대응
-3. **비밀번호 BCrypt 해싱**: 사용자 비밀번호 보호
-4. **QueryDSL + PreparedStatement**: SQL Injection 방지
+2. **Refresh token selector 모델**: `token_key` 인덱스 조회 후 secret 해시 검증으로 scan 제거
+3. **OAuth state cookie + redirect URI allowlist**: Kakao code interception / open redirect 완화
+4. **verified email + explicit link only**: 실수 병합 방지
+5. **비밀번호 BCrypt 해싱**: 사용자 비밀번호 보호
+6. **QueryDSL + PreparedStatement**: SQL Injection 방지
 
 ## 동시성 제어 전략
 
@@ -219,72 +296,59 @@ Optional<Meeting> findByIdForUpdate(@Param("id") Long id);
 int incrementPoints(@Param("userId") Long userId, @Param("amount") int amount);
 ```
 
-## 이벤트 기반 아키텍처
+## 게임화 처리 아키텍처
 
-### 이벤트 플로우 (Outbox 패턴 적용)
+현재 게임화는 `동기 코어 + AFTER_COMMIT projection` 모델을 사용합니다.
+
+- 코어 적립/회수는 요청 트랜잭션 안에서 완료됩니다.
+- Redis 랭킹과 뱃지는 commit 이후 projection으로 반영됩니다.
+- 복구 스케줄러는 self-healing 용도로만 남아 있습니다.
+
+상세 문서:
+
+- [GAMIFICATION_USER_STRUCTURE.md](./GAMIFICATION_USER_STRUCTURE.md)
+- [docs/gamification/OVERVIEW.md](./gamification/OVERVIEW.md)
+- [docs/gamification/RUNTIME_FLOW.md](./gamification/RUNTIME_FLOW.md)
+- [docs/gamification/MIGRATION_AND_OPERATIONS.md](./gamification/MIGRATION_AND_OPERATIONS.md)
+
+### 현재 이벤트 플로우
 
 ```mermaid
 sequenceDiagram
     participant Client
-    participant Service as MeetingService
-    participant Outbox as ActivityOutboxWriter
+    participant Domain as PostService / CommentService / MeetingService
+    participant Facade as GamificationFacade
     participant DB
-    participant Scheduler as OutboxRelayScheduler
-    participant Relay as OutboxRelayService
-    participant Activity as UserActivityService
-    participant Processor as ActivityPostProcessor
+    participant Event as GamificationStateChangedEvent
+    participant Badge as BadgeProjectionListener
+    participant Ranking as RankingProjectionListener
     participant Redis
 
-    Client->>Service: approveParticipant()
-    Service->>DB: Meeting 비관적 락 + 인원 증가
-    Service->>Outbox: write(JOIN_MEETING, userId, meetingId)
-    Outbox->>DB: INSERT activity_outbox (같은 트랜잭션)
-    Service->>DB: COMMIT
+    Client->>Domain: 보상 가능한 요청
+    Domain->>Facade: 의미 있는 facade 메서드 호출
+    Facade->>DB: action record insert/delete
+    Facade->>DB: total stats update
+    Facade->>DB: action stats update
+    Facade->>Event: publish AFTER_COMMIT event
+    Domain-->>Client: 응답
 
-    Note over Scheduler: 폴링 (fixedDelay)
-    Scheduler->>DB: SELECT PENDING outbox records
-    Scheduler->>Relay: processIndependently(outboxId)
-    Relay->>DB: PESSIMISTIC_WRITE 락 + PROCESSING 상태 전환
-    Relay->>Activity: recordActivity()
-    Activity->>DB: 활동 저장 + 포인트 Atomic Update
-    Activity->>Processor: ActivityRecordedEvent (AFTER_COMMIT)
-
-    par 비동기 처리
-        Processor->>DB: 뱃지 체크
+    par commit 이후
+        Event->>Badge: changed action 기준 배지 평가
     and
-        Processor->>Redis: 랭킹 업데이트
+        Event->>Ranking: ranking projection update
+        Ranking->>Redis: ZADD
     end
 ```
 
-### 실패 복구 플로우
+### projection 복구 플로우
 
 ```mermaid
 flowchart TD
-    A[이벤트 발생] --> B[EventListener]
-    B --> C{Retry 3회}
-    C -->|성공| D[처리 완료]
-    C -->|실패| E[FailedActivityEvent DB 저장]
-    E --> F[Discord 알림]
-    E --> G[FailedActivityEventRetryScheduler]
-    G --> H{재처리}
-    H -->|성공| I[PROCESSED]
-    H -->|실패| J{Max Retry?}
-    J -->|No| G
-    J -->|Yes| K[FAILED + Discord 알림]
-```
-
-### Outbox 레코드 상태 흐름
-
-```mermaid
-stateDiagram-v2
-    [*] --> PENDING: Outbox INSERT
-    PENDING --> PROCESSING: Relay 폴링
-    PROCESSING --> DONE: 처리 성공
-    PROCESSING --> PENDING: retry < maxRetry
-    PROCESSING --> FAILED: retry >= maxRetry
-    PROCESSING --> PENDING: Stuck 복구 (timeout)
-    FAILED --> [*]
-    DONE --> [*]: 하우스키핑으로 삭제
+    A[ApplicationReadyEvent] --> B{Redis ranking 비어 있음?}
+    B -->|yes| C[rebuildRankings]
+    B -->|no| D[skip]
+    E[Daily Scheduler] --> C
+    E --> F[reconcileBadges]
 ```
 
 ## 스케줄러 설계
@@ -300,13 +364,9 @@ stateDiagram-v2
 | FestivalScheduler (National) | 분기별 (1/4/7/10월 1일 02:00) | 전국 축제 데이터 동기화 |
 | FestivalScheduler (Seoul) | 매일 11:00 | 서울시 축제 데이터 동기화 |
 | MeetingStatusScheduler | 매 1분 | 종료된 모임 상태 자동 업데이트 |
-| RefreshTokenCleanupTask | 매 1시간 | 만료된 Refresh Token 정리 |
-| PostImageFileScheduler | 매주 일요일 04:00 | 미사용 이미지 파일 정리 |
-| OutboxRelayScheduler | fixedDelay 폴링 | Outbox PENDING 레코드 처리 |
-| OutboxRelayScheduler (Stuck) | fixedDelay 폴링 | PROCESSING stuck 레코드 복구 |
-| OutboxRelayScheduler (Cleanup) | 매일 04:00 | 완료된 Outbox 레코드 정리 |
-| FailedActivityEventRetryScheduler | fixedDelay 폴링 | 실패 이벤트 재처리 |
-| RankingScheduler | 매일 04:00 / 매주 일요일 02:00 | Redis ↔ MySQL 랭킹 동기화 |
+| RefreshTokenCleanupScheduler | 매 1시간 | 만료된 Refresh Token 정리 |
+| MediaAssetCleanupScheduler | 매주 일요일 04:00 | 미사용 이미지 파일 정리 |
+| GamificationReconciliationScheduler | 매일 04:00 | Redis 랭킹 rebuild + 배지 복구 |
 
 ## 모니터링 & 로깅
 
@@ -334,13 +394,13 @@ graph LR
     end
 
     subgraph "Data Store"
-        C[(Redis<br>Sorted Set)]
-        D[(MySQL<br>Fallback)]
+        C[(Redis<br>Sorted Set Projection)]
+        D[(Stats Tables<br>Fallback)]
     end
 
     subgraph "Background"
-        E[ActivityPostProcessor]
-        F[RankingScheduler]
+        E[RankingProjectionListener]
+        F[GamificationReconciliationScheduler]
     end
 
     A --> B
@@ -353,10 +413,10 @@ graph LR
 
 ### 랭킹 시스템 설계
 
-- **Redis Sorted Set**: 포인트/활동량 기준 실시간 O(log N) 랭킹
-- **MySQL Fallback**: Redis 장애 시 try-catch 기반 자동 전환
-- **데이터 동기화**: RankingScheduler로 주기적 MySQL → Redis 동기화
-- **랭킹 타입**: `POINTS` (포인트 순위), `ACTIVITY_COUNT` (활동량 순위)
+- **Redis Sorted Set**: 포인트/활동량 projection
+- **Stats Fallback**: Redis 비어 있음 또는 장애 시 `user_gamification_stats` 기준 조회
+- **Projection Update**: `RankingProjectionListener`가 commit 이후 delta 반영
+- **Self-healing**: `GamificationReconciliationScheduler`가 full rebuild 수행
 
 ## Festival 거리 검색 최적화
 

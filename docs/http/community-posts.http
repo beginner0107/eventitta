@@ -1,0 +1,38 @@
+@baseUrl = http://localhost:8080
+@accessToken = replace-me
+@refreshToken = replace-me
+@postId = 1
+
+### 1. 게시글 목록 조회 (비로그인)
+# 목적: 공개 목록 조회와 likedByMe=false 기본값 확인
+GET {{baseUrl}}/api/v1/posts?page=0&size=10
+
+### 2. 게시글 목록 조회 (로그인)
+# 목적: 인증 사용자의 likedByMe 개인화 확인
+GET {{baseUrl}}/api/v1/posts?page=0&size=10
+Cookie: access_token={{accessToken}}; refresh_token={{refreshToken}}
+
+### 3. 게시글 상세 조회 (로그인)
+# 목적: 단건 상세와 likedByMe 확인
+GET {{baseUrl}}/api/v1/posts/{{postId}}
+Cookie: access_token={{accessToken}}; refresh_token={{refreshToken}}
+
+### 4. 게시글 좋아요
+# 목적: 좋아요 상태를 true로 맞추고 PostLikeStateResponse 확인
+PUT {{baseUrl}}/api/v1/posts/{{postId}}/like
+Cookie: access_token={{accessToken}}; refresh_token={{refreshToken}}
+
+### 5. 게시글 좋아요 취소
+# 목적: 좋아요 상태를 false로 맞추고 PostLikeStateResponse 확인
+DELETE {{baseUrl}}/api/v1/posts/{{postId}}/like
+Cookie: access_token={{accessToken}}; refresh_token={{refreshToken}}
+
+### 6. 내가 좋아요한 게시글 목록
+# 목적: 각 항목의 likedByMe=true 확인
+GET {{baseUrl}}/api/v1/posts/liked?page=0&size=10
+Cookie: access_token={{accessToken}}; refresh_token={{refreshToken}}
+
+### 메모
+# - 목록/상세 응답에는 likeCount 와 likedByMe 가 포함된다.
+# - PUT/DELETE /like 는 모두 200 OK 와 함께 postId, likedByMe, likeCount 를 반환한다.
+# - API 응답의 likeCount 는 posts.like_count 가 아니라 post_likes 기준으로 계산된다.

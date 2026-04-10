@@ -1,0 +1,79 @@
+@baseUrl = http://localhost:8080
+@password = Pass123!
+@signupEmail = handsauth{{$timestamp}}@example.com
+@nickname = auth{{$timestamp}}
+@kakaoRedirectUri = http://localhost:3000/auth/kakao/callback
+
+### 1. 회원가입
+# 목적: users insert와 기본 validation 흐름 확인
+# 같이 볼 코드: AuthController, AuthService, AuthControllerTest
+POST {{baseUrl}}/api/v1/auth/signup
+Content-Type: application/json
+
+{
+  "email": "{{signupEmail}}",
+  "password": "{{password}}",
+  "nickname": "{{nickname}}"
+}
+
+### 2. 로그인
+# 목적: access_token / refresh_token HttpOnly 쿠키 발급 확인
+# 같이 볼 코드: AuthController, CookieManager, SecurityConfig
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{signupEmail}}",
+  "password": "{{password}}"
+}
+
+### 3. 내 프로필 조회
+# 목적: JWT 인증 후 현재 사용자 프로필 조회
+# 같이 볼 코드: UserController, UserService
+GET {{baseUrl}}/api/v1/users/me
+
+### 4. 현재 세션 목록 조회
+# 목적: refresh_tokens 기반 세션 메타데이터 확인
+# 응답에서 current=true인 sessionId를 저장해 이후 세션 종료 요청에 사용
+GET {{baseUrl}}/api/v1/users/me/sessions
+> {%
+  const sessions = Array.isArray(response.body) ? response.body : [];
+  const current = sessions.find((item) => item.current) || sessions[0];
+  if (current && current.sessionId) {
+    client.global.set("currentSessionId", current.sessionId);
+  }
+%}
+
+### 5. refresh
+# 목적: access/refresh 쿠키 회전과 refresh_tokens 변경 확인
+# 같이 볼 코드: AuthController, AuthService, RefreshTokenRepositoryTest
+POST {{baseUrl}}/api/v1/auth/refresh
+
+### 6-A. 현재 세션 종료
+# 목적: 선택한 sessionId 하나만 종료
+# 주의: 이 요청 이후 현재 쿠키가 즉시 무효화될 수 있으므로 재로그인이 필요하다
+DELETE {{baseUrl}}/api/v1/users/me/sessions/{{currentSessionId}}
+
+### 6-B. 모든 세션 종료
+# 목적: 현재 계정의 refresh token 전체 제거
+# 주의: 6-A와 6-B 중 하나만 실행하는 편이 이해하기 쉽다
+DELETE {{baseUrl}}/api/v1/users/me/sessions
+
+### 7. 재로그인
+# 목적: 세션 종료 후 다시 쿠키를 발급받아 이후 요청을 이어간다
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{signupEmail}}",
+  "password": "{{password}}"
+}
+
+### 8. 로그아웃
+# 목적: 현재 세션 종료 + 토큰 쿠키 삭제
+# 같이 볼 코드: AuthController, CookieManager
+POST {{baseUrl}}/api/v1/auth/logout
+
+### 9. 로그아웃 이후 프로필 조회
+# 목적: 인증이 사라졌는지 확인
+GET {{baseUrl}}/api/v1/users/me

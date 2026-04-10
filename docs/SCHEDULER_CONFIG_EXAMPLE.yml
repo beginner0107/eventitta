@@ -9,18 +9,21 @@
 #   특정 스케줄러만 비활성화하려면 해당 설정을 false로 지정하세요.
 #
 # 글로벌 제어는 제공되지 않음
-# - 과거에는 scheduling.enabled로 모든 스케줄러를 한 번에 제어할 수 있었으나,
-#   개별 제어의 유연성을 위해 제거되었습니다.
+# - scheduling.enabled 같은 글로벌 플래그는 없습니다.
 # - 모든 스케줄러를 비활성화하려면 각 스케줄러의 enabled를 false로 설정하세요.
+#
+# 참고
+# - LogMonitor는 scheduler.* 체계가 아니라 monitoring.log.enabled 로 제어됩니다.
+# - 축제 수동 sync API는 별도 관리자 HTTP 엔드포인트이며 아래 설정과 무관합니다.
 
 scheduler:
-  # 토큰 정리 스케줄러 (RefreshTokenCleanupTask)
+  # 토큰 정리 스케줄러 (RefreshTokenCleanupScheduler)
   # 만료된 리프레시 토큰을 매시간 정리
   token-cleanup:
     enabled: true
 
   # 축제 데이터 동기화 스케줄러 (FestivalScheduler)
-  # 전국/서울시 축제 데이터를 정기적으로 동기화
+  # 전국 축제 분기 동기화 + 서울시 축제 일별 동기화
   festival-sync:
     enabled: true
 
@@ -29,19 +32,20 @@ scheduler:
   meeting-status:
     enabled: true
 
-  # 이미지 정리 스케줄러 (PostImageFileScheduler)
+  # 이미지 정리 스케줄러 (MediaAssetCleanupScheduler)
   # 미사용 이미지 파일을 주간 단위로 정리
   image-cleanup:
     enabled: true
 
-  # 실패 이벤트 재시도 스케줄러 (FailedActivityEventRetryScheduler)
-  # 실패한 활동 이벤트를 재처리
-  failed-event-retry:
+  # 게임화 정합성 재계산 스케줄러 (GamificationReconciliationScheduler)
+  # 랭킹/배지 projection을 새벽에 재정합
+  gamification-reconciliation:
     enabled: true
 
-  # 랭킹 동기화 스케줄러 (RankingScheduler)
-  # MySQL → Redis 랭킹 데이터 동기화
-  ranking-sync:
+monitoring:
+  log:
+    # LogMonitor 활성화 여부
+    # true 이면 1분마다 error.log, 10분마다 로그 디렉터리 크기를 점검
     enabled: true
 
 # ========================================
@@ -58,15 +62,16 @@ scheduler:
 #     enabled: false
 #   image-cleanup:
 #     enabled: false
-#   failed-event-retry:
+#   gamification-reconciliation:
 #     enabled: false
-#   ranking-sync:
+# monitoring:
+#   log:
 #     enabled: false
 
-# 시나리오 2: 장애 대응 (특정 스케줄러만 비활성화)
-# 예: 랭킹 동기화에서 Redis 장애 발생 시
+# 시나리오 2: 외부 API 호출 방지
+# 예: 스테이징/로컬에서 축제 API 동기화만 막고 싶을 때
 # scheduler:
-#   ranking-sync:
+#   festival-sync:
 #     enabled: false
 
 # 시나리오 3: 성능 튜닝 (리소스 집약적 스케줄러 일시 중지)
@@ -74,6 +79,8 @@ scheduler:
 #   festival-sync:
 #     enabled: false
 #   image-cleanup:
+#     enabled: false
+#   gamification-reconciliation:
 #     enabled: false
 
 # 시나리오 4: 스테이징 환경 (일부 스케줄러만 활성화)
@@ -86,9 +93,10 @@ scheduler:
 #     enabled: false  # 외부 API 호출 방지
 #   image-cleanup:
 #     enabled: false  # 파일 삭제 방지
-#   failed-event-retry:
-#     enabled: true
-#   ranking-sync:
+#   gamification-reconciliation:
+#     enabled: false  # 새벽 projection 재계산 비활성화
+# monitoring:
+#   log:
 #     enabled: true
 
 # ========================================
@@ -97,4 +105,5 @@ scheduler:
 # 1. 설정 변경 후 애플리케이션 재시작 필요
 # 2. 비활성화된 스케줄러는 Spring Bean으로 등록되지 않음
 # 3. matchIfMissing = true이므로 설정이 없으면 기본적으로 활성화됨
-# 4. 운영 환경에서 스케줄러 비활성화 시 영향도 검토 필수
+# 4. LogMonitor는 monitoring.log.enabled 를 사용하며 scheduler.*와 별도임
+# 5. 운영 환경에서 스케줄러 비활성화 시 영향도 검토 필수

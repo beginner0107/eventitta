@@ -1,0 +1,195 @@
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: jdbc:mysql://${RDS_ENDPOINT}:3306/${DB_NAME}?useSSL=true&requireSSL=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
+    username: ${JDBC_USERNAME}
+    password: ${JDBC_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+  sql:
+    init:
+      mode: never
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 0
+    validate-on-migrate: true
+    out-of-order: false
+    clean-disabled: true
+    url: ${spring.datasource.url}
+    user: ${spring.datasource.username}
+    password: ${spring.datasource.password}
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 60MB
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
+  data:
+    redis:
+      host: ${ELASTICACHE_PRIMARY_ENDPOINT}
+      port: 6379
+      ssl:
+        enabled: true
+      password: ${ELASTICACHE_AUTH_TOKEN:}
+      timeout: 2000ms
+      connect-timeout: 5000ms
+      command-timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 5
+          min-idle: 2
+          max-wait: 2000ms
+          time-between-eviction-runs: 60s
+        read-from: MASTER
+        cluster:
+          refresh:
+            adaptive: false
+            period: 300s
+          follow-redirects: false
+          max-redirects: 0
+
+server:
+  port: ${SERVER_PORT:8080}
+  forward-headers-strategy: framework
+  tomcat:
+    remoteip:
+      protocol-header: X-Forwarded-Proto
+      remote-ip-header: X-Forwarded-For
+
+springdoc:
+  swagger-ui:
+    enabled: false
+  api-docs:
+    enabled: false
+  server:
+    url: https://eventitta.com
+    description: Production server
+
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-validity-ms: ${JWT_ACCESS_TOKEN_VALIDITY:3600000}
+  refresh-token-validity-ms: ${JWT_REFRESH_TOKEN_VALIDITY:86400000}
+
+cookie:
+  secure: true
+
+auth:
+  social:
+    kakao:
+      client-id: ${KAKAO_CLIENT_ID}
+      client-secret: ${KAKAO_CLIENT_SECRET}
+      authorize-base-url: https://kauth.kakao.com/oauth/authorize
+      token-base-url: https://kauth.kakao.com
+      api-base-url: https://kapi.kakao.com
+      state-cookie-max-age-seconds: ${KAKAO_STATE_COOKIE_MAX_AGE_SECONDS:300}
+      allowed-redirect-uris:
+        - ${KAKAO_ALLOWED_REDIRECT_URI:https://eventitta.com/auth/kakao/callback}
+
+security:
+  cors:
+    allowed-origins:
+      - ${APP_ALLOWED_ORIGIN:https://eventitta.com}
+
+file:
+  storage:
+    location: ${FILE_STORAGE_LOCATION:/app/uploads}
+
+festival:
+  seoul:
+    base-url: http://openapi.seoul.go.kr:8088
+  national:
+    base-url: http://api.data.go.kr/openapi/tn_pubr_public_cltur_fstvl_api
+  geocoding:
+    enabled: true
+    timeout-seconds: 10
+
+api:
+  seoul:
+    key: ${SEOUL_API_KEY}
+  national:
+    key: ${NATIONAL_API_KEY}
+
+cloud:
+  aws:
+    region:
+      static: ${AWS_REGION:ap-northeast-2}
+    s3:
+      bucket: ${S3_BUCKET_NAME}
+    credentials:
+      access-key: ${AWS_ACCESS_KEY_ID}
+      secret-key: ${AWS_SECRET_ACCESS_KEY}
+    stack:
+      auto: false
+
+logging:
+  level:
+    root: WARN
+    com.eventitta: INFO
+    com.eventitta.festivals.scheduler: WARN
+    com.eventitta.festivals.service.geocoding: WARN
+    com.eventitta.platform.interceptor: WARN
+    org.springframework: ERROR
+    org.springframework.web: ERROR
+    org.springframework.security: ERROR
+    org.hibernate: ERROR
+    org.hibernate.SQL: ERROR
+    p6spy: OFF
+    com.zaxxer.hikari: WARN
+
+async:
+  core-pool-size: 4
+  max-pool-size: 20
+  queue-capacity: 200
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,loggers
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+    loggers:
+      enabled: true
+  security:
+    enabled: false
+
+notification:
+  discord:
+    enabled: true
+    webhook-url: ${DISCORD_WEBHOOK_URL}
+    username: ${DISCORD_USERNAME:eventitta-bot}
+    timeout-seconds: ${DISCORD_TIMEOUT:5}
+
+monitoring:
+  log:
+    enabled: true
+    error-threshold: 20
+    time-window-minutes: 5
+    size-threshold-mb: 900
+    alert-cooldown-minutes: 30
+
+media:
+  delivery:
+    cdn-base-url: ${MEDIA_CDN_BASE_URL:https://cdn.eventitta.com}
+
+scheduler:
+  image-cleanup:
+    enabled: false

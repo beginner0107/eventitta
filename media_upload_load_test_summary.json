@@ -1,0 +1,386 @@
+{
+  "root_group": {
+    "groups": [
+      {
+        "id": "5c0f8025f7e0b6654089e5b00e950f1a",
+        "groups": [],
+        "checks": [
+            {
+              "fails": 0,
+              "name": "seeded login succeeded",
+              "path": "::setup::seeded login succeeded",
+              "id": "a346ffa9ec7c0937023c5e1ae196da9f",
+              "passes": 12
+            }
+          ],
+        "name": "setup",
+        "path": "::setup"
+      },
+      {
+        "path": "::media upload",
+        "id": "044df37a127a388d2b6b237b4d4a72d4",
+        "groups": [],
+        "checks": [
+            {
+              "name": "media upload status is 200",
+              "path": "::media upload::media upload status is 200",
+              "id": "765af7be2a504693efbb8ee76b6952bc",
+              "passes": 2146,
+              "fails": 0
+            },
+            {
+              "path": "::media upload::media download status is 200",
+              "id": "5712edd11b6ec811f0548f158af9326f",
+              "passes": 2146,
+              "fails": 0,
+              "name": "media download status is 200"
+            }
+          ],
+        "name": "media upload"
+      }
+    ],
+    "checks": [],
+    "name": "",
+    "path": "",
+    "id": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "options": {
+    "summaryTrendStats": [
+      "avg",
+      "min",
+      "med",
+      "max",
+      "p(90)",
+      "p(95)"
+    ],
+    "summaryTimeUnit": "",
+    "noColor": false
+  },
+  "state": {
+    "isStdOutTTY": true,
+    "isStdErrTTY": true,
+    "testRunDurationMs": 241719.347
+  },
+  "metrics": {
+    "vus_max": {
+      "type": "gauge",
+      "contains": "default",
+      "values": {
+        "value": 20,
+        "min": 20,
+        "max": 20
+      }
+    },
+    "http_req_tls_handshaking": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 0,
+        "med": 0,
+        "max": 0,
+        "p(90)": 0,
+        "p(95)": 0,
+        "avg": 0
+      }
+    },
+    "media_upload_duration": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "avg": 1110.1473765144476,
+        "min": 52.683,
+        "med": 623.972,
+        "max": 5049.219,
+        "p(90)": 2683.14,
+        "p(95)": 3084.8972499999995
+      },
+      "thresholds": {
+        "p(95)<1500": {
+          "ok": false
+        }
+      }
+    },
+    "http_req_sending": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.4900848048327093,
+        "min": 0.003,
+        "med": 0.076,
+        "max": 38.487,
+        "p(90)": 1.0147,
+        "p(95)": 1.211
+      }
+    },
+    "iteration_duration": {
+      "contains": "time",
+      "values": {
+        "p(90)": 2792.7423750000003,
+        "p(95)": 3195.59037525,
+        "avg": 1195.129170495342,
+        "min": 65.87075,
+        "med": 707.1157495,
+        "max": 5288.650875
+      },
+      "type": "trend"
+    },
+    "group_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 706.3985829999999,
+        "max": 5287.633625,
+        "p(90)": 2791.9277085000003,
+        "p(95)": 3194.8400525,
+        "avg": 1194.2333036328023,
+        "min": 65.662958
+      }
+    },
+    "http_reqs": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 4304,
+        "rate": 17.805773734776803
+      }
+    },
+    "data_sent": {
+      "type": "counter",
+      "contains": "data",
+      "values": {
+        "count": 4875874865,
+        "rate": 20171636.75773127
+      }
+    },
+    "http_req_blocked": {
+      "values": {
+        "p(90)": 0.006,
+        "p(95)": 0.008,
+        "avg": 0.006209107806691527,
+        "min": 0,
+        "med": 0.004,
+        "max": 0.853
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "http_req_waiting": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 574.6865381040886,
+        "min": 0.91,
+        "med": 105.2175,
+        "max": 5048.628,
+        "p(90)": 2179.0547,
+        "p(95)": 2680.8758499999994
+      }
+    },
+    "http_req_duration": {
+      "contains": "time",
+      "values": {
+        "med": 162.7115,
+        "max": 5049.219,
+        "p(90)": 2182.1387,
+        "p(95)": 2682.9993499999996,
+        "avg": 595.4430940985129,
+        "min": 5.03
+      },
+      "thresholds": {
+        "p(95)<500": {
+          "ok": false
+        }
+      },
+      "type": "trend"
+    },
+    "data_received": {
+      "type": "counter",
+      "contains": "data",
+      "values": {
+        "count": 4876446123,
+        "rate": 20174000.0687657
+      }
+    },
+    "iterations": {
+      "contains": "default",
+      "values": {
+        "count": 2146,
+        "rate": 8.878064692107579
+      },
+      "type": "counter"
+    },
+    "http_req_failed": {
+      "values": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 4304
+      },
+      "thresholds": {
+        "rate<0.01": {
+          "ok": true
+        }
+      },
+      "type": "rate",
+      "contains": "default"
+    },
+    "vus": {
+      "type": "gauge",
+      "contains": "default",
+      "values": {
+        "value": 1,
+        "min": 0,
+        "max": 20
+      }
+    },
+    "http_req_connecting": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 0,
+        "avg": 0.0010999070631970262,
+        "min": 0,
+        "med": 0,
+        "max": 0.63,
+        "p(90)": 0
+      }
+    },
+    "http_req_receiving": {
+      "contains": "time",
+      "values": {
+        "p(90)": 72.75590000000001,
+        "p(95)": 94.39189999999999,
+        "avg": 20.266471189591112,
+        "min": 0.013,
+        "med": 5.423500000000001,
+        "max": 1657.431
+      },
+      "type": "trend"
+    },
+    "media_download_duration": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "p(95)": 202.44774999999987,
+        "avg": 83.28532665424035,
+        "min": 5.03,
+        "med": 66.7895,
+        "max": 1959.311,
+        "p(90)": 146.75500000000002
+      },
+      "thresholds": {
+        "p(95)<800": {
+          "ok": true
+        }
+      }
+    },
+    "http_req_duration{expected_response:true}": {
+      "contains": "time",
+      "values": {
+        "p(90)": 2182.1387,
+        "p(95)": 2682.9993499999996,
+        "avg": 595.4430940985129,
+        "min": 5.03,
+        "med": 162.7115,
+        "max": 5049.219
+      },
+      "type": "trend"
+    },
+    "checks": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 1,
+        "passes": 4304,
+        "fails": 0
+      }
+    }
+  },
+  "setup_data": {
+    "users": [
+      {
+        "password": "Pass123!",
+        "refreshToken": "7eaWmFTNFuGfMfOhgnG-QQ.PMew72SP6_nAJ77QJ-4HLM4OSIIPPyQ0n-EGqiUV7Fw",
+        "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMDAwMDAwIiwiZW1haWwiOiJwZXJmc2VlZDBAZXhhbXBsZS5jb20iLCJyb2xlIjoiVVNFUiIsImF1dGhWZXJzaW9uIjowLCJzZXNzaW9uSWQiOiI1ZWI1MWY1Yi05ODExLTRiY2MtYTAxMC0yZWZiMzg2ZmFmZmIiLCJpYXQiOjE3NzQ2MjMxMTQsImV4cCI6MTc3NDYyNjcxNH0.xgZfUVkdtlJC5R52Y1SShSiWt0l7yPS_7M70ykM0PnQ",
+        "email": "perfseed0@example.com",
+        "nickname": "perfuser0"
+      },
+      {
+        "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMDAwMDAxIiwiZW1haWwiOiJwZXJmc2VlZDFAZXhhbXBsZS5jb20iLCJyb2xlIjoiVVNFUiIsImF1dGhWZXJzaW9uIjowLCJzZXNzaW9uSWQiOiI2OTUyNGU5ZS1jZmY5LTRiZjQtOWFhZS1hYzZiOWRjMTkyNzUiLCJpYXQiOjE3NzQ2MjMxMTQsImV4cCI6MTc3NDYyNjcxNH0.fBe4cYQluiMLjf_m3FFlHHF8AKPX2uK-BQ2637UBZe0",
+        "email": "perfseed1@example.com",
+        "nickname": "perfuser1",
+        "password": "Pass123!",
+        "refreshToken": "517mBKVv_4psa84uT_SDWg.p8Z8qOaMleLSpDwSV6nBqap8RFguRgawj6Ldxhw0miY"
+      },
+      {
+        "email": "perfseed2@example.com",
+        "nickname": "perfuser2",
+        "password": "Pass123!",
+        "refreshToken": "o8luO93K9LiJAhbHgwJt_w.N-I3QrH_jVAsRqT9TqSmQor6e1GrxXsm97kPWQ0M3P0",
+        "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMDAwMDAyIiwiZW1haWwiOiJwZXJmc2VlZDJAZXhhbXBsZS5jb20iLCJyb2xlIjoiVVNFUiIsImF1dGhWZXJzaW9uIjowLCJzZXNzaW9uSWQiOiIzZTcwYjZmNi1mMWEzLTQyMGYtYTFjYS1kMjMxMGM5Yjc2NGYiLCJpYXQiOjE3NzQ2MjMxMTQsImV4cCI6MTc3NDYyNjcxNH0.p2yqTsbpzUt2xEXeJzMjgzhY2oU9NpUXHMiIYRHunrg"
+      },
+      {
+        "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMDAwMDAzIiwiZW1haWwiOiJwZXJmc2VlZDNAZXhhbXBsZS5jb20iLCJyb2xlIjoiVVNFUiIsImF1dGhWZXJzaW9uIjowLCJzZXNzaW9uSWQiOiI4ZmJiNWQwOC0xNzIxLTQ5NGEtYmJlMi0zM2E1NjRhYmU5ZTQiLCJpYXQiOjE3NzQ2MjMxMTQsImV4cCI6MTc3NDYyNjcxNH0.N6_WVtc_6YHjB38ujfp_X3b4BJEYEZsZpAITZeitgf0",
+        "email": "perfseed3@example.com",
+        "nickname": "perfuser3",
+        "password": "Pass123!",
+        "refreshToken": "kJqw4aldQ1a9-rrNr5b-4g.J8-PYxGfTXFvfFBzwcNRgndVPr3Z7u_nQJdaRzfsQqc"
+      },
+      {
+        "email": "perfseed4@example.com",
+        "nickname": "perfuser4",
+        "password": "Pass123!",
+        "refreshToken": "kX12LZ3zjzOnjJh8SQyGCQ.rK4fmmXdsIqx4mKgSc18NNIKiDmkh2R7X5VKLi_m5CM",
+        "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMDAwMDA0IiwiZW1haWwiOiJwZXJmc2VlZDRAZXhhbXBsZS5jb20iLCJyb2xlIjoiVVNFUiIsImF1dGhWZXJzaW9uIjowLCJzZXNzaW9uSWQiOiJkOWMzMTM1ZS04YTE4LTQ1OGItODlhMy1hOWJlMzY4ZTgxMDAiLCJpYXQiOjE3NzQ2MjMxMTQsImV4cCI6MTc3NDYyNjcxNH0.9pnFSd8BuGAZIkryNv0PnuVTPd8wzkwWS_-4hc4hNeM"
+      },
+      {
+        "email": "perfseed5@example.com",
+        "nickname": "perfuser5",
+        "password": "Pass123!",
+        "refreshToken": "y11zWCn-P099pnTDUJwe-g.ATxmoBviOiHA467SWQSJOXrEHS_TWruNiXkKmZDHYsc",
+        "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMDAwMDA1IiwiZW1haWwiOiJwZXJmc2VlZDVAZXhhbXBsZS5jb20iLCJyb2xlIjoiVVNFUiIsImF1dGhWZXJzaW9uIjowLCJzZXNzaW9uSWQiOiI0ZGZlNDA3Ni05MDBmLTRkOTItYTZmZi1kNTRiNGRmZGYzNWIiLCJpYXQiOjE3NzQ2MjMxMTQsImV4cCI6MTc3NDYyNjcxNH0.nET_zAb4edF3y5zHBYGUzdwmF1x9R0LNJGJyxdTHhkg"
+      },
+      {
+        "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMDAwMDA2IiwiZW1haWwiOiJwZXJmc2VlZDZAZXhhbXBsZS5jb20iLCJyb2xlIjoiVVNFUiIsImF1dGhWZXJzaW9uIjowLCJzZXNzaW9uSWQiOiI2YTQ2NTU3Zi04NTViLTQzMmEtOGM5NC02MzgwNWYwYWY1YTEiLCJpYXQiOjE3NzQ2MjMxMTQsImV4cCI6MTc3NDYyNjcxNH0.yeG3lp5ZM7Uw-7O57foI3e_GQo3XqVg_6xeN-rV5YlM",
+        "email": "perfseed6@example.com",
+        "nickname": "perfuser6",
+        "password": "Pass123!",
+        "refreshToken": "kCJ_Ed0AE0yGNI7XgiJpOw.-ZUXQjEw6iAXj-hgDO5nkzUChXW54syFfJb52obkPCM"
+      },
+      {
+        "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMDAwMDA3IiwiZW1haWwiOiJwZXJmc2VlZDdAZXhhbXBsZS5jb20iLCJyb2xlIjoiVVNFUiIsImF1dGhWZXJzaW9uIjowLCJzZXNzaW9uSWQiOiJkMjU0YzUyYS01YTY3LTQ4MzQtOGFhNy1lOWY5YmQ5ZTRiMWMiLCJpYXQiOjE3NzQ2MjMxMTQsImV4cCI6MTc3NDYyNjcxNH0.YTegwAGfbc2cIWAUeCDAwoQBQ_HpcmOfQH1FfgQz-s4",
+        "email": "perfseed7@example.com",
+        "nickname": "perfuser7",
+        "password": "Pass123!",
+        "refreshToken": "pYTgXtzqEGrAJgbGC98MSg.2L0nUNL_nzHkk_OmTuiq3MFnV1D94C1XWdy1xtM0ivo"
+      },
+      {
+        "refreshToken": "JzPxRhi6jbDvp8WkDkf8EA.02b25DC9c2UIrk9TyAFJCxYrG80g-N5mccuP-ehJTvg",
+        "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMDAwMDA4IiwiZW1haWwiOiJwZXJmc2VlZDhAZXhhbXBsZS5jb20iLCJyb2xlIjoiVVNFUiIsImF1dGhWZXJzaW9uIjowLCJzZXNzaW9uSWQiOiI0MTlhYTczNS1lM2ZiLTRhYTAtYmExNy04OTM1ZDczYmVkOWYiLCJpYXQiOjE3NzQ2MjMxMTUsImV4cCI6MTc3NDYyNjcxNX0.1zmBfQICJCuANpEhkdbdY2cyThjGxH00oBihToZZB5w",
+        "email": "perfseed8@example.com",
+        "nickname": "perfuser8",
+        "password": "Pass123!"
+      },
+      {
+        "nickname": "perfuser9",
+        "password": "Pass123!",
+        "refreshToken": "Fuu4c_4STTGc86fWVBL24g.Agt0Pz2uA7GItfnLi16-xeXLRNLnEqqxhJQGrQ3P8lA",
+        "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMDAwMDA5IiwiZW1haWwiOiJwZXJmc2VlZDlAZXhhbXBsZS5jb20iLCJyb2xlIjoiVVNFUiIsImF1dGhWZXJzaW9uIjowLCJzZXNzaW9uSWQiOiI3YTU1ZjBlZi1lYzk4LTRmZjctYjE4ZS0xMTRlNzAyYjFiMDciLCJpYXQiOjE3NzQ2MjMxMTUsImV4cCI6MTc3NDYyNjcxNX0.mqiftVOyWarVNkNLBTj28NJctdSoXTJ-ia9rPR3Xrk4",
+        "email": "perfseed9@example.com"
+      },
+      {
+        "nickname": "perfuser10",
+        "password": "Pass123!",
+        "refreshToken": "69gtpdGJXlAZFfYwdd4Rjg.lWwl4taSg7uYpYEwVUNBHf729nt3_S-3Pfi03LG118Y",
+        "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMDAwMDEwIiwiZW1haWwiOiJwZXJmc2VlZDEwQGV4YW1wbGUuY29tIiwicm9sZSI6IlVTRVIiLCJhdXRoVmVyc2lvbiI6MCwic2Vzc2lvbklkIjoiYWJmMDY4NzktYmU5OS00OTRmLTg5ZTQtMzM3ODUwZGU2ZGE2IiwiaWF0IjoxNzc0NjIzMTE1LCJleHAiOjE3NzQ2MjY3MTV9.nfQHww8XVStExWNTG-icd0DnIsIxVtAOMxhYMJWW29c",
+        "email": "perfseed10@example.com"
+      },
+      {
+        "email": "perfseed11@example.com",
+        "nickname": "perfuser11",
+        "password": "Pass123!",
+        "refreshToken": "q102m_gjUji-Jz1ee-qsew.9DaFgIhMfQ9R4d0avF58n0zrqRJZNWj_PA9HrJCmcxI",
+        "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMDAwMDExIiwiZW1haWwiOiJwZXJmc2VlZDExQGV4YW1wbGUuY29tIiwicm9sZSI6IlVTRVIiLCJhdXRoVmVyc2lvbiI6MCwic2Vzc2lvbklkIjoiYjQ0MTI5MDAtZTkxYi00ZGU1LWE2OTQtMGU5ZDhkNzYxYzI2IiwiaWF0IjoxNzc0NjIzMTE1LCJleHAiOjE3NzQ2MjY3MTV9.-f1or0vHQa46a8lELzf4ImEHlToRfz3CPUZ8wWDudfk"
+      }
+    ]
+  }
+}

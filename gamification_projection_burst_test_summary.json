@@ -1,0 +1,425 @@
+{
+  "root_group": {
+    "id": "d41d8cd98f00b204e9800998ecf8427e",
+    "groups": [
+      {
+        "name": "setup",
+        "path": "::setup",
+        "id": "5c0f8025f7e0b6654089e5b00e950f1a",
+        "groups": [],
+        "checks": [
+            {
+              "id": "a346ffa9ec7c0937023c5e1ae196da9f",
+              "passes": 12,
+              "fails": 0,
+              "name": "seeded login succeeded",
+              "path": "::setup::seeded login succeeded"
+            }
+          ]
+      },
+      {
+        "checks": [
+          {
+            "fails": 0,
+            "name": "post create status is 201",
+            "path": "::gamification post create::post create status is 201",
+            "id": "3ef726a42e908e4da8184dbdc630380b",
+            "passes": 4336
+          }
+        ],
+        "name": "gamification post create",
+        "path": "::gamification post create",
+        "id": "527df218f294ff4d9097e4a2b78f7479",
+        "groups": []
+      },
+      {
+        "name": "ranking verification",
+        "path": "::ranking verification",
+        "id": "9c02807b2213247eb2083c631df293f5",
+        "groups": [],
+        "checks": [
+            {
+              "fails": 0,
+              "name": "ranking me status is 200",
+              "path": "::ranking verification::ranking me status is 200",
+              "id": "16923dbc5aa163fac9b557f816fc110a",
+              "passes": 9711
+            },
+            {
+              "passes": 9711,
+              "fails": 0,
+              "name": "ranking stats status is 200",
+              "path": "::ranking verification::ranking stats status is 200",
+              "id": "4d93cc53a361e211c3c49c498e8c6bfe"
+            }
+          ]
+      },
+      {
+        "name": "gamification comment create",
+        "path": "::gamification comment create",
+        "id": "830a6e0134701259e67cfdf30e0c3dfe",
+        "groups": [],
+        "checks": [
+            {
+              "fails": 0,
+              "name": "comment create status is 201",
+              "path": "::gamification comment create::comment create status is 201",
+              "id": "e925d2d7827011684f86bb844a0d5d52",
+              "passes": 5375
+            }
+          ]
+      }
+    ],
+    "checks": [],
+    "name": "",
+    "path": ""
+  },
+  "options": {
+    "summaryTrendStats": [
+      "avg",
+      "min",
+      "med",
+      "max",
+      "p(90)",
+      "p(95)"
+    ],
+    "summaryTimeUnit": "",
+    "noColor": true
+  },
+  "state": {
+    "isStdOutTTY": false,
+    "isStdErrTTY": false,
+    "testRunDurationMs": 241816.597
+  },
+  "metrics": {
+    "http_req_receiving": {
+      "values": {
+        "avg": 0.07546978898610174,
+        "min": 0.005,
+        "med": 0.034,
+        "max": 18.106,
+        "p(90)": 0.185,
+        "p(95)": 0.265
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "data_sent": {
+      "values": {
+        "count": 15551826,
+        "rate": 64312.4838945608
+      },
+      "type": "counter",
+      "contains": "data"
+    },
+    "http_req_failed": {
+      "thresholds": {
+        "rate<0.01": {
+          "ok": true
+        }
+      },
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 29145
+      }
+    },
+    "ranking_query_duration": {
+      "values": {
+        "min": 1.819,
+        "med": 5.623,
+        "max": 82.901,
+        "p(90)": 12.8779,
+        "p(95)": 15.046649999999994,
+        "avg": 7.282061734115943
+      },
+      "thresholds": {
+        "p(95)<500": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "default"
+    },
+    "http_req_blocked": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.003276445359409802,
+        "min": 0,
+        "med": 0.002,
+        "max": 1.163,
+        "p(90)": 0.004,
+        "p(95)": 0.006
+      }
+    },
+    "http_req_connecting": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 0,
+        "avg": 0.0002550694801852805,
+        "min": 0,
+        "med": 0,
+        "max": 0.319,
+        "p(90)": 0
+      }
+    },
+    "http_req_waiting": {
+      "contains": "time",
+      "values": {
+        "avg": 7.780696894836168,
+        "min": 1.707,
+        "med": 7.12,
+        "max": 173.615,
+        "p(90)": 12.118200000000002,
+        "p(95)": 14.182
+      },
+      "type": "trend"
+    },
+    "vus_max": {
+      "type": "gauge",
+      "contains": "default",
+      "values": {
+        "min": 15,
+        "max": 15,
+        "value": 15
+      }
+    },
+    "iterations": {
+      "values": {
+        "count": 9711,
+        "rate": 40.15853386606048
+      },
+      "type": "counter",
+      "contains": "default"
+    },
+    "http_reqs": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 29145,
+        "rate": 120.52522598355812
+      }
+    },
+    "gamification_action_duration": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "avg": 8.874290289362591,
+        "min": 3.617,
+        "med": 8.285,
+        "max": 150.707,
+        "p(90)": 10.983,
+        "p(95)": 12.119
+      },
+      "thresholds": {
+        "p(95)<700": {
+          "ok": true
+        }
+      }
+    },
+    "data_received": {
+      "type": "counter",
+      "contains": "data",
+      "values": {
+        "count": 13617793,
+        "rate": 56314.55065096297
+      }
+    },
+    "group_duration": {
+      "values": {
+        "avg": 11.88206110441765,
+        "min": 3.72675,
+        "med": 9.860604,
+        "max": 150.78075,
+        "p(90)": 18.611037200000002,
+        "p(95)": 21.904507999999996
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "http_req_sending": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 0.001,
+        "med": 0.009,
+        "max": 2.693,
+        "p(90)": 0.018,
+        "p(95)": 0.024,
+        "avg": 0.012045599588264037
+      }
+    },
+    "vus": {
+      "type": "gauge",
+      "contains": "default",
+      "values": {
+        "min": 0,
+        "max": 15,
+        "value": 1
+      }
+    },
+    "iteration_duration": {
+      "contains": "time",
+      "values": {
+        "avg": 224.08719111564272,
+        "min": 209.359167,
+        "med": 223.287083,
+        "max": 362.756291,
+        "p(90)": 231.586458,
+        "p(95)": 234.806854
+      },
+      "type": "trend"
+    },
+    "http_req_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 7.868212283410489,
+        "min": 1.819,
+        "med": 7.205,
+        "max": 174.09,
+        "p(90)": 12.223000000000003,
+        "p(95)": 14.317199999999994
+      },
+      "thresholds": {
+        "p(95)<500": {
+          "ok": true
+        }
+      }
+    },
+    "checks": {
+      "contains": "default",
+      "values": {
+        "rate": 1,
+        "passes": 29145,
+        "fails": 0
+      },
+      "type": "rate"
+    },
+    "projection_lag_rate": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "fails": 9711,
+        "rate": 0,
+        "passes": 0
+      }
+    },
+    "http_req_duration{expected_response:true}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 1.819,
+        "med": 7.205,
+        "max": 174.09,
+        "p(90)": 12.223000000000003,
+        "p(95)": 14.317199999999994,
+        "avg": 7.868212283410489
+      }
+    },
+    "http_req_tls_handshaking": {
+      "values": {
+        "max": 0,
+        "p(90)": 0,
+        "p(95)": 0,
+        "avg": 0,
+        "min": 0,
+        "med": 0
+      },
+      "type": "trend",
+      "contains": "time"
+    }
+  },
+  "setup_data": {
+    "users": [
+      {
+        "password": "Pass123!",
+        "refreshToken": "vh5WRDV4TSOx1_g5SHAeng.SbKcsuReWMuXJwti43-vdXE4Z0DInEhMG8orjEoWFC8",
+        "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMDAwMDAwIiwiZW1haWwiOiJwZXJmc2VlZDBAZXhhbXBsZS5jb20iLCJyb2xlIjoiVVNFUiIsImF1dGhWZXJzaW9uIjowLCJzZXNzaW9uSWQiOiIwMWMzNDllNy00YTI0LTRkZWYtOGFiZS1jZDA3MDJkYWUzNTIiLCJpYXQiOjE3NzQ2MjEwOTksImV4cCI6MTc3NDYyNDY5OX0.-QzDXLMxuLQjssvEuAAp5eVvIYZzcmPVntYSSiYiol4",
+        "email": "perfseed0@example.com",
+        "nickname": "perfuser0"
+      },
+      {
+        "refreshToken": "JFixTkzA2zcSMiCFyW3yPg.-0VzJy5z5_qjinxoxd9FBTVULssq5LCNMGpdAd6UW3w",
+        "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMDAwMDAxIiwiZW1haWwiOiJwZXJmc2VlZDFAZXhhbXBsZS5jb20iLCJyb2xlIjoiVVNFUiIsImF1dGhWZXJzaW9uIjowLCJzZXNzaW9uSWQiOiI4Y2E4ZmMwMy1lMmZmLTRhNDctYmI3NC0yYWIzMmU1YWViYjUiLCJpYXQiOjE3NzQ2MjEwOTksImV4cCI6MTc3NDYyNDY5OX0.MTfziBin7pRDuFjYs_u6nHZoAXGhL7ft3zrWZAQ-Bn4",
+        "email": "perfseed1@example.com",
+        "nickname": "perfuser1",
+        "password": "Pass123!"
+      },
+      {
+        "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMDAwMDAyIiwiZW1haWwiOiJwZXJmc2VlZDJAZXhhbXBsZS5jb20iLCJyb2xlIjoiVVNFUiIsImF1dGhWZXJzaW9uIjowLCJzZXNzaW9uSWQiOiI0YjU2ODdmMS1iNGMyLTRkNTYtYWQwOC0xOGZjZTQ4YTNkNTAiLCJpYXQiOjE3NzQ2MjEwOTksImV4cCI6MTc3NDYyNDY5OX0.nZ4VSGu0_gOsDXltp7u8BxVoAJ25BH-dZInQn-2WrR0",
+        "email": "perfseed2@example.com",
+        "nickname": "perfuser2",
+        "password": "Pass123!",
+        "refreshToken": "vydRatkhndGK0N7AabV2nA.t-aQDxyoCtjqLRqfpERoCp3DhdyAeC4GKFOiaqQrQJo"
+      },
+      {
+        "password": "Pass123!",
+        "refreshToken": "wD9ODuy-nedNZYILZxMMSw.N6uppsSbqqFz9zYU-9DV2ywF0_tjuHeKs2sJ3Vmq5Eg",
+        "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMDAwMDAzIiwiZW1haWwiOiJwZXJmc2VlZDNAZXhhbXBsZS5jb20iLCJyb2xlIjoiVVNFUiIsImF1dGhWZXJzaW9uIjowLCJzZXNzaW9uSWQiOiIwZTlmNWZmZi1jOTRmLTQ3NzktYmNlYS04ZWZlNmQ5OTA2ZTgiLCJpYXQiOjE3NzQ2MjEwOTksImV4cCI6MTc3NDYyNDY5OX0.CZXpuyPxwuTti3nmENb3zdyz-sJeNTSkvO8dt1TRPjg",
+        "email": "perfseed3@example.com",
+        "nickname": "perfuser3"
+      },
+      {
+        "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMDAwMDA0IiwiZW1haWwiOiJwZXJmc2VlZDRAZXhhbXBsZS5jb20iLCJyb2xlIjoiVVNFUiIsImF1dGhWZXJzaW9uIjowLCJzZXNzaW9uSWQiOiJkZThlMTMxNS1jMDdkLTQwMmUtOTYxYi0yZmRkNjEyNGQ4YzMiLCJpYXQiOjE3NzQ2MjEwOTksImV4cCI6MTc3NDYyNDY5OX0.8wx7kMY9CkBCvvddPCzF2meDWnCd8hecx9oeK_1t0NA",
+        "email": "perfseed4@example.com",
+        "nickname": "perfuser4",
+        "password": "Pass123!",
+        "refreshToken": "kemb_4uNoKI4IFahlQaIuA.s1WUfhdATdbcq8aQgZTWHU05CJlTUDnlUJVs6wxTMxQ"
+      },
+      {
+        "password": "Pass123!",
+        "refreshToken": "uDB0gh5ZK1z1LSxvH0qiww.lJh9B95dfbZL34d0St1RieW4yig75eXMdSmvn9NNQ8c",
+        "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMDAwMDA1IiwiZW1haWwiOiJwZXJmc2VlZDVAZXhhbXBsZS5jb20iLCJyb2xlIjoiVVNFUiIsImF1dGhWZXJzaW9uIjowLCJzZXNzaW9uSWQiOiIxNzMxYjQyMS02NWY4LTQ4OWUtOWZiYS05NzhhYmRhZjgwNzgiLCJpYXQiOjE3NzQ2MjEwOTksImV4cCI6MTc3NDYyNDY5OX0.zaQEmL3iEN_dsiGV2YLDZStjzMvHzw58TmwSFnHzbJI",
+        "email": "perfseed5@example.com",
+        "nickname": "perfuser5"
+      },
+      {
+        "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMDAwMDA2IiwiZW1haWwiOiJwZXJmc2VlZDZAZXhhbXBsZS5jb20iLCJyb2xlIjoiVVNFUiIsImF1dGhWZXJzaW9uIjowLCJzZXNzaW9uSWQiOiIxNDEzMDQwYy01ZDA3LTRkZTUtOWJlZC03ZjJmYzc4ZWQ0MzciLCJpYXQiOjE3NzQ2MjExMDAsImV4cCI6MTc3NDYyNDcwMH0.pWZT1lfszMAZn9T8UE0ZAYqlFecE3FOnskXIKzk1xuU",
+        "email": "perfseed6@example.com",
+        "nickname": "perfuser6",
+        "password": "Pass123!",
+        "refreshToken": "p9FscKxpT3amkEmSeZKaIA.BPTvj9d_3hIpMjOiBdvTTRuM0UAyO1jqKwYq0Ge1Ono"
+      },
+      {
+        "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMDAwMDA3IiwiZW1haWwiOiJwZXJmc2VlZDdAZXhhbXBsZS5jb20iLCJyb2xlIjoiVVNFUiIsImF1dGhWZXJzaW9uIjowLCJzZXNzaW9uSWQiOiJiZTEyYWY3ZC00M2U2LTQzMDctYmY5Yy1lNTUwMjg1NzQwNDkiLCJpYXQiOjE3NzQ2MjExMDAsImV4cCI6MTc3NDYyNDcwMH0.RZ9U_jW-qL7b3FxxekiiXcM4cdKNbfwURsRw1ENL2UU",
+        "email": "perfseed7@example.com",
+        "nickname": "perfuser7",
+        "password": "Pass123!",
+        "refreshToken": "51LxUcGqnPFhonr-LwT-0g.RiAc3jp56qO4KiDumulkN27XWcqB3krkj7ScFzvZC3Q"
+      },
+      {
+        "password": "Pass123!",
+        "refreshToken": "OlN9tSygdAoJARatvPbuQw.OYAw4bpOx6pNmGxxt4fXyQGl45vnpmOZ2SteX3yOVk0",
+        "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMDAwMDA4IiwiZW1haWwiOiJwZXJmc2VlZDhAZXhhbXBsZS5jb20iLCJyb2xlIjoiVVNFUiIsImF1dGhWZXJzaW9uIjowLCJzZXNzaW9uSWQiOiIyNDk2OTg3MC1lZDViLTRjOGUtYmY2Zi0yOTM2MjVkM2Y4MjMiLCJpYXQiOjE3NzQ2MjExMDAsImV4cCI6MTc3NDYyNDcwMH0.3gwqXdFgB4r614t5G9ACNLc13fq-ls3zucgBQQ2aUXw",
+        "email": "perfseed8@example.com",
+        "nickname": "perfuser8"
+      },
+      {
+        "email": "perfseed9@example.com",
+        "nickname": "perfuser9",
+        "password": "Pass123!",
+        "refreshToken": "wUybgB9I4cNa6q8trzcLRQ.YBJeJBU-IZ9BvfV8gsHAzg5r-LvU3bawk74WbRdmee0",
+        "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMDAwMDA5IiwiZW1haWwiOiJwZXJmc2VlZDlAZXhhbXBsZS5jb20iLCJyb2xlIjoiVVNFUiIsImF1dGhWZXJzaW9uIjowLCJzZXNzaW9uSWQiOiI5MzBkNzY4OS1kNDU2LTRlOTQtOWVkMy04NGVjNWZkN2Y3YTkiLCJpYXQiOjE3NzQ2MjExMDAsImV4cCI6MTc3NDYyNDcwMH0.cg_1gcKlHfigu7On0Z6emrQ-RF1BPjMPGlAssHD-YCM"
+      },
+      {
+        "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMDAwMDEwIiwiZW1haWwiOiJwZXJmc2VlZDEwQGV4YW1wbGUuY29tIiwicm9sZSI6IlVTRVIiLCJhdXRoVmVyc2lvbiI6MCwic2Vzc2lvbklkIjoiNzdkZmQwZmQtOTI5Ny00ZjQyLWI3MDAtZjFiNTY2MDYwZjE1IiwiaWF0IjoxNzc0NjIxMTAwLCJleHAiOjE3NzQ2MjQ3MDB9.-ZOhtEMa-1q4RrWyqOW2dYohHhkC593pNlhX0VogtXA",
+        "email": "perfseed10@example.com",
+        "nickname": "perfuser10",
+        "password": "Pass123!",
+        "refreshToken": "ZO-AixX49n-bMMA6mVvDIw.o43nbVeZo02QwXDs8Wxnggjem44y1cwDXLhLm3AApf4"
+      },
+      {
+        "refreshToken": "CLafIJo7G4ijQUKxa9EOgw.jNyixIwW7desnNLOum4_2BgjbLoXNjwoQYrtKAsZQUw",
+        "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMDAwMDExIiwiZW1haWwiOiJwZXJmc2VlZDExQGV4YW1wbGUuY29tIiwicm9sZSI6IlVTRVIiLCJhdXRoVmVyc2lvbiI6MCwic2Vzc2lvbklkIjoiZjc0MjVmMGUtZDUwOS00ZTVjLWJmZTYtNDllMTJhMTEyNjAxIiwiaWF0IjoxNzc0NjIxMTAwLCJleHAiOjE3NzQ2MjQ3MDB9.G3Xq63-AGEG3UajRAbCwT8DVSqvlkf428__1oWvtGnE",
+        "email": "perfseed11@example.com",
+        "nickname": "perfuser11",
+        "password": "Pass123!"
+      }
+    ]
+  }
+}

@@ -294,7 +294,8 @@ Stuck 레코드 복구 및 완료 레코드 정리까지 포함:
 ### 문제 상황
 
 게시글 목록 조회 시 Post → User, Post → Region이 N+1로 조회되었습니다.
-`@EntityGraph`로 해결할 수도 있지만, 검색 조건(제목/내용/지역)이 동적으로 조합되어야 했습니다.
+여기에 더해 목록 응답에서 `likeCount`와 `likedByMe`까지 함께 내려줘야 했습니다.
+`@EntityGraph`로 해결할 수도 있지만, 검색 조건(제목/내용/지역)이 동적으로 조합되어야 했고, 좋아요 정보도 현재 사용자 기준으로 계산해야 했습니다.
 
 ### 해결 방법
 
@@ -322,22 +323,46 @@ public Page<Post> findAllByFilter(PostFilter filter, Pageable pageable) {
 
 **2. Projection DTO (필요한 컬럼만 조회)**
 
-목록 화면에서 게시글 전체 내용은 불필요합니다. `Projections.constructor`로 필요한 컬럼만 조회:
+목록 화면에서 게시글 전체 내용은 불필요합니다. `Projections.constructor`로 필요한 컬럼만 조회하고, 좋아요 수와 내 좋아요 여부는 subquery로 함께 계산합니다:
 
 ```java
 // PostRepositoryImpl.findSummaries()
+QPostLike likeCountPostLike = new QPostLike("likeCountPostLike");
+QPostLike likedByUserPostLike = new QPostLike("likedByUserPostLike");
+
 List<PostSummaryResponse> content = queryFactory
     .select(Projections.constructor(
         PostSummaryResponse.class,
-        post.id, post.title, post.user.nickname,
-        post.region.code, post.likeCount, post.createdAt
+        post.id,
+        post.title,
+        user.nickname,
+        post.regionCode,
+        JPAExpressions.select(likeCountPostLike.id.count().intValue())
+            .from(likeCountPostLike)
+            .where(likeCountPostLike.post.id.eq(post.id)),
+        currentUserId == null
+            ? Expressions.constant(false)
+            : JPAExpressions.selectOne()
+                .from(likedByUserPostLike)
+                .where(
+                    likedByUserPostLike.post.id.eq(post.id)
+                        .and(likedByUserPostLike.userId.eq(currentUserId))
+                )
+                .exists(),
+        post.createdAt
     ))
     .from(post)
-    .join(post.user, user)
-    .join(post.region, region)
+    .leftJoin(user).on(post.authorUserId.eq(user.id))
+    .leftJoin(region).on(post.regionCode.eq(region.code))
     .where(predicate)
     ...
 ```
+
+이렇게 하면:
+
+- `User`, `Region` 조인에서의 N+1을 피할 수 있고
+- `likeCount`를 `posts.like_count`가 아니라 `post_likes` 기준으로 계산할 수 있으며
+- 로그인 사용자의 `likedByMe`도 별도 후속 조회 없이 함께 반환할 수 있습니다.
 
 ### 핵심 판단
 

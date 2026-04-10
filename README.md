@@ -29,6 +29,17 @@
 - **축제 정보**: 서울시/전국 축제 API 연동 및 자동 동기화
 - **게임화 시스템**: 활동 추적, 포인트/배지 자동 지급
 
+### 커뮤니티 API 메모
+
+- 게시글 목록/상세 조회는 공개 API를 유지한다.
+- 로그인 사용자가 `GET /api/v1/posts`, `GET /api/v1/posts/{postId}`를 호출하면 응답에 `likedByMe`가 포함된다.
+- 좋아요 변경은 토글이 아니라 상태 명시형으로 처리한다.
+  - `PUT /api/v1/posts/{postId}/like`
+  - `DELETE /api/v1/posts/{postId}/like`
+- 두 변경 API는 모두 `200 OK`와 함께 `postId`, `likedByMe`, `likeCount`를 반환한다.
+- API 응답의 `likeCount`는 `posts.like_count`가 아니라 `post_likes`를 기준으로 계산한다.
+- `GET /api/v1/posts/liked` 응답의 각 항목은 항상 `likedByMe=true`다.
+
 ---
 
 ## ERD
@@ -80,7 +91,9 @@ erDiagram
 erDiagram
   users ||--o{ meetings : "생성"
   users ||--o{ meeting_participants : "참가"
-  users ||--o{ user_activities : "활동"
+  users ||--|| user_gamification_stats : "집계"
+  users ||--o{ user_activity_stats : "액션별 집계"
+  users ||--o{ user_activities : "유효 보상 기록"
   users ||--o{ user_badges : "획득"
   meetings ||--o{ meeting_participants : "포함"
   badges ||--o{ user_badges : "획득"
@@ -106,6 +119,17 @@ erDiagram
     enum activity_type
     int points_earned
   }
+  user_gamification_stats {
+    bigint user_id PK
+    int total_points
+    bigint total_activity_count
+  }
+  user_activity_stats {
+    bigint user_id PK
+    enum action_type PK
+    bigint action_count
+    int points_total
+  }
   badges {
     bigint id PK
     varchar name UK
@@ -121,13 +145,9 @@ erDiagram
     enum activity_type
     int threshold
   }
-  activity_outbox {
-    bigint id PK
-    varchar idempotency_key UK
-    bigint user_id FK
-    enum status
-  }
 ```
+
+→ 상세: [GAMIFICATION_USER_STRUCTURE.md](docs/GAMIFICATION_USER_STRUCTURE.md)
 
 ---
 
@@ -153,7 +173,7 @@ erDiagram
 | 챌린지 | 해결 | 결과 |
 |--------|------|------|
 | **동시성 제어** | 비관적 락(모임) + Atomic Update(포인트) 전략 분리 | 정원 초과·포인트 유실 방지 |
-| **이벤트 기반 아키텍처** | Spring Events → Retry+DB → Transactional Outbox 진화 | 데드락 해결, 이벤트 유실 방지, 배치 실패 격리 |
+| **게임화 정합성 개선** | 동기 코어 + AFTER_COMMIT projection + stats table | 가독성 개선, 코어 정합성 강화, Redis 의존 축소 |
 | **N+1 + 동적 검색** | QueryDSL fetchJoin + Projection DTO | N+1 해결, 동적 필터, 필요 컬럼만 조회 |
 | **JWT 인증 보안** | HttpOnly + SameSite=Strict + RT PBKDF2 해시 저장 | XSS/CSRF 방어, DB 탈취 대응 |
 | **실시간 랭킹** | Redis Sorted Set + MySQL Fallback | O(log N) 업데이트, 장애 시 자동 전환 |
@@ -171,18 +191,20 @@ graph LR
   A[Client] --> B[JWT Filter]
   B --> C[Controllers]
   C --> D[Services]
-  D --> E[Event Publisher]
-  E -. 비동기 .-> F[Event Listeners]
+  D --> E[GamificationFacade]
+  E --> H[(MySQL)]
+  E -. AFTER_COMMIT .-> F[Projection Listeners]
   D --> G[QueryDSL]
-  G --> H[(MySQL)]
-  F --> H
+  G --> H
   D --> I[External APIs]
-  D --> R[(Redis)]
+  F --> R[(Redis)]
   C --> J[Exception Handler]
   J --> K[Discord + RateLimiter]
 ```
 
 → 상세: [ARCHITECTURE.md](docs/ARCHITECTURE.md)
+  
+→ 게임화 상세: [GAMIFICATION_USER_STRUCTURE.md](docs/GAMIFICATION_USER_STRUCTURE.md)
 
 ---
 
@@ -201,6 +223,19 @@ export MYSQL_PASSWORD=your-password SECRET_KEY=your-jwt-secret
 # 4. API 문서 확인
 open http://localhost:8080/swagger-ui.html
 ```
+
+---
+
+## 학습/탐색 가이드
+
+로컬 앱을 띄운 뒤 API를 직접 호출하면서 모듈 구조, SQL, Redis, 스케줄러를 같이 따라가고 싶다면 아래 문서를 먼저 보는 편이 빠릅니다.
+
+- 실습 인덱스: [docs/hands-on/README.md](docs/hands-on/README.md)
+- 모듈/요청 흐름: [docs/hands-on/01-module-and-request-flow.md](docs/hands-on/01-module-and-request-flow.md)
+- API 실습 순서: [docs/hands-on/02-api-exploration.md](docs/hands-on/02-api-exploration.md)
+- 스케줄러/배치: [docs/hands-on/03-scheduler-and-background-jobs.md](docs/hands-on/03-scheduler-and-background-jobs.md)
+- SQL/캐시/Redis 관찰: [docs/hands-on/04-sql-cache-redis-observability.md](docs/hands-on/04-sql-cache-redis-observability.md)
+- 실행형 예제: [docs/http/auth-user-session.http](docs/http/auth-user-session.http), [docs/http/meeting-region-ranking-admin.http](docs/http/meeting-region-ranking-admin.http)
 
 ---
 

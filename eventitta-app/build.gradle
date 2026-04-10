@@ -1,0 +1,27 @@
+apply plugin: 'org.springframework.boot'
+
+dependencies {
+    implementation project(':eventitta-api')
+    implementation project(':eventitta-domain')
+    implementation project(':eventitta-infra')
+
+    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    runtimeOnly 'com.mysql:mysql-connector-j'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+    runtimeOnly 'p6spy:p6spy:3.9.1'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-web'
+    testImplementation 'org.springframework.boot:spring-boot-starter-validation'
+    testImplementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    testImplementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
+    testImplementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
+    testImplementation 'software.amazon.awssdk:s3:2.20.26'
+    testImplementation 'net.javacrumbs.shedlock:shedlock-spring:6.6.0'
+}
+
+tasks.named('jar') {
+    enabled = false
+}

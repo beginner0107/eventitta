@@ -1,0 +1,157 @@
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    url: jdbc:p6spy:mysql://localhost:${DB_PORT:3306}/eventitta?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: eventittaUser
+    password: ${MYSQL_PASSWORD}
+    driver-class-name: com.p6spy.engine.spy.P6SpyDriver
+  jpa:
+    hibernate:
+      ddl-auto: none
+    defer-datasource-initialization: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          batch_size: 100
+        order_inserts: true
+        order_updates: true
+  sql:
+    init:
+      mode: never
+      data-locations: classpath:data.sql
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 0
+    validate-on-migrate: true
+    clean-disabled: false
+  devtools:
+    restart:
+      enabled: true
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 60MB
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 10
+          min-idle: 2
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+    with-credentials: true
+    persist-authorization: true
+  server:
+    url: http://localhost:8080
+    description: Local development server
+
+jwt:
+  secret: ${SECRET_KEY}
+  access-token-validity-ms: 3600000
+  refresh-token-validity-ms: 86400000
+
+auth:
+  social:
+    kakao:
+      client-id: ${KAKAO_CLIENT_ID:test-kakao-client-id}
+      client-secret: ${KAKAO_CLIENT_SECRET:test-kakao-client-secret}
+      authorize-base-url: https://kauth.kakao.com/oauth/authorize
+      token-base-url: https://kauth.kakao.com
+      api-base-url: https://kapi.kakao.com
+      state-cookie-max-age-seconds: 300
+      allowed-redirect-uris:
+        - http://localhost:3000/auth/kakao/callback
+        - http://127.0.0.1:3000/auth/kakao/callback
+        - http://localhost:5173/auth/kakao/callback
+        - http://127.0.0.1:5173/auth/kakao/callback
+
+security:
+  cors:
+    allowed-origins:
+      - http://localhost:3000
+      - http://127.0.0.1:3000
+      - http://localhost:5173
+      - http://127.0.0.1:5173
+
+file:
+  storage:
+    location: ./uploads
+
+festival:
+  seoul:
+    base-url: http://openapi.seoul.go.kr:8088
+  national:
+    base-url: http://api.data.go.kr/openapi/tn_pubr_public_cltur_fstvl_api
+  geocoding:
+    enabled: true
+
+api:
+  seoul:
+    key: ${SEOUL_API_KEY:your-seoul-api-key-here}
+  national:
+    key: ${NATIONAL_API_KEY:your-national-api-key-here}
+
+logging:
+  level:
+    root: INFO
+    com.eventitta: DEBUG                    # 애플리케이션 전체 상세 로그
+    com.eventitta.festivals: DEBUG          # 축제 도메인 디버깅
+    com.eventitta.platform.interceptor: DEBUG # RestClient 요청/응답 상세
+    org.springframework.web: INFO
+    org.springframework.security: INFO
+    org.hibernate.SQL: DEBUG                # SQL 쿼리 확인
+    p6spy: INFO                             # 쿼리 파라미터 바인딩 확인
+  file: # 로컬에서도 파일 로깅 활성화 (테스트용)
+    path: ./logs
+    name: ./logs/eventitta.log
+
+async:
+  core-pool-size: 4
+  max-pool-size: 20
+  queue-capacity: 200
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,loggers,metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    loggers:
+      enabled: true
+
+monitoring:
+  log:
+    enabled: true
+    error-threshold: 3
+    time-window-minutes: 2
+    size-threshold-mb: 10
+    alert-cooldown-minutes: 30
+
+notification:
+  discord:
+    enabled: false

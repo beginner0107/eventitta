@@ -17,6 +17,7 @@
 #   --base-url <url>      대상 애플리케이션 BASE URL (기본: http://localhost:8080)
 #   --influx-url <url>    InfluxDB 수집 URL (기본: http://localhost:8086/k6)
 #   --grafana-url <url>   Grafana 접속 URL (기본: http://localhost:3000)
+#   --scenario <name>     실행할 k6 시나리오 (기본: region)
 #   test 명령의 태그 인자(true/false)는 하위 호환 유지
 #
 # 환경변수:
@@ -57,6 +58,7 @@ print_info() { echo -e "${BLUE}ℹ${NC} $1"; }
 DEFAULT_APP_URL="http://localhost:8080"
 DEFAULT_INFLUX_URL="http://localhost:8086/k6"
 DEFAULT_GRAFANA_URL="http://localhost:3000"
+SCENARIO="region"
 
 # 인자 파싱(명령어 + 옵션)
 CMD="${1:-}"
@@ -76,6 +78,8 @@ while [[ $# -gt 0 ]]; do
       INFLUX_URL="$2"; shift 2 ;;
     --grafana-url)
       GRAFANA_URL="$2"; shift 2 ;;
+    --scenario)
+      SCENARIO="$2"; shift 2 ;;
     true|false)
       # test 명령 호환 태그
       CACHE_TAG_DEFAULT="$1"; shift ;;
@@ -178,7 +182,20 @@ run_test() {
         CACHE_TAG="$CACHE_TAG_DEFAULT"
     fi
 
-    print_info "테스트 타입: cache=${CACHE_TAG}"
+    local SCENARIO_FILE
+    case "$SCENARIO" in
+      region) SCENARIO_FILE="${SCRIPT_DIR}/region-baseline.js" ;;
+      posts-read) SCENARIO_FILE="${SCRIPT_DIR}/posts-read.js" ;;
+      posts-write) SCENARIO_FILE="${SCRIPT_DIR}/posts-write-hotspot.js" ;;
+      media-upload) SCENARIO_FILE="${SCRIPT_DIR}/media-upload.js" ;;
+      gamification) SCENARIO_FILE="${SCRIPT_DIR}/gamification-projection.js" ;;
+      *)
+        print_error "지원하지 않는 시나리오: ${SCENARIO}"
+        exit 1
+        ;;
+    esac
+
+    print_info "테스트 타입: scenario=${SCENARIO}, cache=${CACHE_TAG}"
     print_info "대상: ${APP_BASE_URL}"
     print_info "Influx 출력: ${INFLUX_URL}"
     print_info "예상 소요 시간: 약 7분 30초"
@@ -187,9 +204,10 @@ run_test() {
     k6 run \
         --out "influxdb=${INFLUX_URL}" \
         --tag "cache=${CACHE_TAG}" \
+        --tag "scenario=${SCENARIO}" \
         --tag "test_date=$(date +%Y-%m-%d_%H-%M-%S)" \
         -e "BASE_URL=${APP_BASE_URL}" \
-        "${SCRIPT_DIR}/region-baseline.js"
+        "${SCENARIO_FILE}"
 
     RESULT=$?
 
@@ -254,6 +272,7 @@ Region API 성능 테스트 도구
   --base-url <url>        대상 애플리케이션 BASE URL (기본: ${DEFAULT_APP_URL})
   --influx-url <url>      InfluxDB 수집 URL (기본: ${DEFAULT_INFLUX_URL})
   --grafana-url <url>     Grafana 접속 URL (기본: ${DEFAULT_GRAFANA_URL})
+  --scenario <name>       실행할 시나리오 (region|posts-read|posts-write|media-upload|gamification)
 
 환경변수(옵션보다 낮은 우선순위):
   BASE_URL 또는 TARGET_BASE_URL
@@ -265,10 +284,14 @@ Region API 성능 테스트 도구
   $0 all
 
   # 환경별 URL 지정
-  $0 test --base-url https://dev.api.example.com --influx-url http://localhost:8086/k6
+  $0 test --scenario posts-read --base-url https://dev.api.example.com --influx-url http://localhost:8086/k6
 
   # 캐싱 후 테스트 (캐싱 적용 후 실행)
   $0 test true --base-url http://localhost:8081
+
+  # 업로드 부하 테스트
+  UPLOAD_FIXTURE_PATHS=./performance-tests/fixtures/sample-upload.png \\
+    $0 test --scenario media-upload --base-url http://localhost:18080
 
 접속 URL(기본값):
   - Grafana: ${DEFAULT_GRAFANA_URL} (admin/admin)

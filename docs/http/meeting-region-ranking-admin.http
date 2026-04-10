@@ -1,0 +1,162 @@
+@baseUrl = http://localhost:8080
+@password = Pass123!
+@leaderEmail = leader{{$timestamp}}@example.com
+@leaderNickname = leader{{$timestamp}}
+@participantEmail = member{{$timestamp}}@example.com
+@participantNickname = member{{$timestamp}}
+@meetingStart = 2030-08-01T10:00:00
+@meetingEnd = 2030-08-01T12:00:00
+@kakaoRedirectUri = http://localhost:3000/auth/kakao/callback
+
+### 1. 최상위 지역 조회
+# 목적: RegionController 진입과 regions 캐시 사용 확인
+GET {{baseUrl}}/api/v1/regions
+
+### 2. 하위 지역 조회 예시
+# 목적: parentCode 기준 하위 지역 탐색
+GET {{baseUrl}}/api/v1/regions/11
+
+### 3. 지역 옵션 전체 조회
+# 목적: regionOptions 캐시와 leaf region 계산 확인
+GET {{baseUrl}}/api/v1/regions/options
+
+### 4. leader 회원가입
+# 목적: 모임장 계정 생성
+POST {{baseUrl}}/api/v1/auth/signup
+Content-Type: application/json
+
+{
+  "email": "{{leaderEmail}}",
+  "password": "{{password}}",
+  "nickname": "{{leaderNickname}}"
+}
+
+### 5. leader 로그인
+# 목적: leader용 access/refresh 쿠키를 별도 변수로 저장
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{leaderEmail}}",
+  "password": "{{password}}"
+}
+> {%
+  const cookies = response.headers.valuesOf("Set-Cookie") || [];
+  for (const cookie of cookies) {
+    if (cookie.startsWith("access_token=")) {
+      client.global.set("leaderAccessToken", cookie.split(";")[0].replace("access_token=", ""));
+    }
+    if (cookie.startsWith("refresh_token=")) {
+      client.global.set("leaderRefreshToken", cookie.split(";")[0].replace("refresh_token=", ""));
+    }
+  }
+%}
+
+### 6. leader 모임 생성
+# 목적: meetings insert와 201 Location 확인
+# 같이 볼 코드: MeetingController, MeetingService, MeetingCreateRequest
+POST {{baseUrl}}/api/v1/meetings
+Content-Type: application/json
+Cookie: access_token={{leaderAccessToken}}; refresh_token={{leaderRefreshToken}}
+
+{
+  "title": "실습용 스프링 모임",
+  "description": "모듈 구조를 이해하기 위한 API 실습 모임",
+  "startTime": "{{meetingStart}}",
+  "endTime": "{{meetingEnd}}",
+  "maxMembers": 6,
+  "address": "서울특별시 강남구 테헤란로 212",
+  "latitude": 37.5017,
+  "longitude": 127.0396
+}
+> {%
+  const location = response.headers.valueOf("Location");
+  if (location) {
+    client.global.set("meetingId", location.split("/").pop());
+  }
+%}
+
+### 7. 모임 목록 조회
+# 목적: PageResponse 형태와 생성된 모임 노출 확인
+GET {{baseUrl}}/api/v1/meetings?page=0&size=10
+
+### 8. 생성한 모임 상세 조회
+# 목적: participant 목록과 leader 정보 확인
+GET {{baseUrl}}/api/v1/meetings/{{meetingId}}
+
+### 9. participant 회원가입
+# 목적: 참가자 계정 생성
+POST {{baseUrl}}/api/v1/auth/signup
+Content-Type: application/json
+
+{
+  "email": "{{participantEmail}}",
+  "password": "{{password}}",
+  "nickname": "{{participantNickname}}"
+}
+
+### 10. participant 로그인
+# 목적: participant용 access/refresh 쿠키를 별도 변수로 저장
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{participantEmail}}",
+  "password": "{{password}}"
+}
+> {%
+  const cookies = response.headers.valuesOf("Set-Cookie") || [];
+  for (const cookie of cookies) {
+    if (cookie.startsWith("access_token=")) {
+      client.global.set("participantAccessToken", cookie.split(";")[0].replace("access_token=", ""));
+    }
+    if (cookie.startsWith("refresh_token=")) {
+      client.global.set("participantRefreshToken", cookie.split(";")[0].replace("refresh_token=", ""));
+    }
+  }
+%}
+
+### 11. participant 모임 참가 신청
+# 목적: meeting_participants insert와 PENDING 상태 확인
+POST {{baseUrl}}/api/v1/meetings/{{meetingId}}/join
+Cookie: access_token={{participantAccessToken}}; refresh_token={{participantRefreshToken}}
+> {%
+  if (response.body && response.body.participantId) {
+    client.global.set("participantId", String(response.body.participantId));
+  }
+}
+%}
+
+### 12. leader 참가 승인
+# 목적: meeting_participants 상태 변경과 currentMembers 반영 확인
+PUT {{baseUrl}}/api/v1/meetings/{{meetingId}}/participants/{{participantId}}/approve
+Cookie: access_token={{leaderAccessToken}}; refresh_token={{leaderRefreshToken}}
+
+### 13. 승인 후 모임 상세 재조회
+# 목적: participant status=APPROVED 확인
+GET {{baseUrl}}/api/v1/meetings/{{meetingId}}
+
+### 14. 포인트 랭킹 top 조회
+# 목적: Redis ranking:points 읽기 흐름 확인
+GET {{baseUrl}}/api/v1/rankings/top?type=POINTS&limit=10
+Cookie: access_token={{leaderAccessToken}}; refresh_token={{leaderRefreshToken}}
+
+### 15. 내 랭킹 조회
+# 목적: 인증 사용자 기준 랭킹 조회 확인
+GET {{baseUrl}}/api/v1/rankings/me?type=POINTS
+Cookie: access_token={{leaderAccessToken}}; refresh_token={{leaderRefreshToken}}
+
+### 16. 랭킹 통계 조회
+# 목적: ranking:points / ranking:activity:count 참여자 수 확인
+GET {{baseUrl}}/api/v1/rankings/stats
+Cookie: access_token={{leaderAccessToken}}; refresh_token={{leaderRefreshToken}}
+
+### 17. 전국 축제 수동 sync
+# 목적: FestivalAdminController -> FestivalService 흐름 확인
+# 주의: controller에 @PreAuthorize("hasRole('ADMIN')")가 있으므로 관리자 계정 세션에서 실행해야 한다
+POST {{baseUrl}}/api/v1/admin/festivals/sync/national
+
+### 18. 서울시 축제 수동 sync
+# 목적: 일별 축제 sync 수동 재실행
+# 주의: 관리자 계정 세션이 아니면 403이 정상이다
+POST {{baseUrl}}/api/v1/admin/festivals/sync/seoul

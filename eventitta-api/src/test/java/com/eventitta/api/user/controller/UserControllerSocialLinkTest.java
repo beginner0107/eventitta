@@ -2,14 +2,13 @@ package com.eventitta.api.user.controller;
 
 import com.eventitta.api.auth.security.config.SecurityConfig;
 import com.eventitta.api.auth.AuthConstants;
-import com.eventitta.api.auth.controller.request.SocialLoginRequest;
+import com.eventitta.domain.auth.dto.request.SocialLoginRequest;
 import com.eventitta.api.auth.security.principal.UserPrincipal;
 import com.eventitta.api.auth.security.handler.JwtAccessDeniedHandler;
 import com.eventitta.api.auth.security.handler.JwtAuthenticationEntryPoint;
 import com.eventitta.api.auth.jwt.JwtTokenProvider;
 import com.eventitta.api.auth.security.userdetails.CustomUserDetailsService;
 import com.eventitta.api.common.logging.RequestActorResolver;
-import com.eventitta.api.auth.controller.AuthMapperImpl;
 import com.eventitta.api.auth.security.config.SecurityCorsProperties;
 import com.eventitta.api.auth.cookie.CookieManager;
 import com.eventitta.api.auth.oauth.kakao.KakaoAuthorizationSupport;
@@ -61,7 +60,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(UserController.class)
 @AutoConfigureMockMvc
-@Import({SecurityConfig.class, AuthMapperImpl.class})
+@Import(SecurityConfig.class)
 class UserControllerSocialLinkTest {
 
     @Autowired

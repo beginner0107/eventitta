@@ -3,7 +3,7 @@ package com.eventitta.api.auth.cookie;
 import com.eventitta.api.auth.cookie.CookieProperties;
 import com.eventitta.api.auth.oauth.kakao.KakaoWebProperties;
 import com.eventitta.domain.auth.port.AuthTokenProvider;
-import com.eventitta.domain.auth.service.dto.TokenResult;
+import com.eventitta.domain.auth.dto.TokenResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

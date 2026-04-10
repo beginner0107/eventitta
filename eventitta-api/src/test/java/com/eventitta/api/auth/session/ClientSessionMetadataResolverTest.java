@@ -1,6 +1,6 @@
 package com.eventitta.api.auth.session;
 
-import com.eventitta.domain.auth.service.dto.ClientSessionMetadata;
+import com.eventitta.domain.auth.dto.ClientSessionMetadata;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;

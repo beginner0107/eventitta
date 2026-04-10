@@ -17,7 +17,7 @@ import com.eventitta.api.user.controller.response.UserSessionResponse;
 import com.eventitta.api.user.controller.response.UserProfileResponse;
 import com.eventitta.api.user.mapper.UserMapper;
 import com.eventitta.domain.auth.service.AuthService;
-import com.eventitta.domain.auth.service.dto.AuthSessionMetadata;
+import com.eventitta.domain.auth.dto.AuthSessionMetadata;
 import com.eventitta.domain.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

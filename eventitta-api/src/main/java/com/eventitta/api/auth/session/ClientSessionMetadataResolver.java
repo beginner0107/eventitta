@@ -1,6 +1,6 @@
 package com.eventitta.api.auth.session;
 
-import com.eventitta.domain.auth.service.dto.ClientSessionMetadata;
+import com.eventitta.domain.auth.dto.ClientSessionMetadata;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;

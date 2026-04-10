@@ -1,4 +1,4 @@
-package com.eventitta.domain.auth.port.dto;
+package com.eventitta.domain.auth.dto;
 
 public record KakaoUserInfo(
     String providerUserId,

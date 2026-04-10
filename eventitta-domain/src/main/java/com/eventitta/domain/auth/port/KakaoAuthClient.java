@@ -1,6 +1,6 @@
 package com.eventitta.domain.auth.port;
 
-import com.eventitta.domain.auth.port.dto.KakaoUserInfo;
+import com.eventitta.domain.auth.dto.KakaoUserInfo;
 
 public interface KakaoAuthClient {
 

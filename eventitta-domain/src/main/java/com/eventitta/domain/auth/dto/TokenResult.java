@@ -1,4 +1,4 @@
-package com.eventitta.domain.auth.service.dto;
+package com.eventitta.domain.auth.dto;
 
 public record TokenResult(
     String accessToken,

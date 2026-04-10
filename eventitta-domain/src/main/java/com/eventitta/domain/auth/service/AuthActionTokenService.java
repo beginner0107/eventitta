@@ -4,7 +4,7 @@ import com.eventitta.domain.auth.config.AuthActionTokenProperties;
 import com.eventitta.domain.auth.domain.AuthActionToken;
 import com.eventitta.domain.auth.domain.AuthActionTokenPurpose;
 import com.eventitta.domain.auth.repository.AuthActionTokenRepository;
-import com.eventitta.domain.auth.service.dto.ClientSessionMetadata;
+import com.eventitta.domain.auth.dto.ClientSessionMetadata;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.Pbkdf2PasswordEncoder;
 import org.springframework.stereotype.Service;

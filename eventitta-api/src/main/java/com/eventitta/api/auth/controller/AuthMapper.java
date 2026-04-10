@@ -4,7 +4,7 @@ import com.eventitta.api.auth.controller.request.SignInRequest;
 import com.eventitta.api.auth.controller.request.SignUpRequest;
 import com.eventitta.api.auth.controller.request.SocialLoginRequest;
 import com.eventitta.api.auth.controller.response.SignUpResponse;
-import com.eventitta.domain.auth.service.dto.*;
+import com.eventitta.domain.auth.dto.*;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")

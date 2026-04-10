@@ -3,7 +3,7 @@ package com.eventitta.api.auth.cookie;
 import com.eventitta.api.auth.cookie.CookieProperties;
 import com.eventitta.api.auth.oauth.kakao.KakaoWebProperties;
 import com.eventitta.domain.auth.port.AuthTokenProvider;
-import com.eventitta.domain.auth.service.dto.TokenResult;
+import com.eventitta.domain.auth.dto.TokenResult;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;

@@ -2,7 +2,7 @@ package com.eventitta.infra.auth.client;
 
 import com.eventitta.domain.auth.exception.AuthErrorCode;
 import com.eventitta.domain.auth.port.KakaoAuthClient;
-import com.eventitta.domain.auth.port.dto.KakaoUserInfo;
+import com.eventitta.domain.auth.dto.KakaoUserInfo;
 import com.eventitta.infra.auth.client.dto.KakaoTokenResponse;
 import com.eventitta.infra.auth.client.dto.KakaoUserResponse;
 import com.eventitta.infra.auth.config.KakaoAuthProperties;

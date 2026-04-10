@@ -1,4 +1,4 @@
-package com.eventitta.domain.file.service;
+package com.eventitta.domain.media.service;
 
 import com.eventitta.domain.common.exception.CustomException;
 import com.eventitta.domain.file.api.internal.command.UploadFileCommand;
@@ -26,13 +26,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 @DisplayName("파일 형식 유효성 검사하는 서비스 테스트")
-class FileValidationServiceTest {
+class MediaUploadValidationServiceTest {
 
-    private FileValidationService fileValidationService;
+    private MediaUploadValidationService fileValidationService;
 
     @BeforeEach
     void setUp() {
-        fileValidationService = new FileValidationService(new TestMediaPolicyProvider());
+        fileValidationService = new MediaUploadValidationService(new TestMediaPolicyProvider());
         ReflectionTestUtils.setField(fileValidationService, "fallbackMaxFileSize", DataSize.ofMegabytes(5));
     }
 

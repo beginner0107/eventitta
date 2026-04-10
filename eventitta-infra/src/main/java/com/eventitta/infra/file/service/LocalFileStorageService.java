@@ -3,7 +3,7 @@ package com.eventitta.infra.file.service;
 import com.eventitta.domain.file.api.internal.command.UploadFileCommand;
 import com.eventitta.domain.file.api.internal.facade.FileStorageFacade;
 import com.eventitta.domain.file.api.internal.view.StoredFileView;
-import com.eventitta.domain.media.domain.MediaStorageProvider;
+import com.eventitta.domain.file.api.internal.FileStorageProvider;
 import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -141,8 +141,8 @@ public class LocalFileStorageService implements FileStorageFacade {
     }
 
     @Override
-    public MediaStorageProvider getStorageProvider() {
-        return MediaStorageProvider.LOCAL;
+    public FileStorageProvider getStorageProvider() {
+        return FileStorageProvider.LOCAL;
     }
 
     private Path safeResolve(String key) {

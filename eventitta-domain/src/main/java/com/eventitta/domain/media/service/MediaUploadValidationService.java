@@ -1,8 +1,6 @@
-package com.eventitta.domain.file.service;
+package com.eventitta.domain.media.service;
 
 import com.eventitta.domain.file.api.internal.command.UploadFileCommand;
-import com.eventitta.domain.file.api.internal.facade.FileValidationFacade;
-import com.eventitta.domain.file.api.internal.view.ValidatedMediaFile;
 import com.eventitta.domain.file.exception.FileStorageErrorCode;
 import com.eventitta.domain.media.domain.MediaCategory;
 import com.eventitta.domain.media.policy.MediaCategoryPolicy;
@@ -26,7 +24,7 @@ import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
-public class FileValidationService implements FileValidationFacade {
+public class MediaUploadValidationService {
 
     private static final Set<String> ALLOWED_IMAGE_CONTENT_TYPES = Set.of(
         "image/jpeg", "image/png", "image/gif"
@@ -37,8 +35,7 @@ public class FileValidationService implements FileValidationFacade {
     @Value("${spring.servlet.multipart.max-file-size:10MB}")
     private DataSize fallbackMaxFileSize;
 
-    @Override
-    public List<ValidatedMediaFile> validateFiles(MediaCategory category, List<UploadFileCommand> files) {
+    public List<ValidatedMedia> validateFiles(MediaCategory category, List<UploadFileCommand> files) {
         if (files == null || files.isEmpty()) {
             throw FileStorageErrorCode.INVALID_FILE_REQUEST.defaultException();
         }
@@ -53,7 +50,7 @@ public class FileValidationService implements FileValidationFacade {
             .toList();
     }
 
-    private ValidatedMediaFile validateSingleFile(
+    private ValidatedMedia validateSingleFile(
         MediaCategory category,
         UploadFileCommand file,
         MediaCategoryPolicy policy
@@ -88,7 +85,7 @@ public class FileValidationService implements FileValidationFacade {
             throw FileStorageErrorCode.EMPTY_FILE.defaultException();
         }
 
-        return new ValidatedMediaFile(
+        return new ValidatedMedia(
             filename != null ? filename : "upload",
             declaredContentType,
             sizeBytes,

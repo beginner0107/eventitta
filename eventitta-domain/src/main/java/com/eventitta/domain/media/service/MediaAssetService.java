@@ -1,9 +1,8 @@
 package com.eventitta.domain.media.service;
 
+import com.eventitta.domain.file.api.internal.FileStorageProvider;
 import com.eventitta.domain.file.api.internal.command.UploadFileCommand;
 import com.eventitta.domain.file.api.internal.facade.FileStorageFacade;
-import com.eventitta.domain.file.api.internal.facade.FileValidationFacade;
-import com.eventitta.domain.file.api.internal.view.ValidatedMediaFile;
 import com.eventitta.domain.media.api.internal.facade.MediaAssetInternalFacade;
 import com.eventitta.domain.media.api.internal.view.MediaAttachmentView;
 import com.eventitta.domain.media.api.internal.view.MediaDisplayView;
@@ -44,7 +43,7 @@ public class MediaAssetService implements MediaAssetInternalFacade {
     private final UserInternalFacade userInternalFacade;
     private final PostInternalFacade postInternalFacade;
     private final FileStorageFacade fileStorageService;
-    private final FileValidationFacade fileValidationService;
+    private final MediaUploadValidationService mediaUploadValidationService;
     private final MediaPolicyProvider mediaPolicyProvider;
     private final MediaUrlResolver mediaUrlResolver;
     private final MediaVariantProcessingService mediaVariantProcessingService;
@@ -54,7 +53,7 @@ public class MediaAssetService implements MediaAssetInternalFacade {
     @Override
     public List<UploadedMediaView> upload(Long userId, MediaCategory category, List<UploadFileCommand> files) {
         userInternalFacade.ensureActiveUser(userId);
-        List<ValidatedMediaFile> validatedFiles = fileValidationService.validateFiles(category, files);
+        List<ValidatedMedia> validatedFiles = mediaUploadValidationService.validateFiles(category, files);
         String keyPrefix = "media/original/" + category.storageDirectory() + "/" + userId;
 
         List<String> storedKeys = new ArrayList<>();
@@ -63,7 +62,7 @@ public class MediaAssetService implements MediaAssetInternalFacade {
         try {
             for (int i = 0; i < files.size(); i++) {
                 UploadFileCommand file = files.get(i);
-                ValidatedMediaFile validatedFile = validatedFiles.get(i);
+                ValidatedMedia validatedFile = validatedFiles.get(i);
                 String storageKey = fileStorageService.store(file, keyPrefix);
                 storedKeys.add(storageKey);
 
@@ -286,7 +285,7 @@ public class MediaAssetService implements MediaAssetInternalFacade {
     }
 
     private void deleteStoredObjects(MediaAsset asset) {
-        if (asset.getStorageProvider() == com.eventitta.domain.media.domain.MediaStorageProvider.LEGACY) {
+        if (asset.getStorageProvider() == FileStorageProvider.LEGACY) {
             mediaAssetVariantRepository.deleteAllByMediaAssetId(asset.getId());
             return;
         }

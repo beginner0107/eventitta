@@ -88,14 +88,13 @@ graph LR
 - `meeting`: 모임 생성/참가/승인
 - `gamification`: 포인트, 활동 집계, 랭킹
 - `user`, `region`: 사용자 프로필, 지역 마스터
-- `file`: **storage port**. 바이트 저장/조회/검증의 어댑터 경계.
-  - 진입점: `FileStorageFacade`, `FileValidationFacade`
+- `file`: **storage port**. 바이트 저장/조회의 어댑터 경계.
+  - 진입점: `FileStorageFacade`
   - 구현: `infra/file/service/{LocalFileStorageService, S3FileStorageService}`
-  - 원칙: 바이트·경로·검증만 다룬다. 미디어 도메인 규칙은 media 슬라이스에 둔다.
-- `media`: **미디어 애셋 도메인**. `MediaAsset` 엔티티, variant/status 상태머신, 업로드·변환·정리 정책, URL 해석.
+  - 원칙: 바이트·경로·storage provider 만 다룬다. 미디어 도메인/정책은 media 슬라이스에 둔다. `domain/file` 은 `domain/media` 를 import 하지 않는다 (ArchUnit `fileMustNotDependOnMedia`).
+- `media`: **미디어 애셋 도메인**. `MediaAsset` 엔티티, variant/status 상태머신, 업로드 validation·변환·정리 정책, URL 해석.
   - 진입점: `MediaAssetInternalFacade`
-  - 의존 방향 (의도): `media → file`. media 가 file 의 storage/validation facade 를 호출한다.
-  - 현재 상태: file 쪽 facade 일부가 `MediaCategory`, `MediaStorageProvider`, `MediaPolicyProvider` 를 참조해 **양방향 의존**이 잔존한다. 아래 "known deviations" 참고.
+  - 의존 방향: `media → file` 단방향. media 가 file 의 `FileStorageFacade` 와 `FileStorageErrorCode` 를 사용한다.
 
 ## Internal Facade Rule
 
@@ -163,8 +162,6 @@ sequenceDiagram
 - `domain/auth`: `port/dto/` 와 `service/dto/` 가 공존한다. → `dto/` 로 단일화 필요.
 - `domain/auth`: `annotation/` 서브패키지가 슬라이스 루트에 있다. `api/common/security/annotation/` 과 위치 일관성이 없다.
 - `domain/user`: 표준에 없는 `persistence/`, `mapper/` 가 있다.
-- `domain/file`: `api/internal/view/ValidatedMediaFile` 이 media 개념을 file 슬라이스에 누출한다. 리네이밍 또는 media 로 이동 대상.
-- `domain/file` ↔ `domain/media`: 상호 의존. `file/api/internal/facade/FileStorageFacade`, `file/service/FileValidationService` 가 media 타입을 import 한다. 의도된 단방향 (`media → file`) 으로 수렴 필요.
 - `api/auth`: `domain/` 서브패키지 (모듈명 충돌, `UserPrincipal` 1개), `jwt/{filter,service,util}` 3-depth, `web/` (Cookie/Kakao/SessionMetadata 혼재), `mapper/`, `properties/`, `constants/`, `config/` 로 표준 대비 과도하게 세분화되어 있다. → 평탄화 및 구체적 이름 부여 대상.
 - `api/auth`, `api/user`: `controller/request/`, `controller/response/` 를 자체 보유. → domain 의 `dto/` 재사용으로 이동.
 - `api/common/monitoring` 과 `domain/common/monitoring`: 같은 이름의 공통 패키지가 두 모듈에 모두 존재. → 하나로 통합하거나 `api/common/observability` 처럼 명시적으로 rename.

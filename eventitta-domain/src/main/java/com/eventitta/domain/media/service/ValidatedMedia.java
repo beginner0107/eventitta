@@ -1,6 +1,6 @@
-package com.eventitta.domain.file.api.internal.view;
+package com.eventitta.domain.media.service;
 
-public record ValidatedMediaFile(
+public record ValidatedMedia(
     String originalFilename,
     String contentType,
     long sizeBytes,

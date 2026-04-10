@@ -6,7 +6,7 @@ import com.eventitta.domain.media.domain.MediaAssetStatus;
 import com.eventitta.domain.media.domain.MediaAssetVariant;
 import com.eventitta.domain.media.domain.MediaCategory;
 import com.eventitta.domain.media.domain.MediaProcessingStatus;
-import com.eventitta.domain.media.domain.MediaStorageProvider;
+import com.eventitta.domain.file.api.internal.FileStorageProvider;
 import com.eventitta.domain.media.domain.MediaVariantType;
 import com.eventitta.domain.media.policy.MediaCategoryPolicy;
 import com.eventitta.domain.media.policy.MediaCleanupPolicy;
@@ -48,7 +48,7 @@ class MediaUrlResolverTest {
         MediaAsset asset = MediaAsset.builder()
             .ownerUserId(1L)
             .category(MediaCategory.POST_IMAGE)
-            .storageProvider(MediaStorageProvider.S3)
+            .storageProvider(FileStorageProvider.S3)
             .storageKey("media/original/post-image/1/2026/03/26/original.png")
             .publicUrl("/api/v1/uploads/media/original/post-image/1/2026/03/26/original.png")
             .originalFilename("original.png")

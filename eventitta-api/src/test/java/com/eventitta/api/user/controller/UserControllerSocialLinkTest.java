@@ -8,7 +8,7 @@ import com.eventitta.api.auth.security.handler.JwtAccessDeniedHandler;
 import com.eventitta.api.auth.security.handler.JwtAuthenticationEntryPoint;
 import com.eventitta.api.auth.jwt.JwtTokenProvider;
 import com.eventitta.api.auth.security.userdetails.CustomUserDetailsService;
-import com.eventitta.api.auth.jwt.UserInfoService;
+import com.eventitta.api.common.logging.RequestActorResolver;
 import com.eventitta.api.auth.controller.AuthMapperImpl;
 import com.eventitta.api.auth.security.config.SecurityCorsProperties;
 import com.eventitta.api.auth.cookie.CookieManager;
@@ -101,7 +101,7 @@ class UserControllerSocialLinkTest {
     private JwtAccessDeniedHandler jwtAccessDeniedHandler;
 
     @MockitoBean
-    private UserInfoService userInfoService;
+    private RequestActorResolver requestActorResolver;
 
     @MockitoBean
     private SecurityCorsProperties securityCorsProperties;
@@ -122,7 +122,7 @@ class UserControllerSocialLinkTest {
     void setUp() {
         given(securityCorsProperties.getAllowedOrigins()).willReturn(List.of("http://localhost:3000"));
         given(alertLevelResolver.resolveLevel(any())).willReturn(AlertLevel.INFO);
-        given(userInfoService.getCurrentUserInfo()).willReturn("test-user");
+        given(requestActorResolver.resolveActor(any())).willReturn("test-user");
     }
 
     @Test

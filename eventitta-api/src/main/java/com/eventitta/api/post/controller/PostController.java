@@ -1,6 +1,6 @@
 package com.eventitta.api.post.controller;
 
-import com.eventitta.api.common.security.annotation.CurrentUser;
+import com.eventitta.api.auth.security.annotation.CurrentUser;
 import com.eventitta.api.auth.domain.UserPrincipal;
 import com.eventitta.domain.common.response.PageResponse;
 import com.eventitta.domain.post.dto.PostFilter;

@@ -1,6 +1,6 @@
 package com.eventitta.api.file.controller;
 
-import com.eventitta.api.common.security.annotation.CurrentUser;
+import com.eventitta.api.auth.security.annotation.CurrentUser;
 import com.eventitta.domain.file.api.internal.command.UploadFileCommand;
 import com.eventitta.domain.file.api.internal.facade.FileStorageFacade;
 import com.eventitta.domain.file.api.internal.view.StoredFileView;

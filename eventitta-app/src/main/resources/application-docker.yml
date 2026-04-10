@@ -1,0 +1,112 @@
+spring:
+  datasource:
+    url: jdbc:mysql://db:${DB_PORT:3306}/eventitta?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: ${MYSQL_USER}
+    password: ${MYSQL_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: none  # Flyway로 스키마 관리
+    defer-datasource-initialization: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  sql:
+    init:
+      mode: never
+
+  # Flyway 설정 추가
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 0
+    validate-on-migrate: true
+    clean-disabled: false  # Docker 환경에서는 clean 허용
+
+  devtools:
+    restart:
+      enabled: true
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 60MB
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+    with-credentials: true
+    persist-authorization: true
+  server:
+    url: http://localhost:8080
+    description: Docker container server
+
+file:
+  storage:
+    location: ./uploads
+festival:
+  seoul:
+    base-url: http://openapi.seoul.go.kr:8088
+  national:
+    base-url: http://api.data.go.kr/openapi/tn_pubr_public_cltur_fstvl_api
+  geocoding:
+    enabled: true
+
+api:
+  seoul:
+    key: ${SEOUL_API_KEY:your-seoul-api-key-here}
+  national:
+    key: ${NATIONAL_API_KEY:your-national-api-key-here}
+logging:
+  level:
+    root: INFO
+    org.hibernate.SQL: WARN
+    p6spy: DEBUG
+async:
+  core-pool-size: 4
+  max-pool-size: 20
+  queue-capacity: 200
+
+jwt:
+  secret: ${SECRET_KEY}
+  access-token-validity-ms: 3600000        # 1시간
+  refresh-token-validity-ms: 86400000      # 24시간
+
+auth:
+  social:
+    kakao:
+      client-id: ${KAKAO_CLIENT_ID:test-kakao-client-id}
+      client-secret: ${KAKAO_CLIENT_SECRET:test-kakao-client-secret}
+      authorize-base-url: https://kauth.kakao.com/oauth/authorize
+      token-base-url: https://kauth.kakao.com
+      api-base-url: https://kapi.kakao.com
+      state-cookie-max-age-seconds: 300
+      allowed-redirect-uris:
+        - http://localhost:3000/auth/kakao/callback
+        - http://127.0.0.1:3000/auth/kakao/callback
+        - http://localhost:5173/auth/kakao/callback
+        - http://127.0.0.1:5173/auth/kakao/callback
+
+security:
+  cors:
+    allowed-origins:
+      - http://localhost:3000
+      - http://127.0.0.1:3000
+      - http://localhost:5173
+      - http://127.0.0.1:5173
+
+notification:
+  slack:
+    enabled: true
+
+server:
+  port: 8080

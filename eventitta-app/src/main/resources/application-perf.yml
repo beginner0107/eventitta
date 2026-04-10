@@ -1,0 +1,187 @@
+spring:
+  config:
+    activate:
+      on-profile: perf
+  datasource:
+    url: jdbc:mysql://${PERF_DB_HOST:db}:${PERF_DB_PORT:3306}/${DB_NAME:eventitta_perf}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: ${JDBC_USERNAME:eventittaUser}
+    password: ${JDBC_PASSWORD:eventittaPass}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+  sql:
+    init:
+      mode: never
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 0
+    validate-on-migrate: true
+    out-of-order: false
+    clean-disabled: true
+    url: ${spring.datasource.url}
+    user: ${spring.datasource.username}
+    password: ${spring.datasource.password}
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 60MB
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
+  data:
+    redis:
+      host: ${PERF_REDIS_HOST:redis}
+      port: ${PERF_REDIS_PORT:6379}
+      ssl:
+        enabled: false
+      timeout: 2000ms
+      connect-timeout: 5000ms
+      command-timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 5
+          min-idle: 2
+          max-wait: 2000ms
+          time-between-eviction-runs: 60s
+        read-from: MASTER
+        cluster:
+          refresh:
+            adaptive: false
+            period: 300s
+          follow-redirects: false
+          max-redirects: 0
+
+server:
+  port: 8080
+  forward-headers-strategy: framework
+  tomcat:
+    remoteip:
+      protocol-header: X-Forwarded-Proto
+      remote-ip-header: X-Forwarded-For
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+    with-credentials: true
+    persist-authorization: true
+  server:
+    url: http://localhost:${PERF_NGINX_PORT:18080}
+    description: Perf validation server
+
+jwt:
+  secret: ${JWT_SECRET:perf-jwt-secret-change-me-32-byte-minimum}
+  access-token-validity-ms: ${JWT_ACCESS_TOKEN_VALIDITY:3600000}
+  refresh-token-validity-ms: ${JWT_REFRESH_TOKEN_VALIDITY:86400000}
+
+cookie:
+  secure: false
+
+auth:
+  social:
+    kakao:
+      client-id: ${KAKAO_CLIENT_ID:perf-kakao-client-id}
+      client-secret: ${KAKAO_CLIENT_SECRET:perf-kakao-client-secret}
+      authorize-base-url: ${PERF_KAKAO_AUTHORIZE_BASE_URL:http://mock-services:8080/kakao/authorize}
+      token-base-url: ${PERF_KAKAO_TOKEN_BASE_URL:http://mock-services:8080/kakao}
+      api-base-url: ${PERF_KAKAO_API_BASE_URL:http://mock-services:8080/kakao}
+      state-cookie-max-age-seconds: ${KAKAO_STATE_COOKIE_MAX_AGE_SECONDS:300}
+      allowed-redirect-uris:
+        - http://localhost:${PERF_NGINX_PORT:18080}/auth/kakao/callback
+        - http://127.0.0.1:${PERF_NGINX_PORT:18080}/auth/kakao/callback
+
+security:
+  cors:
+    allowed-origins:
+      - http://localhost:${PERF_NGINX_PORT:18080}
+      - http://127.0.0.1:${PERF_NGINX_PORT:18080}
+
+file:
+  storage:
+    location: /app/uploads
+
+festival:
+  seoul:
+    base-url: ${PERF_SEOUL_BASE_URL:http://mock-services:8080/seoul}
+  national:
+    base-url: ${PERF_NATIONAL_BASE_URL:http://mock-services:8080/national}
+  geocoding:
+    base-url: ${PERF_GEOCODING_BASE_URL:http://mock-services:8080/geocoding}
+    enabled: true
+    timeout-seconds: 10
+    request-delay-ms: ${PERF_GEOCODING_REQUEST_DELAY_MS:0}
+
+api:
+  seoul:
+    key: ${SEOUL_API_KEY:perf-seoul-key}
+  national:
+    key: ${NATIONAL_API_KEY:perf-national-key}
+
+logging:
+  level:
+    root: INFO
+    com.eventitta: INFO
+    com.eventitta.festivals.scheduler: INFO
+    com.eventitta.festivals.service.geocoding: INFO
+    com.eventitta.platform.interceptor: INFO
+    org.springframework: WARN
+    org.springframework.web: WARN
+    org.springframework.security: WARN
+    org.hibernate: WARN
+    org.hibernate.SQL: WARN
+    p6spy: OFF
+    com.zaxxer.hikari: INFO
+
+async:
+  core-pool-size: 4
+  max-pool-size: 20
+  queue-capacity: 200
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,loggers,metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    loggers:
+      enabled: true
+  security:
+    enabled: false
+
+notification:
+  discord:
+    enabled: false
+
+monitoring:
+  log:
+    enabled: true
+    error-threshold: 20
+    time-window-minutes: 5
+    size-threshold-mb: 900
+    alert-cooldown-minutes: 30
+
+media:
+  delivery:
+    cdn-base-url: ${MEDIA_CDN_BASE_URL:http://localhost:${PERF_NGINX_PORT:18080}}
+
+scheduler:
+  image-cleanup:
+    enabled: false

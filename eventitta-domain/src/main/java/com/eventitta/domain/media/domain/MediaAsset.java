@@ -1,6 +1,7 @@
 package com.eventitta.domain.media.domain;
 
 import com.eventitta.domain.common.domain.BaseEntity;
+import com.eventitta.domain.file.api.internal.FileStorageProvider;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -37,7 +38,7 @@ public class MediaAsset extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "storage_provider", nullable = false, length = 30)
-    private MediaStorageProvider storageProvider;
+    private FileStorageProvider storageProvider;
 
     @Column(name = "storage_key", nullable = false, length = 1024)
     private String storageKey;
@@ -87,7 +88,7 @@ public class MediaAsset extends BaseEntity {
     private MediaAsset(
         Long ownerUserId,
         MediaCategory category,
-        MediaStorageProvider storageProvider,
+        FileStorageProvider storageProvider,
         String storageKey,
         String publicUrl,
         String originalFilename,
@@ -123,7 +124,7 @@ public class MediaAsset extends BaseEntity {
     public static MediaAsset temp(
         Long ownerUserId,
         MediaCategory category,
-        MediaStorageProvider storageProvider,
+        FileStorageProvider storageProvider,
         String storageKey,
         String publicUrl,
         String originalFilename,

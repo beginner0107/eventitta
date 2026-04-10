@@ -118,6 +118,15 @@ class ModularStructureArchTest {
             );
 
     @ArchTest
+    static final ArchRule fileMustNotDependOnMedia =
+        noClasses()
+            .that()
+            .resideInAnyPackage("com.eventitta.domain.file..")
+            .should()
+            .dependOnClassesThat()
+            .resideInAnyPackage("com.eventitta.domain.media..");
+
+    @ArchTest
     static final ArchRule nonFileDomainsMustNotDependOnFileServiceImplementations =
         noClasses()
             .that()

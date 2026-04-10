@@ -2,7 +2,7 @@ package com.eventitta.domain.file.api.internal.facade;
 
 import com.eventitta.domain.file.api.internal.command.UploadFileCommand;
 import com.eventitta.domain.file.api.internal.view.StoredFileView;
-import com.eventitta.domain.media.domain.MediaStorageProvider;
+import com.eventitta.domain.file.api.internal.FileStorageProvider;
 
 public interface FileStorageFacade {
 
@@ -20,5 +20,5 @@ public interface FileStorageFacade {
 
     String normalizeKey(String keyOrUrl);
 
-    MediaStorageProvider getStorageProvider();
+    FileStorageProvider getStorageProvider();
 }

@@ -3,7 +3,7 @@ package com.eventitta.infra.file.service;
 import com.eventitta.domain.file.api.internal.command.UploadFileCommand;
 import com.eventitta.domain.file.api.internal.facade.FileStorageFacade;
 import com.eventitta.domain.file.api.internal.view.StoredFileView;
-import com.eventitta.domain.media.domain.MediaStorageProvider;
+import com.eventitta.domain.file.api.internal.FileStorageProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -155,8 +155,8 @@ public class S3FileStorageService implements FileStorageFacade {
     }
 
     @Override
-    public MediaStorageProvider getStorageProvider() {
-        return MediaStorageProvider.S3;
+    public FileStorageProvider getStorageProvider() {
+        return FileStorageProvider.S3;
     }
 
     private String extractSafeExt(String name) {

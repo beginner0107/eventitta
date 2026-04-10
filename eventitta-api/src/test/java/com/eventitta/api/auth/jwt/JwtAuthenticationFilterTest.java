@@ -1,6 +1,6 @@
-package com.eventitta.api.auth.jwt.filter;
+package com.eventitta.api.auth.jwt;
 
-import com.eventitta.api.auth.domain.UserPrincipal;
+import com.eventitta.api.auth.security.UserPrincipal;
 import com.eventitta.api.auth.jwt.JwtTokenProvider;
 import com.eventitta.api.auth.jwt.ParsedAccessToken;
 import com.eventitta.domain.auth.domain.RefreshToken;
@@ -21,8 +21,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.Instant;
 
-import static com.eventitta.api.auth.constants.AuthConstants.AUTHORIZATION_HEADER;
-import static com.eventitta.api.auth.constants.AuthConstants.BEARER_PREFIX;
+import static com.eventitta.api.auth.AuthConstants.AUTHORIZATION_HEADER;
+import static com.eventitta.api.auth.AuthConstants.BEARER_PREFIX;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;

@@ -9,10 +9,10 @@ import com.eventitta.api.auth.controller.request.SocialAuthorizeRequest;
 import com.eventitta.api.auth.controller.request.SocialLoginRequest;
 import com.eventitta.api.auth.controller.response.SignUpResponse;
 import com.eventitta.api.auth.controller.response.SocialAuthorizeResponse;
-import com.eventitta.api.auth.mapper.AuthMapper;
-import com.eventitta.api.auth.web.ClientSessionMetadataResolver;
-import com.eventitta.api.auth.web.CookieManager;
-import com.eventitta.api.auth.web.KakaoAuthorizationSupport;
+import com.eventitta.api.auth.controller.AuthMapper;
+import com.eventitta.api.auth.session.ClientSessionMetadataResolver;
+import com.eventitta.api.auth.cookie.CookieManager;
+import com.eventitta.api.auth.oauth.kakao.KakaoAuthorizationSupport;
 import com.eventitta.domain.auth.service.AuthService;
 import com.eventitta.domain.auth.service.dto.ClientSessionMetadata;
 import com.eventitta.domain.auth.service.dto.LogoutCommand;
@@ -31,9 +31,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import static com.eventitta.api.auth.constants.AuthConstants.ACCESS_TOKEN;
-import static com.eventitta.api.auth.constants.AuthConstants.OAUTH_STATE;
-import static com.eventitta.api.auth.constants.AuthConstants.REFRESH_TOKEN;
+import static com.eventitta.api.auth.AuthConstants.ACCESS_TOKEN;
+import static com.eventitta.api.auth.AuthConstants.OAUTH_STATE;
+import static com.eventitta.api.auth.AuthConstants.REFRESH_TOKEN;
 
 @RestController
 @RequiredArgsConstructor

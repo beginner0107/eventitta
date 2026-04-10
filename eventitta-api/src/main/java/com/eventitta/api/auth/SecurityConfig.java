@@ -1,11 +1,11 @@
-package com.eventitta.api.auth.config;
+package com.eventitta.api.auth;
 
 import com.eventitta.api.auth.jwt.JwtTokenProvider;
 import com.eventitta.api.auth.jwt.JwtAccessDeniedHandler;
-import com.eventitta.api.auth.jwt.filter.JwtAuthenticationFilter;
-import com.eventitta.api.auth.jwt.service.CustomUserDetailsService;
+import com.eventitta.api.auth.jwt.JwtAuthenticationFilter;
+import com.eventitta.api.auth.jwt.CustomUserDetailsService;
 import com.eventitta.api.auth.jwt.JwtAuthenticationEntryPoint;
-import com.eventitta.api.auth.properties.SecurityCorsProperties;
+import com.eventitta.api.auth.security.SecurityCorsProperties;
 import com.eventitta.domain.auth.repository.RefreshTokenRepository;
 import com.eventitta.domain.user.api.internal.facade.UserInternalFacade;
 import lombok.RequiredArgsConstructor;

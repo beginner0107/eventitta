@@ -1,6 +1,6 @@
 package com.eventitta.api.auth.jwt;
 
-import com.eventitta.api.auth.jwt.service.UserInfoService;
+import com.eventitta.api.auth.jwt.UserInfoService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

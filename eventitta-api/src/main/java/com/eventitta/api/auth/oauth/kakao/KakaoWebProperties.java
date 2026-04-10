@@ -1,4 +1,4 @@
-package com.eventitta.api.auth.properties;
+package com.eventitta.api.auth.oauth.kakao;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -1,7 +1,7 @@
-package com.eventitta.api.auth.web;
+package com.eventitta.api.auth.cookie;
 
-import com.eventitta.api.auth.properties.CookieProperties;
-import com.eventitta.api.auth.properties.KakaoWebProperties;
+import com.eventitta.api.auth.cookie.CookieProperties;
+import com.eventitta.api.auth.oauth.kakao.KakaoWebProperties;
 import com.eventitta.domain.auth.port.AuthTokenProvider;
 import com.eventitta.domain.auth.service.dto.TokenResult;
 import org.junit.jupiter.api.BeforeEach;

@@ -1,4 +1,4 @@
-package com.eventitta.api.auth.jwt.util;
+package com.eventitta.api.auth.jwt;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -6,9 +6,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.Optional;
 
-import static com.eventitta.api.auth.constants.AuthConstants.ACCESS_TOKEN;
-import static com.eventitta.api.auth.constants.AuthConstants.AUTHORIZATION_HEADER;
-import static com.eventitta.api.auth.constants.AuthConstants.BEARER_PREFIX;
+import static com.eventitta.api.auth.AuthConstants.ACCESS_TOKEN;
+import static com.eventitta.api.auth.AuthConstants.AUTHORIZATION_HEADER;
+import static com.eventitta.api.auth.AuthConstants.BEARER_PREFIX;
 
 public final class JwtTokenUtil {
 

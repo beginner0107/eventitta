@@ -1,7 +1,7 @@
-package com.eventitta.api.auth.jwt.service;
+package com.eventitta.api.auth.jwt;
 
 import com.eventitta.api.auth.jwt.JwtTokenProvider;
-import com.eventitta.api.auth.jwt.util.JwtTokenUtil;
+import com.eventitta.api.auth.jwt.JwtTokenUtil;
 import com.eventitta.domain.common.util.SecurityUtil;
 import com.eventitta.domain.user.api.internal.facade.UserInternalFacade;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
-import static com.eventitta.api.auth.constants.AuthConstants.*;
+import static com.eventitta.api.auth.AuthConstants.*;
 
 @Service
 @RequiredArgsConstructor

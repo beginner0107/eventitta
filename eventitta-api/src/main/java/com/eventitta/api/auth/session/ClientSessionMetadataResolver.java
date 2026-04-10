@@ -1,4 +1,4 @@
-package com.eventitta.api.auth.web;
+package com.eventitta.api.auth.session;
 
 import com.eventitta.domain.auth.service.dto.ClientSessionMetadata;
 import jakarta.servlet.http.HttpServletRequest;

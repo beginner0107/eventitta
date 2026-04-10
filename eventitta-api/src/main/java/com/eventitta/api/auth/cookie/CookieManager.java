@@ -1,7 +1,7 @@
-package com.eventitta.api.auth.web;
+package com.eventitta.api.auth.cookie;
 
-import com.eventitta.api.auth.properties.CookieProperties;
-import com.eventitta.api.auth.properties.KakaoWebProperties;
+import com.eventitta.api.auth.cookie.CookieProperties;
+import com.eventitta.api.auth.oauth.kakao.KakaoWebProperties;
 import com.eventitta.domain.auth.port.AuthTokenProvider;
 import com.eventitta.domain.auth.service.dto.TokenResult;
 import jakarta.servlet.http.HttpServletResponse;
@@ -11,8 +11,8 @@ import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 
-import static com.eventitta.api.auth.constants.AuthConstants.ACCESS_TOKEN;
-import static com.eventitta.api.auth.constants.AuthConstants.REFRESH_TOKEN;
+import static com.eventitta.api.auth.AuthConstants.ACCESS_TOKEN;
+import static com.eventitta.api.auth.AuthConstants.REFRESH_TOKEN;
 
 @Component
 public class CookieManager {
@@ -101,7 +101,7 @@ public class CookieManager {
         return switch (name) {
             case ACCESS_TOKEN -> ROOT_PATH;
             case REFRESH_TOKEN -> AUTH_PATH;
-            case com.eventitta.api.auth.constants.AuthConstants.OAUTH_STATE -> KAKAO_AUTH_PATH;
+            case com.eventitta.api.auth.AuthConstants.OAUTH_STATE -> KAKAO_AUTH_PATH;
             default -> ROOT_PATH;
         };
     }

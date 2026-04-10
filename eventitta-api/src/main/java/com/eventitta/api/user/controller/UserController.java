@@ -2,12 +2,12 @@ package com.eventitta.api.user.controller;
 
 import com.eventitta.api.auth.security.annotation.CurrentUser;
 import com.eventitta.api.common.response.ApiErrorResponse;
-import com.eventitta.api.auth.domain.UserPrincipal;
+import com.eventitta.api.auth.security.UserPrincipal;
 import com.eventitta.api.auth.controller.request.SocialLoginRequest;
-import com.eventitta.api.auth.constants.AuthConstants;
-import com.eventitta.api.auth.mapper.AuthMapper;
-import com.eventitta.api.auth.web.CookieManager;
-import com.eventitta.api.auth.web.KakaoAuthorizationSupport;
+import com.eventitta.api.auth.AuthConstants;
+import com.eventitta.api.auth.controller.AuthMapper;
+import com.eventitta.api.auth.cookie.CookieManager;
+import com.eventitta.api.auth.oauth.kakao.KakaoAuthorizationSupport;
 import com.eventitta.domain.gamification.api.internal.facade.GamificationQueryFacade;
 import com.eventitta.domain.gamification.api.internal.view.ActivitySummaryView;
 import com.eventitta.api.user.controller.request.ChangePasswordRequest;

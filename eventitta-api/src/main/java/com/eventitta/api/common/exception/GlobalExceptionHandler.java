@@ -1,6 +1,6 @@
 package com.eventitta.api.common.exception;
 
-import com.eventitta.api.auth.jwt.service.UserInfoService;
+import com.eventitta.api.auth.jwt.UserInfoService;
 import com.eventitta.api.common.response.ApiErrorResponse;
 import com.eventitta.domain.notification.service.AlertNotificationService;
 import com.eventitta.domain.auth.exception.AuthErrorCode;

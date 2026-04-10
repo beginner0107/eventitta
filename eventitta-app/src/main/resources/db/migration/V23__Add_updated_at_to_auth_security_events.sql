@@ -1,0 +1,4 @@
+ALTER TABLE auth_security_events
+    ADD COLUMN updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6)
+    ON UPDATE CURRENT_TIMESTAMP(6)
+    AFTER created_at;

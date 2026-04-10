@@ -1,6 +1,7 @@
 package com.eventitta.domain.post.service;
 
 import com.eventitta.domain.post.api.internal.facade.PostInternalFacade;
+import com.eventitta.domain.post.repository.PostImageRepository;
 import com.eventitta.domain.post.repository.PostRepository;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import static com.eventitta.domain.post.exception.PostErrorCode.NOT_FOUND_POST_I
 class DefaultPostInternalFacade implements PostInternalFacade {
 
     private final PostRepository postRepository;
+    private final PostImageRepository postImageRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -28,5 +30,11 @@ class DefaultPostInternalFacade implements PostInternalFacade {
     public Optional<Long> findAuthorUserId(Long postId) {
         return postRepository.findByIdAndDeletedFalse(postId)
             .map(post -> post.getAuthorUserId());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isMediaAssetReferenced(Long mediaAssetId) {
+        return postImageRepository.existsByMediaAssetId(mediaAssetId);
     }
 }

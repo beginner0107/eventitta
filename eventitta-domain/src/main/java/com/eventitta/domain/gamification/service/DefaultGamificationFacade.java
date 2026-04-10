@@ -1,6 +1,7 @@
 package com.eventitta.domain.gamification.service;
 
 import com.eventitta.domain.gamification.domain.RewardActionType;
+import com.eventitta.domain.gamification.domain.RankingType;
 import com.eventitta.domain.gamification.domain.UserActivityStats;
 import com.eventitta.domain.gamification.domain.UserGamificationStats;
 import com.eventitta.domain.gamification.api.internal.facade.GamificationInternalFacade;
@@ -25,6 +26,7 @@ public class DefaultGamificationFacade implements GamificationInternalFacade {
     private final UserActivityStatsRepository userActivityStatsRepository;
     private final UserBadgeRepository userBadgeRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final RankingService rankingService;
 
     @Override
     @Transactional
@@ -69,6 +71,7 @@ public class DefaultGamificationFacade implements GamificationInternalFacade {
         actionRecordRepository.deleteByUserId(userId);
         userActivityStatsRepository.deleteByUserId(userId);
         userGamificationStatsRepository.deleteById(userId);
+        removeUserFromRankings(userId);
     }
 
     private void grant(Long userId, RewardActionType actionType, Long targetId) {
@@ -121,5 +124,14 @@ public class DefaultGamificationFacade implements GamificationInternalFacade {
             actionStats != null ? actionStats.getActionCount() : 0L,
             actionStats != null ? actionStats.getPointsTotal() : 0
         ));
+    }
+
+    private void removeUserFromRankings(Long userId) {
+        try {
+            rankingService.removeUser(RankingType.POINTS, userId);
+            rankingService.removeUser(RankingType.ACTIVITY_COUNT, userId);
+        } catch (Exception ex) {
+            log.error("[Gamification] Failed to remove user from rankings. userId={}", userId, ex);
+        }
     }
 }

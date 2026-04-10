@@ -1,23 +1,26 @@
 package com.eventitta.api.auth.controller;
 
-import com.eventitta.api.auth.controller.request.ActionTokenRequest;
-import com.eventitta.api.auth.controller.request.EmailRequest;
-import com.eventitta.api.auth.controller.request.PasswordResetConfirmRequest;
-import com.eventitta.api.auth.controller.request.SignInRequest;
-import com.eventitta.api.auth.controller.request.SignUpRequest;
-import com.eventitta.api.auth.controller.request.SocialAuthorizeRequest;
-import com.eventitta.api.auth.controller.request.SocialLoginRequest;
-import com.eventitta.api.auth.controller.response.SignUpResponse;
-import com.eventitta.api.auth.controller.response.SocialAuthorizeResponse;
-import com.eventitta.api.auth.controller.AuthMapper;
 import com.eventitta.api.auth.session.ClientSessionMetadataResolver;
 import com.eventitta.api.auth.cookie.CookieManager;
 import com.eventitta.api.auth.oauth.kakao.KakaoAuthorizationSupport;
-import com.eventitta.domain.auth.service.AuthService;
 import com.eventitta.domain.auth.dto.ClientSessionMetadata;
+import com.eventitta.domain.auth.dto.KakaoLoginCommand;
 import com.eventitta.domain.auth.dto.LogoutCommand;
 import com.eventitta.domain.auth.dto.RefreshCommand;
+import com.eventitta.domain.auth.dto.SignInCommand;
+import com.eventitta.domain.auth.dto.SignUpCommand;
+import com.eventitta.domain.auth.dto.SignUpResult;
 import com.eventitta.domain.auth.dto.TokenResult;
+import com.eventitta.domain.auth.dto.request.ActionTokenRequest;
+import com.eventitta.domain.auth.dto.request.EmailRequest;
+import com.eventitta.domain.auth.dto.request.PasswordResetConfirmRequest;
+import com.eventitta.domain.auth.dto.request.SignInRequest;
+import com.eventitta.domain.auth.dto.request.SignUpRequest;
+import com.eventitta.domain.auth.dto.request.SocialAuthorizeRequest;
+import com.eventitta.domain.auth.dto.request.SocialLoginRequest;
+import com.eventitta.domain.auth.dto.response.SignUpResponse;
+import com.eventitta.domain.auth.dto.response.SocialAuthorizeResponse;
+import com.eventitta.domain.auth.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -41,7 +44,6 @@ import static com.eventitta.api.auth.AuthConstants.REFRESH_TOKEN;
 @Tag(name = "인증 API", description = "회원가입, 로그인 등의 인증 관련 API")
 public class AuthController {
     private final AuthService authService;
-    private final AuthMapper authMapper;
     private final CookieManager cookieManager;
     private final KakaoAuthorizationSupport kakaoAuthorizationSupport;
     private final ClientSessionMetadataResolver clientSessionMetadataResolver;
@@ -49,8 +51,10 @@ public class AuthController {
     @Operation(summary = "회원가입", description = "회원 정보를 받아 회원가입을 수행합니다.")
     @PostMapping("/signup")
     public ResponseEntity<SignUpResponse> signUp(@Valid @RequestBody SignUpRequest request) {
-        var result = authService.signUp(authMapper.toSignUpCommand(request));
-        return ResponseEntity.ok(authMapper.toSignUpResponse(result));
+        SignUpResult result = authService.signUp(
+            new SignUpCommand(request.email(), request.password(), request.nickname())
+        );
+        return ResponseEntity.ok(new SignUpResponse(result.email(), result.nickname()));
     }
 
     @Operation(summary = "로그인", description = "회원 정보를 받아 로그인을 수행합니다.")
@@ -64,7 +68,9 @@ public class AuthController {
         HttpServletResponse response
     ) {
         ClientSessionMetadata sessionMetadata = clientSessionMetadataResolver.resolve(servletRequest);
-        TokenResult tokens = authService.login(authMapper.toSignInCommand(request, sessionMetadata));
+        TokenResult tokens = authService.login(
+            new SignInCommand(request.email(), request.password(), sessionMetadata)
+        );
         cookieManager.addTokenCookies(response, tokens);
         return ResponseEntity.ok().build();
     }
@@ -81,8 +87,9 @@ public class AuthController {
         HttpServletResponse response
     ) {
         ClientSessionMetadata sessionMetadata = clientSessionMetadataResolver.resolve(request);
-        RefreshCommand command = authMapper.toRefreshCommand(accessToken, refreshToken, sessionMetadata);
-        TokenResult tokens = authService.refresh(command);
+        TokenResult tokens = authService.refresh(
+            new RefreshCommand(accessToken, refreshToken, sessionMetadata)
+        );
         cookieManager.addTokenCookies(response, tokens);
         return ResponseEntity.ok().build();
     }
@@ -99,8 +106,7 @@ public class AuthController {
         @CookieValue(name = REFRESH_TOKEN, required = false) String refreshToken,
         HttpServletResponse response
     ) {
-        LogoutCommand command = authMapper.toLogoutCommand(accessToken, refreshToken);
-        authService.logout(command);
+        authService.logout(new LogoutCommand(accessToken, refreshToken));
         cookieManager.deleteTokenCookies(response);
         return ResponseEntity.noContent().build();
     }
@@ -167,7 +173,9 @@ public class AuthController {
         try {
             kakaoAuthorizationSupport.validateState(oauthState, request.state());
             ClientSessionMetadata sessionMetadata = clientSessionMetadataResolver.resolve(servletRequest);
-            TokenResult tokens = authService.loginWithKakao(authMapper.toKakaoLoginCommand(request, sessionMetadata));
+            TokenResult tokens = authService.loginWithKakao(
+                new KakaoLoginCommand(request.code(), request.redirectUri(), sessionMetadata)
+            );
             cookieManager.addTokenCookies(response, tokens);
             return ResponseEntity.ok().build();
         } finally {

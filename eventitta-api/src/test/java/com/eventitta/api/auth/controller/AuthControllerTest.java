@@ -2,19 +2,18 @@ package com.eventitta.api.auth.controller;
 
 import com.eventitta.api.auth.security.config.SecurityConfig;
 import com.eventitta.api.auth.AuthConstants;
-import com.eventitta.api.auth.controller.request.ActionTokenRequest;
-import com.eventitta.api.auth.controller.request.EmailRequest;
-import com.eventitta.api.auth.controller.request.PasswordResetConfirmRequest;
-import com.eventitta.api.auth.controller.request.SignInRequest;
-import com.eventitta.api.auth.controller.request.SignUpRequest;
-import com.eventitta.api.auth.controller.request.SocialAuthorizeRequest;
-import com.eventitta.api.auth.controller.request.SocialLoginRequest;
+import com.eventitta.domain.auth.dto.request.ActionTokenRequest;
+import com.eventitta.domain.auth.dto.request.EmailRequest;
+import com.eventitta.domain.auth.dto.request.PasswordResetConfirmRequest;
+import com.eventitta.domain.auth.dto.request.SignInRequest;
+import com.eventitta.domain.auth.dto.request.SignUpRequest;
+import com.eventitta.domain.auth.dto.request.SocialAuthorizeRequest;
+import com.eventitta.domain.auth.dto.request.SocialLoginRequest;
 import com.eventitta.api.auth.security.handler.JwtAccessDeniedHandler;
 import com.eventitta.api.auth.security.handler.JwtAuthenticationEntryPoint;
 import com.eventitta.api.auth.jwt.JwtTokenProvider;
 import com.eventitta.api.auth.security.userdetails.CustomUserDetailsService;
 import com.eventitta.api.common.logging.RequestActorResolver;
-import com.eventitta.api.auth.controller.AuthMapperImpl;
 import com.eventitta.api.auth.security.config.SecurityCorsProperties;
 import com.eventitta.api.auth.session.ClientSessionMetadataResolver;
 import com.eventitta.api.auth.cookie.CookieManager;
@@ -67,7 +66,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(AuthController.class)
 @AutoConfigureMockMvc(addFilters = false)
-@Import({SecurityConfig.class, AuthMapperImpl.class})
+@Import(SecurityConfig.class)
 class AuthControllerTest {
 
     @Autowired

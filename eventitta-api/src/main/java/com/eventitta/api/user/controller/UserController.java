@@ -3,9 +3,7 @@ package com.eventitta.api.user.controller;
 import com.eventitta.api.auth.security.annotation.CurrentUser;
 import com.eventitta.api.common.response.ApiErrorResponse;
 import com.eventitta.api.auth.security.principal.UserPrincipal;
-import com.eventitta.api.auth.controller.request.SocialLoginRequest;
 import com.eventitta.api.auth.AuthConstants;
-import com.eventitta.api.auth.controller.AuthMapper;
 import com.eventitta.api.auth.cookie.CookieManager;
 import com.eventitta.api.auth.oauth.kakao.KakaoAuthorizationSupport;
 import com.eventitta.domain.gamification.api.internal.facade.GamificationQueryFacade;
@@ -16,8 +14,10 @@ import com.eventitta.api.user.controller.request.UpdateProfileRequest;
 import com.eventitta.api.user.controller.response.UserSessionResponse;
 import com.eventitta.api.user.controller.response.UserProfileResponse;
 import com.eventitta.api.user.mapper.UserMapper;
-import com.eventitta.domain.auth.service.AuthService;
 import com.eventitta.domain.auth.dto.AuthSessionMetadata;
+import com.eventitta.domain.auth.dto.KakaoLinkCommand;
+import com.eventitta.domain.auth.dto.request.SocialLoginRequest;
+import com.eventitta.domain.auth.service.AuthService;
 import com.eventitta.domain.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -43,7 +43,6 @@ public class UserController {
     private final AuthService authService;
     private final GamificationQueryFacade gamificationQueryService;
     private final UserMapper userMapper;
-    private final AuthMapper authMapper;
     private final KakaoAuthorizationSupport kakaoAuthorizationSupport;
     private final CookieManager cookieManager;
 
@@ -130,7 +129,7 @@ public class UserController {
     ) {
         try {
             kakaoAuthorizationSupport.validateState(oauthState, request.state());
-            authService.linkKakao(userId, authMapper.toKakaoLinkCommand(request));
+            authService.linkKakao(userId, new KakaoLinkCommand(request.code(), request.redirectUri()));
             return ResponseEntity.noContent().build();
         } finally {
             cookieManager.deleteCookie(response, AuthConstants.OAUTH_STATE);

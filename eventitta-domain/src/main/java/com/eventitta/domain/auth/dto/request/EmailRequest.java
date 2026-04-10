@@ -1,4 +1,4 @@
-package com.eventitta.api.auth.controller.request;
+package com.eventitta.domain.auth.dto.request;
 
 import com.eventitta.domain.common.constants.RegexPattern;
 import com.eventitta.domain.common.constants.ValidationMessage;

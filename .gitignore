@@ -79,7 +79,7 @@ local.properties
 *_LOCAL_*.txt
 *_REMOTE_*.txt
 
-/src/main/generated
+**/src/main/generated/
 
 ### Intellij ###
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio, WebStorm and Rider

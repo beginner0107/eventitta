@@ -1,7 +1,7 @@
 package com.eventitta.api.auth.jwt;
 
 import com.eventitta.domain.auth.exception.AuthErrorCode;
-import com.eventitta.api.auth.jwt.service.UserInfoService;
+import com.eventitta.api.auth.jwt.UserInfoService;
 import com.eventitta.api.common.response.ApiErrorResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;

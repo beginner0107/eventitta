@@ -1,4 +1,4 @@
-package com.eventitta.api.auth.constants;
+package com.eventitta.api.auth;
 
 public final class AuthConstants {
 

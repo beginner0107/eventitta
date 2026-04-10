@@ -1,4 +1,4 @@
-package com.eventitta.api.auth.mapper;
+package com.eventitta.api.auth.controller;
 
 import com.eventitta.api.auth.controller.request.SignInRequest;
 import com.eventitta.api.auth.controller.request.SignUpRequest;

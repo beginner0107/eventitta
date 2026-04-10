@@ -1,6 +1,6 @@
-package com.eventitta.api.auth.web;
+package com.eventitta.api.auth.oauth.kakao;
 
-import com.eventitta.api.auth.properties.KakaoWebProperties;
+import com.eventitta.api.auth.oauth.kakao.KakaoWebProperties;
 import com.eventitta.domain.auth.exception.AuthErrorCode;
 import com.eventitta.domain.common.exception.CommonErrorCode;
 import org.springframework.security.crypto.keygen.KeyGenerators;

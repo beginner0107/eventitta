@@ -1,6 +1,6 @@
 package com.eventitta.api.auth.jwt;
 
-import com.eventitta.api.auth.properties.JwtProperties;
+import com.eventitta.api.auth.jwt.JwtProperties;
 import com.eventitta.domain.auth.port.AuthTokenProvider;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
@@ -14,10 +14,10 @@ import java.time.Instant;
 import java.util.Base64;
 import java.util.Date;
 
-import static com.eventitta.api.auth.constants.AuthConstants.CLAIM_AUTH_VERSION;
-import static com.eventitta.api.auth.constants.AuthConstants.CLAIM_EMAIL;
-import static com.eventitta.api.auth.constants.AuthConstants.CLAIM_ROLE;
-import static com.eventitta.api.auth.constants.AuthConstants.CLAIM_SESSION_ID;
+import static com.eventitta.api.auth.AuthConstants.CLAIM_AUTH_VERSION;
+import static com.eventitta.api.auth.AuthConstants.CLAIM_EMAIL;
+import static com.eventitta.api.auth.AuthConstants.CLAIM_ROLE;
+import static com.eventitta.api.auth.AuthConstants.CLAIM_SESSION_ID;
 import static com.eventitta.domain.auth.exception.AuthErrorCode.ACCESS_TOKEN_EXPIRED;
 import static com.eventitta.domain.auth.exception.AuthErrorCode.ACCESS_TOKEN_INVALID;
 import static java.nio.charset.StandardCharsets.UTF_8;

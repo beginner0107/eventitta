@@ -1,6 +1,6 @@
 package com.eventitta.api.gamification.controller;
 
-import com.eventitta.api.auth.security.UserPrincipal;
+import com.eventitta.api.auth.security.principal.UserPrincipal;
 import com.eventitta.domain.gamification.domain.RankingType;
 import com.eventitta.domain.gamification.dto.response.RankingPageResponse;
 import com.eventitta.domain.gamification.dto.response.UserRankResponse;

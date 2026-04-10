@@ -1,4 +1,4 @@
-package com.eventitta.api.auth.security;
+package com.eventitta.api.auth.security.config;
 
 import lombok.Getter;
 import lombok.Setter;

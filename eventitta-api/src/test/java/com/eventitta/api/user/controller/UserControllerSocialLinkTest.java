@@ -1,16 +1,16 @@
 package com.eventitta.api.user.controller;
 
-import com.eventitta.api.auth.SecurityConfig;
+import com.eventitta.api.auth.security.config.SecurityConfig;
 import com.eventitta.api.auth.AuthConstants;
 import com.eventitta.api.auth.controller.request.SocialLoginRequest;
-import com.eventitta.api.auth.security.UserPrincipal;
-import com.eventitta.api.auth.jwt.JwtAccessDeniedHandler;
-import com.eventitta.api.auth.jwt.JwtAuthenticationEntryPoint;
+import com.eventitta.api.auth.security.principal.UserPrincipal;
+import com.eventitta.api.auth.security.handler.JwtAccessDeniedHandler;
+import com.eventitta.api.auth.security.handler.JwtAuthenticationEntryPoint;
 import com.eventitta.api.auth.jwt.JwtTokenProvider;
-import com.eventitta.api.auth.jwt.CustomUserDetailsService;
+import com.eventitta.api.auth.security.userdetails.CustomUserDetailsService;
 import com.eventitta.api.auth.jwt.UserInfoService;
 import com.eventitta.api.auth.controller.AuthMapperImpl;
-import com.eventitta.api.auth.security.SecurityCorsProperties;
+import com.eventitta.api.auth.security.config.SecurityCorsProperties;
 import com.eventitta.api.auth.cookie.CookieManager;
 import com.eventitta.api.auth.oauth.kakao.KakaoAuthorizationSupport;
 import com.eventitta.api.user.mapper.UserMapper;

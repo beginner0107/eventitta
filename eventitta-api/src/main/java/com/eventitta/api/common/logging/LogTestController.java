@@ -1,7 +1,7 @@
-package com.eventitta.api.common.monitoring;
+package com.eventitta.api.common.logging;
 
-import com.eventitta.domain.common.monitoring.LogSanitizer;
-import com.eventitta.domain.common.monitoring.LogStatusProvider;
+import com.eventitta.domain.common.logging.LogSanitizer;
+import com.eventitta.domain.common.logging.LogStatusProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.HashMap;

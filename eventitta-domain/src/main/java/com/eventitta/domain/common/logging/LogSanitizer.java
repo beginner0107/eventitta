@@ -1,4 +1,4 @@
-package com.eventitta.domain.common.monitoring;
+package com.eventitta.domain.common.logging;
 
 import java.util.regex.Pattern;
 

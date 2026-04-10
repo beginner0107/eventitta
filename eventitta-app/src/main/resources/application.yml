@@ -1,0 +1,57 @@
+spring:
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: false
+  sql:
+    init:
+      mode: never
+      schema-locations: classpath:schema.sql
+  cache:
+    type: caffeine
+
+cache:
+  caffeine:
+    maximum-size: 20
+    ttl-days: 30
+
+logging:
+  level:
+    root: INFO
+    org.hibernate.SQL: WARN
+    com.eventitta.festivals: DEBUG
+    com.eventitta.platform.interceptor: DEBUG
+    festival.error: INFO
+
+# Swagger/OpenAPI 서버 설정
+springdoc:
+  server:
+    url: http://localhost:8080
+    description: Development server
+
+# 축제 데이터 처리 관련 설정
+festival:
+  geocoding:
+    base-url: https://nominatim.openstreetmap.org
+    user-agent: Eventitta/1.0 (${GEOCODING_CONTACT_EMAIL:dev@eventitta.com})
+    timeout-seconds: 5
+    request-delay-ms: 1000
+    enabled: true
+
+notification:
+  discord:
+    enabled: false
+    webhook-url: ${DISCORD_WEBHOOK_URL:}
+    username: "eventitta-bot"
+    timeout-seconds: 5
+
+monitoring:
+  log:
+    enabled: false
+
+cookie:
+  secure: false

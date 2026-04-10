@@ -1,1 +1,6 @@
 rootProject.name = 'eventitta'
+
+include 'eventitta-app'
+include 'eventitta-api'
+include 'eventitta-domain'
+include 'eventitta-infra'

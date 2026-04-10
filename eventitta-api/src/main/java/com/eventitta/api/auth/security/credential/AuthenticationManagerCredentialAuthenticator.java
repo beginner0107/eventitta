@@ -1,6 +1,6 @@
-package com.eventitta.api.auth.security;
+package com.eventitta.api.auth.security.credential;
 
-import com.eventitta.api.auth.security.UserPrincipal;
+import com.eventitta.api.auth.security.principal.UserPrincipal;
 import com.eventitta.domain.auth.exception.AuthErrorCode;
 import com.eventitta.domain.auth.port.CredentialAuthenticator;
 import lombok.RequiredArgsConstructor;

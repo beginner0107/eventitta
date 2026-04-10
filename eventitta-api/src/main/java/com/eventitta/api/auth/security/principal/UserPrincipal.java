@@ -1,4 +1,4 @@
-package com.eventitta.api.auth.security;
+package com.eventitta.api.auth.security.principal;
 
 import com.eventitta.domain.user.api.internal.view.UserAuthView;
 import lombok.Getter;

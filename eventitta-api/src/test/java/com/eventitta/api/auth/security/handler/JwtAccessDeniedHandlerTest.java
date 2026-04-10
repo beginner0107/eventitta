@@ -1,4 +1,4 @@
-package com.eventitta.api.auth.jwt;
+package com.eventitta.api.auth.security.handler;
 
 import com.eventitta.api.auth.jwt.UserInfoService;
 import com.fasterxml.jackson.databind.ObjectMapper;

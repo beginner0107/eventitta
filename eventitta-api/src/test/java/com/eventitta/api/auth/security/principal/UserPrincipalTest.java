@@ -1,4 +1,4 @@
-package com.eventitta.api.auth.security;
+package com.eventitta.api.auth.security.principal;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

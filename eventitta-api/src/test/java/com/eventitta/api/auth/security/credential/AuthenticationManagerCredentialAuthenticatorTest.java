@@ -1,6 +1,6 @@
-package com.eventitta.api.auth.security;
+package com.eventitta.api.auth.security.credential;
 
-import com.eventitta.api.auth.security.UserPrincipal;
+import com.eventitta.api.auth.security.principal.UserPrincipal;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

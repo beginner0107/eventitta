@@ -1,6 +1,6 @@
-package com.eventitta.api.auth.jwt;
+package com.eventitta.api.auth.security.userdetails;
 
-import com.eventitta.api.auth.security.UserPrincipal;
+import com.eventitta.api.auth.security.principal.UserPrincipal;
 import com.eventitta.domain.user.api.internal.facade.UserInternalFacade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;

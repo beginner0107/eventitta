@@ -1,6 +1,6 @@
-package com.eventitta.api.auth.jwt;
+package com.eventitta.api.auth.security.filter;
 
-import com.eventitta.api.auth.security.UserPrincipal;
+import com.eventitta.api.auth.security.principal.UserPrincipal;
 import com.eventitta.api.auth.jwt.JwtTokenProvider;
 import com.eventitta.api.auth.jwt.ParsedAccessToken;
 import com.eventitta.domain.auth.domain.RefreshToken;

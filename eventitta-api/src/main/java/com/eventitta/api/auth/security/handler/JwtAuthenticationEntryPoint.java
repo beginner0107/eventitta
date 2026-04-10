@@ -1,7 +1,7 @@
 package com.eventitta.api.auth.security.handler;
 
 import com.eventitta.domain.auth.exception.AuthErrorCode;
-import com.eventitta.api.auth.jwt.UserInfoService;
+import com.eventitta.api.common.logging.RequestActorResolver;
 import com.eventitta.api.common.response.ApiErrorResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,7 +22,7 @@ import java.io.IOException;
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
     private final ObjectMapper objectMapper;
-    private final UserInfoService userInfoService;
+    private final RequestActorResolver requestActorResolver;
 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException {
@@ -61,7 +61,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
     private String resolveUserInfoSafely(HttpServletRequest request) {
         try {
-            return userInfoService.extractUserInfoFromRequest(request);
+            return requestActorResolver.resolveActor(request);
         } catch (Exception ex) {
             log.warn("요청 기반 사용자 정보 추출 실패. path={}", request.getRequestURI(), ex);
             return "unknown";

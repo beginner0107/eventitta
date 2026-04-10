@@ -1,6 +1,6 @@
 package com.eventitta.api.common.exception;
 
-import com.eventitta.api.auth.jwt.UserInfoService;
+import com.eventitta.api.common.logging.RequestActorResolver;
 import com.eventitta.api.common.response.ApiErrorResponse;
 import com.eventitta.domain.notification.service.AlertNotificationService;
 import com.eventitta.domain.auth.exception.AuthErrorCode;
@@ -40,7 +40,7 @@ public class GlobalExceptionHandler {
     private final HttpServletRequest request;
     private final AlertNotificationService alertNotificationService;
     private final AlertLevelResolver alertLevelResolver;
-    private final UserInfoService userInfoService;
+    private final RequestActorResolver requestActorResolver;
 
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<ApiErrorResponse> handleCustom(CustomException ex) {
@@ -203,7 +203,7 @@ public class GlobalExceptionHandler {
             if (level.ordinal() < AlertLevel.HIGH.ordinal()) {
                 return;
             }
-            String userInfo = userInfoService.getCurrentUserInfo();
+            String userInfo = requestActorResolver.resolveActor(request);
 
             alertNotificationService.sendAlert(
                 level,
@@ -291,7 +291,7 @@ public class GlobalExceptionHandler {
 
     private String resolveCurrentUserInfoSafely() {
         try {
-            return userInfoService.getCurrentUserInfo();
+            return requestActorResolver.resolveActor(request);
         } catch (Exception ex) {
             return resolveUserInfoFromRequestSafely();
         }

@@ -1,6 +1,6 @@
 package com.eventitta.api.auth.security.handler;
 
-import com.eventitta.api.auth.jwt.UserInfoService;
+import com.eventitta.api.common.logging.RequestActorResolver;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,8 +14,8 @@ import static org.mockito.Mockito.mock;
 
 class JwtAccessDeniedHandlerTest {
 
-    private final UserInfoService userInfoService = mock(UserInfoService.class);
-    private final JwtAccessDeniedHandler accessDeniedHandler = new JwtAccessDeniedHandler(new ObjectMapper(), userInfoService);
+    private final RequestActorResolver requestActorResolver = mock(RequestActorResolver.class);
+    private final JwtAccessDeniedHandler accessDeniedHandler = new JwtAccessDeniedHandler(new ObjectMapper(), requestActorResolver);
 
     @Test
     @DisplayName("접근 거부 예외가 발생하면 403 JSON 응답을 반환한다")
@@ -23,7 +23,7 @@ class JwtAccessDeniedHandlerTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setRequestURI("/api/v1/admin/festivals/sync");
         MockHttpServletResponse response = new MockHttpServletResponse();
-        given(userInfoService.extractUserInfoFromRequest(request)).willReturn("anonymous");
+        given(requestActorResolver.resolveActor(request)).willReturn("anonymous");
 
         accessDeniedHandler.handle(request, response, new AccessDeniedException("forbidden"));
 

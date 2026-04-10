@@ -1,6 +1,6 @@
 package com.eventitta.api.auth.security.handler;
 
-import com.eventitta.api.auth.jwt.UserInfoService;
+import com.eventitta.api.common.logging.RequestActorResolver;
 import com.eventitta.domain.common.exception.CommonErrorCode;
 import com.eventitta.api.common.response.ApiErrorResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,7 +22,7 @@ import java.io.IOException;
 public class JwtAccessDeniedHandler implements AccessDeniedHandler {
 
     private final ObjectMapper objectMapper;
-    private final UserInfoService userInfoService;
+    private final RequestActorResolver requestActorResolver;
 
     @Override
     public void handle(
@@ -57,7 +57,7 @@ public class JwtAccessDeniedHandler implements AccessDeniedHandler {
 
     private String resolveUserInfoSafely(HttpServletRequest request) {
         try {
-            return userInfoService.extractUserInfoFromRequest(request);
+            return requestActorResolver.resolveActor(request);
         } catch (Exception ex) {
             log.warn("요청 기반 사용자 정보 추출 실패. path={}", request.getRequestURI(), ex);
             return "unknown";

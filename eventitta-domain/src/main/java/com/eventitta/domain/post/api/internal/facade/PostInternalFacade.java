@@ -7,4 +7,6 @@ public interface PostInternalFacade {
     void ensureActivePost(Long postId);
 
     Optional<Long> findAuthorUserId(Long postId);
+
+    boolean isMediaAssetReferenced(Long mediaAssetId);
 }

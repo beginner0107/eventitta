@@ -1,6 +1,6 @@
 package com.eventitta.api.comment.controller;
 
-import com.eventitta.api.common.security.annotation.CurrentUser;
+import com.eventitta.api.auth.security.annotation.CurrentUser;
 import com.eventitta.domain.comment.dto.request.CreateCommentRequest;
 import com.eventitta.domain.comment.dto.request.UpdateCommentRequest;
 import com.eventitta.domain.comment.dto.response.CommentWithChildrenResponse;

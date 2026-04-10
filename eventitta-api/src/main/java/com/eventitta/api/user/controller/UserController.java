@@ -1,6 +1,6 @@
 package com.eventitta.api.user.controller;
 
-import com.eventitta.api.common.security.annotation.CurrentUser;
+import com.eventitta.api.auth.security.annotation.CurrentUser;
 import com.eventitta.api.common.response.ApiErrorResponse;
 import com.eventitta.api.auth.security.UserPrincipal;
 import com.eventitta.api.auth.controller.request.SocialLoginRequest;

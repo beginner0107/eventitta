@@ -1,0 +1,15 @@
+package com.eventitta.domain.auth.domain;
+
+public enum AuthSecurityEventType {
+    LOGIN,
+    REFRESH,
+    SOCIAL_LOGIN,
+    SOCIAL_LINK,
+    SOCIAL_UNLINK,
+    EMAIL_VERIFICATION_REQUEST,
+    EMAIL_VERIFICATION_CONFIRM,
+    PASSWORD_RESET_REQUEST,
+    PASSWORD_RESET_CONFIRM,
+    SET_LOCAL_PASSWORD,
+    LOGOUT_ALL
+}

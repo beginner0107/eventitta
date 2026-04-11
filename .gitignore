@@ -156,6 +156,8 @@ fabric.properties
 
 # Editor-based Rest Client
 .idea/httpRequests
+http/
+http/http-client.private.env.json
 
 # Android studio 3.1+ serialized cache file
 .idea/caches/build_file_checksums.ser
@@ -365,3 +367,4 @@ HELP.md
 /db/
 /logs
 /uploads
+/eventitta-app/logs
